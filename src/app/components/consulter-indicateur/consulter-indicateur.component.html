@@ -1,4 +1,12 @@
 <div class="container pb-5">
+  <div class="entete-impression">
+    <div class="societe-impression">Pictor Solution — Plateforme Indicateurs</div>
+    <div class="meta-impression">
+      Valeurs de l'indicateur {{ indicateur?.code }} — {{ indicateur?.nom }} —
+      éditées le {{ imprimeLe | date: 'dd/MM/yyyy à HH:mm' }}
+    </div>
+  </div>
+
   <div class="fil-ariane">
     <a routerLink="/"><i class="bi bi-house-door me-1"></i>Tableau de bord</a>
     <i class="bi bi-chevron-right" style="font-size: 0.7rem"></i>
@@ -107,9 +115,9 @@
                   [(ngModel)]="valeurCourante.degreDeFiabilite"
                 >
                   <option value="">— Non précisé —</option>
-                  <option value="haute">Haute</option>
-                  <option value="moyenne">Moyenne</option>
-                  <option value="faible">Faible</option>
+                  <option *ngFor="let d of degresFiabilite" [value]="d.valeur">
+                    {{ d.libelle }}
+                  </option>
                 </select>
               </div>
 
@@ -199,9 +207,18 @@
     <div class="card">
       <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
         <span><i class="bi bi-table me-2"></i>Valeurs enregistrées</span>
-        <button class="btn btn-sm btn-primary" (click)="ouvrirCreationValeur()">
-          <i class="bi bi-plus-lg"></i> Ajouter une valeur
-        </button>
+        <div class="d-flex gap-2">
+          <button
+            class="btn btn-sm btn-outline-secondary"
+            (click)="imprimer()"
+            title="Imprimer le tableau des valeurs"
+          >
+            <i class="bi bi-printer"></i> Imprimer
+          </button>
+          <button class="btn btn-sm btn-primary" (click)="ouvrirCreationValeur()">
+            <i class="bi bi-plus-lg"></i> Ajouter une valeur
+          </button>
+        </div>
       </div>
 
       <div class="card-body p-0 tableau-defilant">
@@ -210,9 +227,13 @@
             <tr>
               <th class="ps-3">#</th>
               <th>Valeur</th>
-              <th>Date</th>
               <th>Statut</th>
-              <th class="text-end pe-3">Actions</th>
+              <th>Fiabilité</th>
+              <th>Saisi par</th>
+              <th>Commentaire</th>
+              <th>Saisie le</th>
+              <th>Mise à jour le</th>
+              <th class="text-end pe-3 colonne-actions">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -222,7 +243,6 @@
                 <span class="fw-bold">{{ val.valeur }}</span>
                 <span class="text-muted small ms-1">{{ indicateur.unite }}</span>
               </td>
-              <td class="text-muted small">{{ val.saisieLe | date: 'dd/MM/yyyy' }}</td>
               <td>
                 <span class="badge-statut" [ngClass]="classeStatut(val)">
                   {{ libelleStatut(val) }}
@@ -231,7 +251,21 @@
                   par {{ val.validePar }}
                 </div>
               </td>
-              <td class="text-end pe-3">
+              <td>
+                <span class="etiquette" *ngIf="val.degreDeFiabilite">
+                  {{ val.degreDeFiabilite | titlecase }}
+                </span>
+                <span class="text-muted" *ngIf="!val.degreDeFiabilite">—</span>
+              </td>
+              <td class="small">{{ val.saisiePar || '—' }}</td>
+              <td class="small cellule-commentaire" [title]="val.commentaire || ''">
+                {{ val.commentaire || '—' }}
+              </td>
+              <td class="text-muted small">{{ val.saisieLe | date: 'dd/MM/yyyy HH:mm' }}</td>
+              <td class="text-muted small">
+                {{ val.updateAt ? (val.updateAt | date: 'dd/MM/yyyy HH:mm') : '—' }}
+              </td>
+              <td class="text-end pe-3 colonne-actions">
                 <div class="actions-ligne">
                   <button
                     (click)="ouvrirEditionValeur(val)"
@@ -298,7 +332,7 @@
             </tr>
 
             <tr *ngIf="valeurs.length === 0">
-              <td colspan="5">
+              <td colspan="9">
                 <div class="etat-vide">
                   <i class="bi bi-clipboard-x icone-vide"></i>
                   <p class="mb-3">Aucune valeur enregistrée pour cet indicateur.</p>

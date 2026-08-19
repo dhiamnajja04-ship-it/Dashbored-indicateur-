@@ -534,3 +534,215 @@ h1, h2, h3, h4, h5, h6 {
   .tableau-defilant { overflow-x: auto; }
   .tableau-defilant .table { min-width: 640px; }
 }
+
+/* ---------------------------------------------------------------------
+   Notifications (toasts)
+   --------------------------------------------------------------------- */
+
+.pile-notifications {
+  position: fixed;
+  bottom: 1.25rem;
+  right: 1.25rem;
+  z-index: 1080;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  max-width: min(380px, calc(100vw - 2.5rem));
+}
+
+.notification {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.7rem;
+  padding: 0.8rem 0.9rem;
+  border-radius: var(--rayon);
+  background: var(--surface);
+  border: 1px solid var(--bordure);
+  border-left: 4px solid var(--brouillon);
+  box-shadow: var(--ombre-forte);
+  animation: entree-notification 180ms ease-out;
+}
+
+@keyframes entree-notification {
+  from { opacity: 0; transform: translateX(14px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+.notification > .bi {
+  font-size: 1.05rem;
+  line-height: 1.35;
+}
+
+.notification-corps { flex: 1; min-width: 0; }
+
+.notification-titre {
+  font-weight: 600;
+  font-size: 0.88rem;
+}
+
+.notification-message {
+  font-size: 0.8rem;
+  color: var(--texte-doux);
+  margin-top: 0.1rem;
+}
+
+.notification-fermer {
+  border: 0;
+  background: transparent;
+  color: var(--texte-doux);
+  padding: 0;
+  line-height: 1;
+  font-size: 1.05rem;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.notification-fermer:hover { color: var(--texte); }
+
+.notification-succes        { border-left-color: var(--valide); }
+.notification-succes > .bi  { color: var(--valide); }
+.notification-erreur        { border-left-color: var(--rejete); }
+.notification-erreur > .bi  { color: var(--rejete); }
+.notification-info          { border-left-color: var(--marque); }
+.notification-info > .bi    { color: var(--marque); }
+.notification-avertissement       { border-left-color: #d98a06; }
+.notification-avertissement > .bi { color: #d98a06; }
+
+@media (prefers-reduced-motion: reduce) {
+  .notification { animation: none; }
+}
+
+/* ---------------------------------------------------------------------
+   Impression des tableaux
+   --------------------------------------------------------------------- */
+
+.entete-impression { display: none; }
+
+@media print {
+  /* On imprime la donnée, pas l'application : navigation, boutons et
+     panneaux interactifs n'ont aucun sens sur papier. */
+  .navbar-plateforme,
+  .fil-ariane,
+  .pile-notifications,
+  .panneau-ia,
+  .entete-page .btn,
+  .card-header .btn,
+  .actions-ligne,
+  .sans-impression,
+  th.colonne-actions,
+  td.colonne-actions {
+    display: none !important;
+  }
+
+  .entete-impression {
+    display: block;
+    margin-bottom: 1rem;
+    border-bottom: 2px solid #000;
+    padding-bottom: 0.5rem;
+  }
+
+  .entete-impression .societe-impression {
+    font-size: 1.05rem;
+    font-weight: 700;
+  }
+
+  .entete-impression .meta-impression {
+    font-size: 0.8rem;
+    color: #444;
+  }
+
+  body { background: #fff; font-size: 11.5pt; }
+
+  .card {
+    border: 0 !important;
+    box-shadow: none !important;
+  }
+
+  .card-body { padding: 0 !important; }
+
+  .table { width: 100%; border-collapse: collapse; }
+
+  .table > thead th {
+    background: #eee !important;
+    color: #000;
+    border-bottom: 1px solid #000;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .table > tbody td {
+    border-bottom: 1px solid #ccc;
+    padding: 0.35rem 0.4rem;
+  }
+
+  /* Les pastilles de statut doivent rester lisibles en noir et blanc. */
+  .badge-statut {
+    border: 1px solid #666 !important;
+    background: #fff !important;
+    color: #000 !important;
+  }
+
+  .tableau-defilant { overflow: visible !important; }
+  .tableau-defilant .table { min-width: 0 !important; }
+
+  /* Une ligne ne doit pas être coupée entre deux pages. */
+  tr { page-break-inside: avoid; }
+  thead { display: table-header-group; }
+
+  a[href]::after { content: ''; }
+}
+
+/* ---------------------------------------------------------------------
+   Marque et pied de page
+   --------------------------------------------------------------------- */
+
+.bloc-marque {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+}
+
+.nom-societe {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--marque-fonce);
+  letter-spacing: -0.02em;
+}
+
+.nom-produit {
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--texte-doux);
+  letter-spacing: 0.01em;
+}
+
+.pied-page {
+  border-top: 1px solid var(--bordure);
+  background: var(--surface);
+  padding: 1rem 0;
+  margin-top: 2.5rem;
+  font-size: 0.8rem;
+  color: var(--texte-doux);
+}
+
+.pied-page .container {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+/* Commentaire tronqué dans le tableau : le texte complet reste en infobulle. */
+.cellule-commentaire {
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media print {
+  .cellule-commentaire {
+    max-width: none;
+    white-space: normal;
+  }
+}

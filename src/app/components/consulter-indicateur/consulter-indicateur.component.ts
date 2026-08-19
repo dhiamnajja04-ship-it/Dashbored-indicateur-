@@ -10,6 +10,8 @@ import {
   Statut,
   LIBELLES_STATUT,
 } from '../../services/indicateur.service';
+import { NotificationService } from '../../services/notification.service';
+import { DEGRES_FIABILITE } from '../../reference/referentiels';
 import { AnalyseIaComponent } from '../analyse-ia/analyse-ia.component';
 
 @Component({
@@ -36,7 +38,16 @@ export class ConsulterIndicateurComponent implements OnInit {
     private route: ActivatedRoute,
     private indicateurService: IndicateurService,
     private cdr: ChangeDetectorRef,
+    private notifications: NotificationService,
   ) {}
+
+  readonly degresFiabilite = DEGRES_FIABILITE;
+  readonly imprimeLe = new Date();
+
+  /** Impression du tableau des valeurs (mise en page dans styles.css). */
+  imprimer(): void {
+    window.print();
+  }
 
   ngOnInit(): void {
     const idParam = this.route.snapshot.paramMap.get('id');
@@ -193,6 +204,36 @@ export class ConsulterIndicateurComponent implements OnInit {
     this.appliquerStatut(valueId, 'Rejete');
   }
 
+  /**
+   * Message de confirmation adapté à la transition. Le passage à « Validé »
+   * est signalé explicitement, car c'est lui qui fait entrer la valeur dans le
+   * périmètre analysé par l'IA.
+   */
+  private notifierChangementStatut(statut: string): void {
+    switch (statut) {
+      case 'Valide':
+        this.notifications.succes(
+          'Valeur validée',
+          "Elle est désormais transmise à l'IA lors des prochaines analyses.",
+        );
+        break;
+      case 'Brouillon':
+        this.notifications.avertissement(
+          'Valeur dévalidée',
+          "Elle sort du périmètre de l'IA, mais n'est pas supprimée.",
+        );
+        break;
+      case 'EnRevue':
+        this.notifications.info('Valeur soumise à la revue', 'En attente de décision.');
+        break;
+      case 'Rejete':
+        this.notifications.avertissement('Valeur rejetée', 'Elle reste consultable en base.');
+        break;
+      default:
+        this.notifications.info('Statut mis à jour', `Nouveau statut : ${statut}.`);
+    }
+  }
+
   private appliquerStatut(valueId: number, statut: Statut) {
     if (this.statutEnCours !== null) return;
     this.statutEnCours = valueId;
@@ -201,15 +242,17 @@ export class ConsulterIndicateurComponent implements OnInit {
     this.cdr.markForCheck();
 
     this.indicateurService.changerStatut(valueId, statut).subscribe({
-      next: () => {
+      next: (resultat) => {
         this.statutEnCours = null;
         this.cdr.markForCheck();
+        this.notifierChangementStatut(resultat.statut);
         this.chargerDetails();
       },
       error: (err: HttpErrorResponse) => {
         console.error('Erreur lors du changement de statut', err);
         this.statutEnCours = null;
         this.cdr.markForCheck();
+        this.notifications.erreur('Changement de statut refusé', this.messageErreur(err));
         this.erreur = this.messageErreur(err);
         this.cdr.markForCheck();
       },

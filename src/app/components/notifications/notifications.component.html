@@ -1,0 +1,23 @@
+<!-- aria-live : un lecteur d'écran annonce la notification sans voler le focus. -->
+<div class="pile-notifications" aria-live="polite" aria-atomic="false">
+  <div
+    class="notification"
+    [ngClass]="'notification-' + notif.type"
+    *ngFor="let notif of notifications()"
+    role="status"
+  >
+    <i class="bi" [ngClass]="icone(notif.type)"></i>
+    <div class="notification-corps">
+      <div class="notification-titre">{{ notif.titre }}</div>
+      <div class="notification-message" *ngIf="notif.message">{{ notif.message }}</div>
+    </div>
+    <button
+      type="button"
+      class="notification-fermer"
+      (click)="fermer(notif.id)"
+      aria-label="Fermer la notification"
+    >
+      <i class="bi bi-x"></i>
+    </button>
+  </div>
+</div>

@@ -4,6 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { IndicateurService, Indicateur } from '../../services/indicateur.service';
+import { NotificationService } from '../../services/notification.service';
+import { UNITES_COURANTES, TYPES_COLLECTE, FREQUENCES } from '../../reference/referentiels';
 
 @Component({
   selector: 'app-indicateurs-list',
@@ -25,9 +27,15 @@ export class IndicateursListComponent implements OnInit {
   enregistrementEnCours = false;
   erreurFormulaire = '';
 
+  /** Suggestions proposées dans le formulaire (voir reference/referentiels.ts). */
+  readonly unites = UNITES_COURANTES;
+  readonly typesCollecte = TYPES_COLLECTE;
+  readonly frequences = FREQUENCES;
+
   constructor(
     private indicateurService: IndicateurService,
     private cdr: ChangeDetectorRef,
+    private notifications: NotificationService,
   ) {}
 
   ngOnInit(): void {
@@ -61,6 +69,7 @@ export class IndicateursListComponent implements OnInit {
       nom: '',
       description: '',
       unite: '',
+      sourceDeDonner: '',
       typeCollecte: '',
       frequence: '',
       categorieId: 1,
@@ -112,10 +121,15 @@ export class IndicateursListComponent implements OnInit {
           this.enregistrementEnCours = false;
           this.cdr.markForCheck();
           this.afficherFormulaire = false;
+          this.notifications.succes(
+            'Indicateur modifié',
+            `« ${this.indicateurCourant.nom} » a été mis à jour.`,
+          );
           this.charger();
         },
         error: (err: HttpErrorResponse) => {
           console.error('Erreur lors de la mise à jour', err);
+          this.notifications.erreur('Modification impossible', this.messageErreur(err));
           this.enregistrementEnCours = false;
           this.cdr.markForCheck();
           this.erreurFormulaire = this.messageErreur(err);
@@ -128,10 +142,15 @@ export class IndicateursListComponent implements OnInit {
           this.enregistrementEnCours = false;
           this.cdr.markForCheck();
           this.afficherFormulaire = false;
+          this.notifications.succes(
+            'Indicateur créé',
+            `« ${this.indicateurCourant.nom} » a été ajouté.`,
+          );
           this.charger();
         },
         error: (err: HttpErrorResponse) => {
           console.error('Erreur lors de la création', err);
+          this.notifications.erreur('Création impossible', this.messageErreur(err));
           this.enregistrementEnCours = false;
           this.cdr.markForCheck();
           this.erreurFormulaire = this.messageErreur(err);
@@ -139,6 +158,18 @@ export class IndicateursListComponent implements OnInit {
         },
       });
     }
+  }
+
+  /** Date affichée dans l'en-tête de la version imprimée. */
+  readonly imprimeLe = new Date();
+
+  /**
+   * Lance l'impression du tableau. La mise en page papier est entièrement
+   * gérée par les règles `@media print` de styles.css : navigation, boutons
+   * et panneau IA sont masqués, seul le tableau est conservé.
+   */
+  imprimer(): void {
+    window.print();
   }
 
   supprimer(ind: Indicateur): void {

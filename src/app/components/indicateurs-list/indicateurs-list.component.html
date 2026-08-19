@@ -1,4 +1,12 @@
 <div class="container pb-5">
+  <!-- Visible uniquement à l'impression (voir @media print dans styles.css). -->
+  <div class="entete-impression">
+    <div class="societe-impression">Pictor Solution — Plateforme Indicateurs</div>
+    <div class="meta-impression">
+      Liste des indicateurs — éditée le {{ imprimeLe | date: 'dd/MM/yyyy à HH:mm' }}
+    </div>
+  </div>
+
   <div class="fil-ariane">
     <a routerLink="/"><i class="bi bi-house-door me-1"></i>Tableau de bord</a>
     <i class="bi bi-chevron-right" style="font-size: 0.7rem"></i>
@@ -12,9 +20,14 @@
         Créer, modifier et supprimer les indicateurs suivis par la plateforme.
       </p>
     </div>
-    <button class="btn btn-primary" (click)="ouvrirCreation()" *ngIf="!afficherFormulaire">
-      <i class="bi bi-plus-lg"></i> Nouvel indicateur
-    </button>
+    <div class="d-flex gap-2">
+      <button class="btn btn-outline-secondary" (click)="imprimer()" title="Imprimer le tableau">
+        <i class="bi bi-printer"></i> Imprimer
+      </button>
+      <button class="btn btn-primary" (click)="ouvrirCreation()" *ngIf="!afficherFormulaire">
+        <i class="bi bi-plus-lg"></i> Nouvel indicateur
+      </button>
+    </div>
   </div>
 
   <!-- ---------------------------------------------------------------
@@ -86,8 +99,15 @@
                 [(ngModel)]="indicateurCourant.unite"
                 #unite="ngModel"
                 required
+                list="listeUnites"
                 placeholder="%"
+                autocomplete="off"
               />
+              <!-- Liste de suggestions plutôt qu'un select fermé : les unités
+                   déjà en base doivent rester saisissables. -->
+              <datalist id="listeUnites">
+                <option *ngFor="let u of unites" [value]="u.valeur">{{ u.libelle }}</option>
+              </datalist>
               <div class="message-erreur-champ" *ngIf="unite.invalid && unite.touched">
                 L'unité est obligatoire.
               </div>
@@ -120,10 +140,7 @@
                 [(ngModel)]="indicateurCourant.typeCollecte"
               >
                 <option value="">— Non précisé —</option>
-                <option value="Enquête">Enquête</option>
-                <option value="Registre">Registre</option>
-                <option value="Estimation">Estimation</option>
-                <option value="Déclaratif">Déclaratif</option>
+                <option *ngFor="let t of typesCollecte" [value]="t">{{ t }}</option>
               </select>
             </div>
 
@@ -136,10 +153,7 @@
                 [(ngModel)]="indicateurCourant.frequence"
               >
                 <option value="">— Non précisée —</option>
-                <option value="Mensuelle">Mensuelle</option>
-                <option value="Trimestrielle">Trimestrielle</option>
-                <option value="Semestrielle">Semestrielle</option>
-                <option value="Annuelle">Annuelle</option>
+                <option *ngFor="let f of frequences" [value]="f">{{ f }}</option>
               </select>
             </div>
 
@@ -155,6 +169,36 @@
               />
               <div class="aide-champ">
                 Identifiant de la catégorie en base (1 = Économie, 2 = Social).
+              </div>
+            </div>
+
+            <div class="col-md-8">
+              <label class="form-label" for="champSource">Source de données</label>
+              <input
+                id="champSource"
+                class="form-control"
+                name="sourceDeDonner"
+                [(ngModel)]="indicateurCourant.sourceDeDonner"
+                maxlength="150"
+                placeholder="Institut National de la Statistique — enquête emploi 2025"
+              />
+              <div class="aide-champ">
+                Organisme producteur, publication ou référence du jeu de données.
+              </div>
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label" for="champFichier">Document justificatif</label>
+              <input
+                id="champFichier"
+                type="file"
+                class="form-control"
+                accept=".pdf,.csv,.xlsx,.xls,.ods,.doc,.docx"
+                disabled
+              />
+              <div class="aide-champ">
+                Emplacement prévu — le dépôt de fichier nécessite un espace de
+                stockage côté serveur, pas encore en place.
               </div>
             </div>
           </div>
@@ -209,8 +253,9 @@
             <th class="ps-3">Code</th>
             <th>Nom</th>
             <th>Unité</th>
+            <th>Source</th>
             <th class="text-center">Valeurs</th>
-            <th class="text-end pe-3">Actions</th>
+            <th class="text-end pe-3 colonne-actions">Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -223,10 +268,11 @@
               </div>
             </td>
             <td>{{ ind.unite }}</td>
+            <td class="text-muted small">{{ ind.sourceDeDonner || '—' }}</td>
             <td class="text-center">
               <span class="etiquette">{{ (ind.valeursIndicateurs || []).length }}</span>
             </td>
-            <td class="text-end pe-3">
+            <td class="text-end pe-3 colonne-actions">
               <div class="actions-ligne">
                 <a
                   [routerLink]="['/indicateurs', ind.id]"
@@ -256,7 +302,7 @@
           </tr>
 
           <tr *ngIf="indicateurs.length === 0">
-            <td colspan="5">
+            <td colspan="6">
               <div class="etat-vide">
                 <i class="bi bi-inbox icone-vide"></i>
                 <p class="mb-3">Aucun indicateur pour le moment.</p>

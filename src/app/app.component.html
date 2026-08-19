@@ -2,7 +2,10 @@
   <div class="container">
     <a class="navbar-brand" routerLink="/">
       <span class="marque-pastille"><i class="bi bi-bar-chart-fill"></i></span>
-      <span>Plateforme Indicateurs</span>
+      <span class="bloc-marque">
+        <span class="nom-societe">Pictor Solution</span>
+        <span class="nom-produit">Plateforme Indicateurs</span>
+      </span>
     </a>
 
     <button
@@ -36,3 +39,12 @@
 </nav>
 
 <router-outlet></router-outlet>
+
+<footer class="pied-page sans-impression">
+  <div class="container">
+    <span>© {{ anneeCourante }} <strong>Pictor Solution</strong> — Plateforme Indicateurs</span>
+    <span class="text-muted">Analyse IA par modèle local · données validées uniquement</span>
+  </div>
+</footer>
+
+<app-notifications></app-notifications>
