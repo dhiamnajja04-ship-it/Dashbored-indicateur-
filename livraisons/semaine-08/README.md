@@ -241,6 +241,37 @@ navigateur, pas reconstitué.
 | [`06-apres-devalidation-statut-brouillon.png`](captures/06-apres-devalidation-statut-brouillon.png) | Après « Dévalider » : statut **Brouillon**, « 0 valeur(s) validée(s) sur 1 » |
 | [`07-reponse-ia-perimetre-reduit.png`](captures/07-reponse-ia-perimetre-reduit.png) | Nouvelle analyse : **IND-CHOM a disparu**, seul IND-SCOL subsiste |
 
+### Interface (captures 08 à 19)
+
+Ces captures documentent l'interface livrée. Elles complètent le scénario
+ci-dessus, qui porte sur la règle métier.
+
+| Capture | Ce qu'elle montre |
+|---|---|
+| [`08-interface-tableau-de-bord.png`](captures/08-interface-tableau-de-bord.png) | Compteurs, panneau IA, cartes d'indicateurs |
+| [`09-interface-liste-indicateurs.png`](captures/09-interface-liste-indicateurs.png) | Tableau, colonne Source, actions par ligne |
+| [`10-interface-detail-indicateur.png`](captures/10-interface-detail-indicateur.png) | Fil d'Ariane, en-tête, valeurs et workflow |
+| [`11-interface-formulaire-indicateur.png`](captures/11-interface-formulaire-indicateur.png) | Formulaire en sections, champs obligatoires signalés |
+| [`12-interface-colonnes-valeurs.png`](captures/12-interface-colonnes-valeurs.png) | Fiabilité, saisi par, commentaire, dates de saisie et de mise à jour |
+| [`13-interface-roles.png`](captures/13-interface-roles.png) | Sélecteur de rôle et actions filtrées |
+| [`14-interface-reclamations.png`](captures/14-interface-reclamations.png) | Dépôt, filtres et traitement d'une réclamation |
+| [`15-interface-notification.png`](captures/15-interface-notification.png) | Notification après un changement de statut |
+| [`16-interface-recherche-et-tri.png`](captures/16-interface-recherche-et-tri.png) | Recherche filtrante et tri par colonne |
+| [`17-interface-selecteur-unite.png`](captures/17-interface-selecteur-unite.png) | 19 unités en 5 groupes, échappatoire « Autre unité » |
+| [`18-interface-ecart-a-la-cible.png`](captures/18-interface-ecart-a-la-cible.png) | Écart entre la valeur et la cible de l'indicateur |
+| [`19-interface-territoire.png`](captures/19-interface-territoire.png) | Valeur nationale et valeur de gouvernorat côte à côte |
+
+### Impression (captures 20 et 21)
+
+| Fichier | Contenu |
+|---|---|
+| [`20-impression-liste-indicateurs.pdf`](captures/20-impression-liste-indicateurs.pdf) | Liste des indicateurs, mise en page papier |
+| [`21-impression-valeurs-indicateur.pdf`](captures/21-impression-valeurs-indicateur.pdf) | Valeurs d'un indicateur, mise en page papier |
+
+En-tête Pictor Solution ajouté, navigation, boutons, panneau IA et colonne
+Actions masqués : on imprime la donnée, pas l'application.
+
+
 ### Preuve chiffrée du filtrage
 
 Le endpoint `GET /api/ia/contexte` renvoie le périmètre exact soumis au modèle,

@@ -31,7 +31,7 @@ Elle n'est **jamais** dans Git :
 
 ## Préparation de la base
 
-Le dump initial (`schema_db.sql`) ne correspondait pas au modèle EF Core. Deux
+Le dump initial (`db/00-schema-initial.sql`) ne correspondait pas au modèle EF Core. Deux
 écarts provoquaient des erreurs 500 :
 
 1. **Noms de colonnes** — la base exposait `saisie_at`, le code attend
