@@ -1,20 +1,29 @@
-<div class="card shadow-sm border-0 mb-4">
-  <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-    <h5 class="mb-0">🤖 {{ titre }}</h5>
-    <small class="text-white-50">Modèle local — indicateurs validés uniquement</small>
+<div class="card panneau-ia mb-4">
+  <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+    <span class="d-flex align-items-center gap-2">
+      <i class="bi bi-cpu"></i>
+      <span class="fw-semibold">{{ titre }}</span>
+    </span>
+    <small class="text-white-50">
+      <i class="bi bi-hdd-network me-1"></i>Modèle local — indicateurs validés uniquement
+    </small>
   </div>
 
   <div class="card-body">
-    <p class="text-muted small mb-3">
-      L'analyse ne porte que sur les valeurs dont le statut est
-      <span class="badge bg-success">Validé</span>. Les brouillons, valeurs en revue et
-      valeurs rejetées sont ignorés.
+    <p class="text-muted small mb-3 d-flex align-items-start gap-2">
+      <i class="bi bi-funnel-fill mt-1"></i>
+      <span>
+        L'analyse ne porte que sur les valeurs dont le statut est
+        <span class="badge-statut statut-valide">Validé</span>. Les brouillons, valeurs en revue
+        et valeurs rejetées sont ignorés.
+      </span>
     </p>
 
     <div class="row g-2 align-items-end mb-3">
       <div class="col-md-9">
-        <label class="form-label small fw-bold">Question (facultatif)</label>
+        <label class="form-label" for="champQuestion">Question (facultatif)</label>
         <input
+          id="champQuestion"
           class="form-control"
           name="question"
           [(ngModel)]="question"
@@ -22,58 +31,73 @@
           (keyup.enter)="lancerAnalyse()"
           placeholder="Ex : quels indicateurs sont en dessous de leur cible ?"
         />
+        <div class="aide-champ">Laissez vide pour obtenir une synthèse générale.</div>
       </div>
       <div class="col-md-3 d-grid">
         <button class="btn btn-primary" (click)="lancerAnalyse()" [disabled]="chargement">
-          <span *ngIf="!chargement">Lancer l'analyse</span>
-          <span *ngIf="chargement">
-            <span class="spinner-border spinner-border-sm me-1"></span>
+          <ng-container *ngIf="!chargement">
+            <i class="bi bi-stars"></i> Lancer l'analyse
+          </ng-container>
+          <ng-container *ngIf="chargement">
+            <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
             Génération…
-          </span>
+          </ng-container>
         </button>
       </div>
     </div>
 
-    <div *ngIf="chargement" class="alert alert-info py-2 small mb-0">
-      Le modèle tourne en local sur la VM : la première réponse peut prendre plusieurs dizaines
-      de secondes.
+    <!-- Attente : on explique pourquoi c'est long, sinon ça ressemble à un blocage. -->
+    <div *ngIf="chargement" class="alert alert-info d-flex align-items-start gap-2 py-2 mb-0">
+      <i class="bi bi-hourglass-split mt-1"></i>
+      <div class="small">
+        Le modèle tourne <strong>en local sur la VM</strong>, sans carte graphique : la réponse
+        peut prendre quelques dizaines de secondes.
+      </div>
     </div>
 
-    <div *ngIf="erreur" class="alert alert-danger py-2 mb-0">{{ erreur }}</div>
+    <div *ngIf="erreur" class="alert alert-danger d-flex align-items-start gap-2 py-2 mb-0">
+      <i class="bi bi-exclamation-triangle-fill mt-1"></i>
+      <div class="small">{{ erreur }}</div>
+    </div>
 
     <div *ngIf="resultat && !chargement">
-      <div *ngIf="aucuneDonneeValidee" class="alert alert-warning">
-        {{ resultat.reponse }}
+      <div
+        *ngIf="aucuneDonneeValidee"
+        class="alert alert-warning d-flex align-items-start gap-2 mb-0"
+      >
+        <i class="bi bi-info-circle-fill mt-1"></i>
+        <div class="small">{{ resultat.reponse }}</div>
       </div>
 
       <div *ngIf="!aucuneDonneeValidee">
-        <div class="border rounded p-3 bg-light" style="white-space: pre-wrap">{{
-          resultat.reponse
-        }}</div>
+        <div class="reponse-ia">{{ resultat.reponse }}</div>
 
         <div class="d-flex flex-wrap gap-2 mt-3 align-items-center">
-          <span class="badge bg-dark">Modèle : {{ resultat.modele }}</span>
-          <span class="badge bg-success">
+          <span class="etiquette">
+            <i class="bi bi-cpu me-1"></i>{{ resultat.modele }}
+          </span>
+          <span class="badge-statut statut-valide">
             {{ resultat.nbValeursValidees }} valeur(s) validée(s) analysée(s)
           </span>
-          <span class="badge bg-secondary">
+          <span class="etiquette">
             {{ resultat.nbIndicateursAnalyses }} indicateur(s)
           </span>
           <span
-            class="badge bg-info text-dark"
+            class="jeton-indicateur"
             *ngFor="let code of resultat.indicateursUtilises"
-            title="Indicateur transmis au modèle"
+            title="Indicateur réellement transmis au modèle"
           >
             {{ code }}
           </span>
           <button class="btn btn-sm btn-outline-secondary ms-auto" (click)="reinitialiser()">
-            Effacer
+            <i class="bi bi-x-lg"></i> Effacer
           </button>
         </div>
 
         <p class="text-muted small mt-2 mb-0">
-          Généré le {{ resultat.genereLe | date: 'short' }}. Les codes ci-dessus sont exactement
-          les indicateurs transmis au modèle.
+          <i class="bi bi-clock-history me-1"></i>
+          Généré le {{ resultat.genereLe | date: 'short' }}. Les codes ci-dessus sont
+          <strong>exactement</strong> les indicateurs transmis au modèle.
         </p>
       </div>
     </div>

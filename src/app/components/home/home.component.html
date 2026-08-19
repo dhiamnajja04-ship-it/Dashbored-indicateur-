@@ -1,34 +1,58 @@
 <div class="container pb-5">
-  <h2 class="fw-bold mb-4">Tableau de bord</h2>
+  <div class="entete-page">
+    <div>
+      <h2>Tableau de bord</h2>
+      <p class="sous-titre-page">
+        Vue d'ensemble des indicateurs et de l'avancement de leur validation.
+      </p>
+    </div>
+    <a routerLink="/indicateurs" class="btn btn-primary">
+      <i class="bi bi-sliders"></i> Gérer les indicateurs
+    </a>
+  </div>
 
-  <div *ngIf="loading" class="text-center text-muted py-5">Chargement des indicateurs...</div>
+  <!-- Chargement : on montre la forme du contenu à venir, pas un mot. -->
+  <div *ngIf="loading" class="row g-3 mb-4">
+    <div class="col-md-3 col-6" *ngFor="let i of [1, 2, 3, 4]">
+      <div class="card carte-stat">
+        <div class="squelette mb-2" style="height: 2rem; width: 3.5rem"></div>
+        <div class="squelette" style="height: 0.8rem; width: 80%"></div>
+      </div>
+    </div>
+  </div>
 
-  <div *ngIf="erreur" class="alert alert-danger">{{ erreur }}</div>
+  <div *ngIf="erreur" class="alert alert-danger d-flex align-items-start gap-2">
+    <i class="bi bi-exclamation-triangle-fill mt-1"></i>
+    <div>
+      <div class="fw-semibold">Impossible de charger les données</div>
+      <div class="small">{{ erreur }}</div>
+    </div>
+  </div>
 
   <ng-container *ngIf="!loading && !erreur">
     <div class="row g-3 mb-4">
       <div class="col-md-3 col-6">
-        <div class="card text-center shadow-sm border-0 p-3 h-100">
-          <div class="fs-2 fw-bold text-primary">{{ totalIndicateurs }}</div>
-          <div class="text-muted small">Indicateurs</div>
+        <div class="card carte-stat stat-total">
+          <div class="stat-valeur" style="color: var(--marque)">{{ totalIndicateurs }}</div>
+          <div class="stat-libelle">Indicateurs</div>
         </div>
       </div>
       <div class="col-md-3 col-6">
-        <div class="card text-center shadow-sm border-0 p-3 h-100">
-          <div class="fs-2 fw-bold text-dark">{{ totalValeurs }}</div>
-          <div class="text-muted small">Valeurs saisies</div>
+        <div class="card carte-stat">
+          <div class="stat-valeur">{{ totalValeurs }}</div>
+          <div class="stat-libelle">Valeurs saisies</div>
         </div>
       </div>
       <div class="col-md-3 col-6">
-        <div class="card text-center shadow-sm border-0 p-3 h-100">
-          <div class="fs-2 fw-bold text-success">{{ valeursValidees }}</div>
-          <div class="text-muted small">Valeurs validées</div>
+        <div class="card carte-stat stat-valide">
+          <div class="stat-valeur" style="color: var(--valide)">{{ valeursValidees }}</div>
+          <div class="stat-libelle">Valeurs validées</div>
         </div>
       </div>
       <div class="col-md-3 col-6">
-        <div class="card text-center shadow-sm border-0 p-3 h-100">
-          <div class="fs-2 fw-bold text-warning">{{ valeursEnAttente }}</div>
-          <div class="text-muted small">En attente de validation</div>
+        <div class="card carte-stat stat-attente">
+          <div class="stat-valeur" style="color: #d98a06">{{ valeursEnAttente }}</div>
+          <div class="stat-libelle">En attente de validation</div>
         </div>
       </div>
     </div>
@@ -36,28 +60,47 @@
     <!-- Semaine 7 : la réponse IA est visible directement dans l'interface. -->
     <app-analyse-ia titre="Synthèse IA des indicateurs validés"></app-analyse-ia>
 
-    <div class="d-flex justify-content-between align-items-center mb-3">
-      <h5 class="fw-bold mb-0">Indicateurs</h5>
-      <a routerLink="/indicateurs" class="btn btn-sm btn-primary">Gérer les indicateurs</a>
-    </div>
+    <h5 class="fw-bold mt-4 mb-3">Indicateurs</h5>
 
     <div class="row g-3">
-      <div class="col-md-4" *ngFor="let ind of indicateurs">
-        <div class="card h-100 shadow-sm border-0">
+      <div class="col-lg-4 col-md-6" *ngFor="let ind of indicateurs">
+        <div class="card carte-indicateur h-100">
           <div class="card-body">
-            <h6 class="fw-bold">{{ ind.nom }}</h6>
-            <p class="text-muted small mb-2">{{ ind.description || 'Pas de description' }}</p>
-            <span class="badge bg-secondary me-1">{{ ind.unite }}</span>
-            <span class="badge bg-light text-dark">{{ (ind.valeursIndicateurs || []).length }} valeur(s)</span>
+            <div class="d-flex justify-content-between align-items-start gap-2 mb-1">
+              <h6 class="fw-bold mb-0">{{ ind.nom }}</h6>
+              <span class="code-indicateur">{{ ind.code }}</span>
+            </div>
+            <p class="text-muted small mb-3">
+              {{ ind.description || 'Pas de description' }}
+            </p>
+            <div class="d-flex gap-2 flex-wrap">
+              <span class="etiquette" *ngIf="ind.unite">
+                <i class="bi bi-rulers me-1"></i>{{ ind.unite }}
+              </span>
+              <span class="etiquette">
+                {{ (ind.valeursIndicateurs || []).length }} valeur(s)
+              </span>
+            </div>
           </div>
-          <div class="card-footer bg-white border-0">
-            <a [routerLink]="['/indicateurs', ind.id]" class="btn btn-sm btn-outline-primary w-100">Voir détails</a>
+          <div class="card-footer bg-transparent border-0 pt-0">
+            <a
+              [routerLink]="['/indicateurs', ind.id]"
+              class="btn btn-sm btn-outline-primary w-100"
+            >
+              Voir le détail <i class="bi bi-arrow-right"></i>
+            </a>
           </div>
         </div>
       </div>
 
-      <div *ngIf="indicateurs.length === 0" class="text-muted">
-        Aucun indicateur pour le moment. <a routerLink="/indicateurs">Ajoutes-en un</a>.
+      <div *ngIf="indicateurs.length === 0" class="col-12">
+        <div class="card etat-vide">
+          <i class="bi bi-inbox icone-vide"></i>
+          <p class="mb-3">Aucun indicateur pour le moment.</p>
+          <a routerLink="/indicateurs" class="btn btn-primary btn-sm">
+            <i class="bi bi-plus-lg"></i> Créer le premier indicateur
+          </a>
+        </div>
       </div>
     </div>
   </ng-container>

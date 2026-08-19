@@ -1,3 +1,43 @@
+/* =====================================================================
+   Socle visuel de la plateforme.
+
+   Bootstrap 5 fournit la grille et les composants ; ce fichier définit
+   l'identité : palette, typographie, profondeur, états. Tout passe par des
+   variables CSS afin qu'un changement de couleur reste une seule ligne.
+
+   Aucune règle ici ne dépend du métier : renommer un indicateur ou changer
+   un statut n'oblige jamais à toucher cette feuille.
+   ===================================================================== */
+
+:root {
+  /* Palette — un bleu institutionnel, sobre, lisible sur fond clair. */
+  --marque: #2857a4;
+  --marque-clair: #eaf0fa;
+  --marque-fonce: #1c3d76;
+
+  /* Couleurs sémantiques du workflow de validation. */
+  --valide: #1a7f4b;
+  --valide-fond: #e6f4ec;
+  --revue: #0b6b8a;
+  --revue-fond: #e2f2f7;
+  --brouillon: #6b7280;
+  --brouillon-fond: #f0f1f3;
+  --rejete: #b42318;
+  --rejete-fond: #fdeceb;
+
+  --texte: #1a1d23;
+  --texte-doux: #667085;
+  --bordure: #e4e7ec;
+  --fond: #f7f8fa;
+  --surface: #ffffff;
+
+  --rayon: 10px;
+  --rayon-sm: 7px;
+  --ombre: 0 1px 2px rgba(16, 24, 40, 0.05), 0 1px 3px rgba(16, 24, 40, 0.06);
+  --ombre-forte: 0 4px 12px rgba(16, 24, 40, 0.08), 0 2px 4px rgba(16, 24, 40, 0.04);
+  --transition: 140ms ease;
+}
+
 html,
 body {
   height: 100%;
@@ -5,10 +45,492 @@ body {
 
 body {
   margin: 0;
-  background-color: #f5f6f8;
-  font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  background-color: var(--fond);
+  color: var(--texte);
+  font-family: 'Inter', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  font-size: 15px;
+  -webkit-font-smoothing: antialiased;
 }
 
-.navbar-brand {
-  font-size: 1.2rem;
+h1, h2, h3, h4, h5, h6 {
+  letter-spacing: -0.015em;
+  color: var(--texte);
+}
+
+/* ---------------------------------------------------------------------
+   Barre de navigation
+   --------------------------------------------------------------------- */
+
+.navbar-plateforme {
+  background: var(--surface);
+  border-bottom: 1px solid var(--bordure);
+  box-shadow: var(--ombre);
+  padding: 0.65rem 0;
+}
+
+.navbar-plateforme .navbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 1.02rem;
+  font-weight: 700;
+  color: var(--texte);
+  letter-spacing: -0.02em;
+}
+
+/* Pastille de marque : évite l'emoji, qui rend différemment selon l'OS. */
+.marque-pastille {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: var(--marque);
+  color: #fff;
+  font-size: 1rem;
+}
+
+.navbar-plateforme .nav-link {
+  position: relative;
+  padding: 0.45rem 0.9rem;
+  border-radius: var(--rayon-sm);
+  font-weight: 500;
+  color: var(--texte-doux);
+  transition: background var(--transition), color var(--transition);
+}
+
+.navbar-plateforme .nav-link:hover {
+  background: var(--marque-clair);
+  color: var(--marque-fonce);
+}
+
+/* L'onglet courant doit être identifiable sans lire le texte. */
+.navbar-plateforme .nav-link.active {
+  background: var(--marque-clair);
+  color: var(--marque-fonce);
+  font-weight: 600;
+}
+
+/* ---------------------------------------------------------------------
+   Cartes et surfaces
+   --------------------------------------------------------------------- */
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--bordure);
+  border-radius: var(--rayon);
+  box-shadow: var(--ombre);
+}
+
+.card-header {
+  background: var(--surface);
+  border-bottom: 1px solid var(--bordure);
+  font-weight: 600;
+  padding: 0.9rem 1.15rem;
+}
+
+/* Carte de statistique du tableau de bord. */
+.carte-stat {
+  padding: 1.15rem 1.25rem;
+  height: 100%;
+  transition: box-shadow var(--transition), transform var(--transition);
+}
+
+.carte-stat:hover {
+  box-shadow: var(--ombre-forte);
+  transform: translateY(-1px);
+}
+
+.carte-stat .stat-valeur {
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+}
+
+.carte-stat .stat-libelle {
+  color: var(--texte-doux);
+  font-size: 0.82rem;
+  font-weight: 500;
+  margin-top: 0.15rem;
+}
+
+/* Filet coloré : la couleur porte le sens, pas seulement la décoration. */
+.carte-stat {
+  border-left: 3px solid var(--bordure);
+}
+.carte-stat.stat-total   { border-left-color: var(--marque); }
+.carte-stat.stat-valide  { border-left-color: var(--valide); }
+.carte-stat.stat-attente { border-left-color: #d98a06; }
+
+/* Carte d'indicateur cliquable. */
+.carte-indicateur {
+  transition: box-shadow var(--transition), transform var(--transition),
+    border-color var(--transition);
+}
+
+.carte-indicateur:hover {
+  box-shadow: var(--ombre-forte);
+  transform: translateY(-2px);
+  border-color: #c9d4e8;
+}
+
+/* ---------------------------------------------------------------------
+   Boutons
+   --------------------------------------------------------------------- */
+
+.btn {
+  --bs-btn-font-weight: 500;
+  border-radius: var(--rayon-sm);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  transition: background var(--transition), border-color var(--transition),
+    box-shadow var(--transition), transform var(--transition);
+}
+
+.btn:active {
+  transform: translateY(1px);
+}
+
+.btn:focus-visible {
+  outline: 2px solid var(--marque);
+  outline-offset: 2px;
+  box-shadow: none;
+}
+
+.btn-primary {
+  --bs-btn-bg: var(--marque);
+  --bs-btn-border-color: var(--marque);
+  --bs-btn-hover-bg: var(--marque-fonce);
+  --bs-btn-hover-border-color: var(--marque-fonce);
+  --bs-btn-disabled-bg: #9db2d4;
+  --bs-btn-disabled-border-color: #9db2d4;
+}
+
+.btn-outline-primary {
+  --bs-btn-color: var(--marque);
+  --bs-btn-border-color: #c2d0e8;
+  --bs-btn-hover-bg: var(--marque);
+  --bs-btn-hover-border-color: var(--marque);
+}
+
+/* Un bouton désactivé doit se lire comme « pas maintenant », pas comme cassé. */
+.btn:disabled,
+.btn.disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* Groupe d'actions d'une ligne de tableau : compact, aligné, sans retour à la ligne. */
+.actions-ligne {
+  display: inline-flex;
+  gap: 0.35rem;
+  white-space: nowrap;
+}
+
+/* Bouton réduit à une icône : la taille reste cliquable au doigt. */
+.btn-icone {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  font-size: 0.95rem;
+  line-height: 1;
+}
+
+/* ---------------------------------------------------------------------
+   Badges de statut du workflow
+   --------------------------------------------------------------------- */
+
+.badge-statut {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.28rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.76rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  border: 1px solid transparent;
+}
+
+/* Une pastille en plus de la couleur : lisible aussi en daltonisme. */
+.badge-statut::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.badge-statut.statut-valide {
+  color: var(--valide);
+  background: var(--valide-fond);
+  border-color: #b7e0c8;
+}
+.badge-statut.statut-revue {
+  color: var(--revue);
+  background: var(--revue-fond);
+  border-color: #b3ddea;
+}
+.badge-statut.statut-brouillon {
+  color: var(--brouillon);
+  background: var(--brouillon-fond);
+  border-color: #dcdfe4;
+}
+.badge-statut.statut-rejete {
+  color: var(--rejete);
+  background: var(--rejete-fond);
+  border-color: #f5c4c0;
+}
+
+/* Étiquette neutre (unité, nombre de valeurs…). */
+.etiquette {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.22rem 0.55rem;
+  border-radius: var(--rayon-sm);
+  background: var(--brouillon-fond);
+  border: 1px solid var(--bordure);
+  color: var(--texte-doux);
+  font-size: 0.76rem;
+  font-weight: 500;
+}
+
+/* ---------------------------------------------------------------------
+   Tableaux
+   --------------------------------------------------------------------- */
+
+.table {
+  --bs-table-border-color: var(--bordure);
+  margin-bottom: 0;
+}
+
+.table > thead th {
+  background: #fafbfc;
+  color: var(--texte-doux);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border-bottom: 1px solid var(--bordure);
+  padding: 0.7rem 0.75rem;
+}
+
+.table > tbody td {
+  padding: 0.75rem;
+  vertical-align: middle;
+}
+
+.table > tbody tr:hover {
+  background: #fafbfd;
+}
+
+.code-indicateur {
+  font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--marque-fonce);
+}
+
+/* ---------------------------------------------------------------------
+   Formulaires
+   --------------------------------------------------------------------- */
+
+.form-label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--texte);
+  margin-bottom: 0.3rem;
+}
+
+/* Astérisque discret mais explicite sur les champs obligatoires. */
+.form-label.requis::after {
+  content: ' *';
+  color: var(--rejete);
+  font-weight: 700;
+}
+
+.form-control,
+.form-select {
+  border-radius: var(--rayon-sm);
+  border-color: #d3d8e0;
+  padding: 0.5rem 0.7rem;
+  font-size: 0.9rem;
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+.form-control:focus,
+.form-select:focus {
+  border-color: var(--marque);
+  box-shadow: 0 0 0 3px rgba(40, 87, 164, 0.12);
+}
+
+.form-control.champ-invalide {
+  border-color: var(--rejete);
+}
+
+.form-control.champ-invalide:focus {
+  box-shadow: 0 0 0 3px rgba(180, 35, 24, 0.12);
+}
+
+.aide-champ {
+  font-size: 0.76rem;
+  color: var(--texte-doux);
+  margin-top: 0.25rem;
+}
+
+.message-erreur-champ {
+  font-size: 0.76rem;
+  color: var(--rejete);
+  margin-top: 0.25rem;
+}
+
+/* Regroupement thématique à l'intérieur d'un formulaire long. */
+.section-formulaire {
+  border-top: 1px solid var(--bordure);
+  margin-top: 1.35rem;
+  padding-top: 1.1rem;
+}
+
+.section-formulaire:first-of-type {
+  border-top: 0;
+  margin-top: 0;
+  padding-top: 0;
+}
+
+.titre-section {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--texte-doux);
+  margin-bottom: 0.8rem;
+}
+
+/* ---------------------------------------------------------------------
+   En-tête de page et fil d'Ariane
+   --------------------------------------------------------------------- */
+
+.entete-page {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+}
+
+.entete-page h1,
+.entete-page h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.sous-titre-page {
+  color: var(--texte-doux);
+  font-size: 0.88rem;
+  margin: 0.2rem 0 0;
+}
+
+.fil-ariane {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.82rem;
+  color: var(--texte-doux);
+  margin-bottom: 0.9rem;
+}
+
+.fil-ariane a {
+  color: var(--texte-doux);
+  text-decoration: none;
+}
+
+.fil-ariane a:hover {
+  color: var(--marque);
+  text-decoration: underline;
+}
+
+/* ---------------------------------------------------------------------
+   États : chargement, vide
+   --------------------------------------------------------------------- */
+
+/* Squelette animé : indique la forme du contenu à venir plutôt qu'un mot. */
+.squelette {
+  background: linear-gradient(90deg, #eef0f3 25%, #f6f7f9 50%, #eef0f3 75%);
+  background-size: 200% 100%;
+  animation: glissement 1.3s ease-in-out infinite;
+  border-radius: var(--rayon-sm);
+}
+
+@keyframes glissement {
+  from { background-position: 200% 0; }
+  to   { background-position: -200% 0; }
+}
+
+.etat-vide {
+  text-align: center;
+  padding: 3rem 1.5rem;
+  color: var(--texte-doux);
+}
+
+.etat-vide .icone-vide {
+  font-size: 2.4rem;
+  color: #c4cad4;
+  display: block;
+  margin-bottom: 0.6rem;
+}
+
+/* Respecte le réglage système « animations réduites ». */
+@media (prefers-reduced-motion: reduce) {
+  .squelette { animation: none; }
+  .btn, .card, .carte-stat, .carte-indicateur { transition: none; }
+}
+
+/* ---------------------------------------------------------------------
+   Panneau d'analyse IA
+   --------------------------------------------------------------------- */
+
+.panneau-ia .card-header {
+  background: linear-gradient(135deg, var(--marque) 0%, var(--marque-fonce) 100%);
+  color: #fff;
+  border-bottom: 0;
+}
+
+.reponse-ia {
+  white-space: pre-wrap;
+  line-height: 1.65;
+  font-size: 0.92rem;
+  background: #fbfcfd;
+  border: 1px solid var(--bordure);
+  border-radius: var(--rayon-sm);
+  padding: 1rem 1.15rem;
+}
+
+/* Traçabilité : les codes réellement transmis au modèle. */
+.jeton-indicateur {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.55rem;
+  border-radius: var(--rayon-sm);
+  background: var(--marque-clair);
+  color: var(--marque-fonce);
+  border: 1px solid #c7d6ee;
+  font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  font-size: 0.76rem;
+  font-weight: 600;
+}
+
+/* ---------------------------------------------------------------------
+   Petits écrans
+   --------------------------------------------------------------------- */
+
+@media (max-width: 767.98px) {
+  .entete-page { flex-direction: column; align-items: stretch; }
+  .entete-page .btn { width: 100%; }
+  .tableau-defilant { overflow-x: auto; }
+  .tableau-defilant .table { min-width: 640px; }
 }

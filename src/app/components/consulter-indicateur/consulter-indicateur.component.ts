@@ -159,15 +159,16 @@ export class ConsulterIndicateurComponent implements OnInit {
     return statut && LIBELLES_STATUT[statut] ? LIBELLES_STATUT[statut] : 'Brouillon';
   }
 
+  /** Classe du badge de statut. Les couleurs sont définies dans styles.css. */
   classeStatut(val: ValeurIndicateur): string {
-    if (val.isValid) return 'bg-success';
+    if (val.isValid) return 'statut-valide';
     switch (val.statut) {
       case 'EnRevue':
-        return 'bg-info text-dark';
+        return 'statut-revue';
       case 'Rejete':
-        return 'bg-danger';
+        return 'statut-rejete';
       default:
-        return 'bg-warning text-dark';
+        return 'statut-brouillon';
     }
   }
 

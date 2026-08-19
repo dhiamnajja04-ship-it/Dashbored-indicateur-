@@ -1,164 +1,323 @@
-<div class="container mt-4">
-  <button routerLink="/indicateurs" class="btn btn-secondary mb-3">
-    <i class="bi bi-arrow-left"></i> Retour à la liste
-  </button>
+<div class="container pb-5">
+  <div class="fil-ariane">
+    <a routerLink="/"><i class="bi bi-house-door me-1"></i>Tableau de bord</a>
+    <i class="bi bi-chevron-right" style="font-size: 0.7rem"></i>
+    <a routerLink="/indicateurs">Indicateurs</a>
+    <i class="bi bi-chevron-right" style="font-size: 0.7rem"></i>
+    <span class="text-body">{{ indicateur?.code || 'Détail' }}</span>
+  </div>
 
-  <div *ngIf="erreur" class="alert alert-danger">{{ erreur }}</div>
+  <div *ngIf="erreur" class="alert alert-danger d-flex align-items-start gap-2">
+    <i class="bi bi-exclamation-triangle-fill mt-1"></i>
+    <div class="small">{{ erreur }}</div>
+  </div>
+
+  <div *ngIf="!indicateur && !erreur" class="card">
+    <div class="card-body">
+      <div class="squelette mb-3" style="height: 1.8rem; width: 40%"></div>
+      <div class="squelette" style="height: 1rem; width: 70%"></div>
+    </div>
+  </div>
 
   <div *ngIf="indicateur">
-    <div class="card shadow-sm border-0 mb-4 p-4 bg-white">
-      <h3 class="fw-bold text-dark">{{ indicateur.nom }}</h3>
-      <p class="text-muted mb-2">{{ indicateur.description }}</p>
-      <div class="d-flex gap-2 flex-wrap">
-        <span class="badge bg-primary">Code : {{ indicateur.code }}</span>
-        <span class="badge bg-info text-dark">Unité : {{ indicateur.unite }}</span>
-        <span class="badge bg-secondary">Fréquence : {{ indicateur.frequence }}</span>
+    <!-- En-tête de l'indicateur -->
+    <div class="card mb-4">
+      <div class="card-body">
+        <div class="entete-page mb-0">
+          <div>
+            <h2>{{ indicateur.nom }}</h2>
+            <p class="sous-titre-page">{{ indicateur.description }}</p>
+            <div class="d-flex gap-2 flex-wrap mt-3">
+              <span class="etiquette"><span class="code-indicateur">{{ indicateur.code }}</span></span>
+              <span class="etiquette" *ngIf="indicateur.unite">
+                <i class="bi bi-rulers me-1"></i>{{ indicateur.unite }}
+              </span>
+              <span class="etiquette" *ngIf="indicateur.frequence">
+                <i class="bi bi-calendar3 me-1"></i>{{ indicateur.frequence }}
+              </span>
+              <span class="etiquette" *ngIf="indicateur.valeurCible != null">
+                <i class="bi bi-bullseye me-1"></i>Cible : {{ indicateur.valeurCible }}
+                {{ indicateur.unite }}
+              </span>
+            </div>
+          </div>
+          <a routerLink="/indicateurs" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Retour
+          </a>
+        </div>
       </div>
     </div>
 
-    <div class="card shadow-sm border-0 mb-4" *ngIf="afficherFormulaireValeur">
-      <div class="card-header bg-dark text-white">
+    <!-- Formulaire de saisie / modification d'une valeur -->
+    <div class="card mb-4" *ngIf="afficherFormulaireValeur">
+      <div class="card-header d-flex align-items-center gap-2">
+        <i class="bi" [ngClass]="modeEditionValeur ? 'bi-pencil-square' : 'bi-plus-circle'"></i>
         {{ modeEditionValeur ? 'Modifier la valeur' : 'Nouvelle valeur' }}
       </div>
       <div class="card-body">
-        <div *ngIf="erreurFormulaire" class="alert alert-danger py-2">{{ erreurFormulaire }}</div>
-        <form (ngSubmit)="enregistrerValeur()">
-          <div class="row g-3">
-            <div class="col-md-3">
-              <label class="form-label">Valeur</label>
-              <input type="number" step="any" class="form-control" name="valeur" [(ngModel)]="valeurCourante.valeur" required />
-            </div>
-            <div class="col-md-3">
-              <label class="form-label">Organisation (id)</label>
-              <input type="number" class="form-control" name="organisationId" [(ngModel)]="valeurCourante.organisationId" />
-            </div>
-            <div class="col-md-3">
-              <label class="form-label">Période (id)</label>
-              <input type="number" class="form-control" name="periodeId" [(ngModel)]="valeurCourante.periodeId" />
-            </div>
-            <div class="col-md-3">
-              <label class="form-label">Degré de fiabilité</label>
-              <input class="form-control" name="degreDeFiabilite" [(ngModel)]="valeurCourante.degreDeFiabilite" placeholder="haute, moyenne..." />
-            </div>
-            <div class="col-md-6">
-              <label class="form-label">Saisi par</label>
-              <input class="form-control" name="saisiePar" [(ngModel)]="valeurCourante.saisiePar" />
-            </div>
-            <div class="col-md-6">
-              <label class="form-label">Commentaire</label>
-              <input class="form-control" name="commentaire" [(ngModel)]="valeurCourante.commentaire" />
+        <div
+          *ngIf="modeEditionValeur"
+          class="alert alert-warning d-flex align-items-start gap-2 py-2"
+        >
+          <i class="bi bi-info-circle-fill mt-1"></i>
+          <div class="small">
+            Modifier le chiffre d'une valeur déjà validée la ramène en
+            <strong>Brouillon</strong> : elle devra être revalidée avant de repartir vers l'IA.
+          </div>
+        </div>
+
+        <div *ngIf="erreurFormulaire" class="alert alert-danger d-flex align-items-start gap-2 py-2">
+          <i class="bi bi-exclamation-circle-fill mt-1"></i>
+          <div class="small">{{ erreurFormulaire }}</div>
+        </div>
+
+        <form (ngSubmit)="enregistrerValeur()" #formValeur="ngForm" novalidate>
+          <div class="section-formulaire">
+            <div class="titre-section">Mesure</div>
+            <div class="row g-3">
+              <div class="col-md-4">
+                <label class="form-label requis" for="champValeur">Valeur</label>
+                <div class="input-group">
+                  <input
+                    id="champValeur"
+                    type="number"
+                    step="any"
+                    class="form-control"
+                    [class.champ-invalide]="valeurChamp.invalid && valeurChamp.touched"
+                    name="valeur"
+                    [(ngModel)]="valeurCourante.valeur"
+                    #valeurChamp="ngModel"
+                    required
+                  />
+                  <span class="input-group-text" *ngIf="indicateur.unite">
+                    {{ indicateur.unite }}
+                  </span>
+                </div>
+                <div class="message-erreur-champ" *ngIf="valeurChamp.invalid && valeurChamp.touched">
+                  La valeur est obligatoire.
+                </div>
+              </div>
+
+              <div class="col-md-4">
+                <label class="form-label" for="champFiabilite">Degré de fiabilité</label>
+                <select
+                  id="champFiabilite"
+                  class="form-select"
+                  name="degreDeFiabilite"
+                  [(ngModel)]="valeurCourante.degreDeFiabilite"
+                >
+                  <option value="">— Non précisé —</option>
+                  <option value="haute">Haute</option>
+                  <option value="moyenne">Moyenne</option>
+                  <option value="faible">Faible</option>
+                </select>
+              </div>
+
+              <div class="col-md-4">
+                <label class="form-label" for="champSaisiePar">Saisi par</label>
+                <input
+                  id="champSaisiePar"
+                  class="form-control"
+                  name="saisiePar"
+                  [(ngModel)]="valeurCourante.saisiePar"
+                  placeholder="Votre nom"
+                />
+              </div>
             </div>
           </div>
-          <div class="mt-3 d-flex gap-2">
-            <button type="submit" class="btn btn-success" [disabled]="enregistrementEnCours">
-              {{ enregistrementEnCours ? 'Enregistrement...' : 'Enregistrer' }}
+
+          <div class="section-formulaire">
+            <div class="titre-section">Rattachement</div>
+            <div class="row g-3">
+              <div class="col-md-3">
+                <label class="form-label" for="champOrganisation">Organisation</label>
+                <input
+                  id="champOrganisation"
+                  type="number"
+                  min="1"
+                  class="form-control"
+                  name="organisationId"
+                  [(ngModel)]="valeurCourante.organisationId"
+                />
+                <div class="aide-champ">Identifiant en base (1 = Ministère du Plan).</div>
+              </div>
+
+              <div class="col-md-3">
+                <label class="form-label" for="champPeriode">Période</label>
+                <input
+                  id="champPeriode"
+                  type="number"
+                  min="1"
+                  class="form-control"
+                  name="periodeId"
+                  [(ngModel)]="valeurCourante.periodeId"
+                />
+                <div class="aide-champ">Identifiant en base (1 = Année 2025).</div>
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label" for="champCommentaire">Commentaire</label>
+                <input
+                  id="champCommentaire"
+                  class="form-control"
+                  name="commentaire"
+                  [(ngModel)]="valeurCourante.commentaire"
+                  placeholder="Source, méthode de calcul, réserves…"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div class="d-flex gap-2 mt-4">
+            <button
+              type="submit"
+              class="btn btn-primary"
+              [disabled]="enregistrementEnCours || formValeur.invalid"
+            >
+              <span
+                *ngIf="enregistrementEnCours"
+                class="spinner-border spinner-border-sm"
+                aria-hidden="true"
+              ></span>
+              <i class="bi bi-check-lg" *ngIf="!enregistrementEnCours"></i>
+              {{ enregistrementEnCours ? 'Enregistrement…' : 'Enregistrer' }}
             </button>
-            <button type="button" class="btn btn-outline-secondary" (click)="annulerFormulaireValeur()" [disabled]="enregistrementEnCours">Annuler</button>
+            <button
+              type="button"
+              class="btn btn-outline-secondary"
+              (click)="annulerFormulaireValeur()"
+              [disabled]="enregistrementEnCours"
+            >
+              Annuler
+            </button>
           </div>
         </form>
       </div>
     </div>
 
-    <div class="card shadow-sm border-0">
-      <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
-        <h5 class="mb-0">Valeurs enregistrées pour cet indicateur</h5>
-        <button class="btn btn-sm btn-light" (click)="ouvrirCreationValeur()">+ Ajouter une valeur</button>
+    <!-- Tableau des valeurs et workflow de validation -->
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <span><i class="bi bi-table me-2"></i>Valeurs enregistrées</span>
+        <button class="btn btn-sm btn-primary" (click)="ouvrirCreationValeur()">
+          <i class="bi bi-plus-lg"></i> Ajouter une valeur
+        </button>
       </div>
-      <div class="card-body p-0">
-        <table class="table table-hover align-middle mb-0">
-          <thead class="table-light">
+
+      <div class="card-body p-0 tableau-defilant">
+        <table class="table table-hover align-middle">
+          <thead>
             <tr>
               <th class="ps-3">#</th>
-              <th>VALEUR</th>
-              <th>DATE</th>
-              <th>STATUT</th>
-              <th class="text-end pe-3">ACTIONS</th>
+              <th>Valeur</th>
+              <th>Date</th>
+              <th>Statut</th>
+              <th class="text-end pe-3">Actions</th>
             </tr>
           </thead>
           <tbody>
             <tr *ngFor="let val of valeurs; let i = index">
-              <td class="ps-3 fw-bold">{{ i + 1 }}</td>
-              <td class="fw-bold text-success">{{ val.valeur }}</td>
-              <td>{{ val.saisieLe | date: 'shortDate' }}</td>
+              <td class="ps-3 text-muted">{{ i + 1 }}</td>
               <td>
-                <span class="badge" [ngClass]="classeStatut(val)">{{ libelleStatut(val) }}</span>
-                <div class="small text-muted mt-1" *ngIf="val.isValid && val.validePar">
+                <span class="fw-bold">{{ val.valeur }}</span>
+                <span class="text-muted small ms-1">{{ indicateur.unite }}</span>
+              </td>
+              <td class="text-muted small">{{ val.saisieLe | date: 'dd/MM/yyyy' }}</td>
+              <td>
+                <span class="badge-statut" [ngClass]="classeStatut(val)">
+                  {{ libelleStatut(val) }}
+                </span>
+                <div class="text-muted small mt-1" *ngIf="val.isValid && val.validePar">
                   par {{ val.validePar }}
                 </div>
               </td>
               <td class="text-end pe-3">
-                <button
-                  (click)="ouvrirEditionValeur(val)"
-                  class="btn btn-sm btn-outline-secondary me-1"
-                  [disabled]="statutEnCours !== null"
-                  title="Modifier (une valeur validée repassera en brouillon si le chiffre change)"
-                >
-                  ✏️ Modifier
-                </button>
+                <div class="actions-ligne">
+                  <button
+                    (click)="ouvrirEditionValeur(val)"
+                    class="btn btn-sm btn-outline-secondary btn-icone"
+                    [disabled]="statutEnCours !== null"
+                    title="Modifier — une valeur validée repassera en brouillon si le chiffre change"
+                    aria-label="Modifier la valeur"
+                  >
+                    <i class="bi bi-pencil"></i>
+                  </button>
 
-                <!-- Brouillon / Rejeté : on peut soumettre à revue ou valider directement -->
-                <button
-                  *ngIf="!val.isValid && val.statut !== 'EnRevue'"
-                  (click)="soumettreEnRevue(val.id!)"
-                  class="btn btn-sm btn-outline-info me-1"
-                  [disabled]="statutEnCours !== null"
-                  title="Soumettre à la revue"
-                >
-                  📤 Soumettre
-                </button>
+                  <button
+                    *ngIf="!val.isValid && val.statut !== 'EnRevue'"
+                    (click)="soumettreEnRevue(val.id!)"
+                    class="btn btn-sm btn-outline-info"
+                    [disabled]="statutEnCours !== null"
+                    title="Soumettre cette valeur à la revue"
+                  >
+                    <i class="bi bi-send"></i> Soumettre
+                  </button>
 
-                <button
-                  *ngIf="!val.isValid"
-                  (click)="valider(val.id!)"
-                  class="btn btn-sm btn-outline-success me-1"
-                  [disabled]="statutEnCours !== null"
-                  title="Valider : la valeur devient visible par l'IA"
-                >
-                  ✔️ Valider
-                </button>
+                  <button
+                    *ngIf="!val.isValid"
+                    (click)="valider(val.id!)"
+                    class="btn btn-sm btn-outline-success"
+                    [disabled]="statutEnCours !== null"
+                    title="Valider : la valeur devient visible par l'IA"
+                  >
+                    <i class="bi bi-check-lg"></i> Valider
+                  </button>
 
-                <!-- En revue : possibilité de rejeter -->
-                <button
-                  *ngIf="!val.isValid && val.statut === 'EnRevue'"
-                  (click)="rejeter(val.id!)"
-                  class="btn btn-sm btn-outline-warning me-1"
-                  [disabled]="statutEnCours !== null"
-                  title="Rejeter la valeur"
-                >
-                  ✖️ Rejeter
-                </button>
+                  <button
+                    *ngIf="!val.isValid && val.statut === 'EnRevue'"
+                    (click)="rejeter(val.id!)"
+                    class="btn btn-sm btn-outline-warning btn-icone"
+                    [disabled]="statutEnCours !== null"
+                    title="Rejeter la valeur"
+                    aria-label="Rejeter la valeur"
+                  >
+                    <i class="bi bi-x-lg"></i>
+                  </button>
 
-                <!-- Validée : on peut la retirer du périmètre de l'IA sans la supprimer -->
-                <button
-                  *ngIf="val.isValid"
-                  (click)="devalider(val.id!)"
-                  class="btn btn-sm btn-outline-warning me-1"
-                  [disabled]="statutEnCours !== null"
-                  title="Dévalider : la valeur sort du périmètre de l'IA"
-                >
-                  ↩️ Dévalider
-                </button>
+                  <button
+                    *ngIf="val.isValid"
+                    (click)="devalider(val.id!)"
+                    class="btn btn-sm btn-outline-warning"
+                    [disabled]="statutEnCours !== null"
+                    title="Dévalider : la valeur sort du périmètre de l'IA, sans être supprimée"
+                  >
+                    <i class="bi bi-arrow-counterclockwise"></i> Dévalider
+                  </button>
 
-                <button
-                  (click)="supprimerValeur(val.id!)"
-                  class="btn btn-sm btn-outline-danger"
-                  [disabled]="statutEnCours !== null"
-                  title="Supprimer"
-                >
-                  🗑️ Supprimer
-                </button>
+                  <button
+                    (click)="supprimerValeur(val.id!)"
+                    class="btn btn-sm btn-outline-danger btn-icone"
+                    [disabled]="statutEnCours !== null"
+                    title="Supprimer définitivement cette valeur"
+                    aria-label="Supprimer la valeur"
+                  >
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </div>
               </td>
             </tr>
+
             <tr *ngIf="valeurs.length === 0">
-              <td colspan="5" class="text-center py-4 text-muted">Aucune valeur enregistrée pour cet indicateur.</td>
+              <td colspan="5">
+                <div class="etat-vide">
+                  <i class="bi bi-clipboard-x icone-vide"></i>
+                  <p class="mb-3">Aucune valeur enregistrée pour cet indicateur.</p>
+                  <button class="btn btn-primary btn-sm" (click)="ouvrirCreationValeur()">
+                    <i class="bi bi-plus-lg"></i> Ajouter une valeur
+                  </button>
+                </div>
+              </td>
             </tr>
           </tbody>
         </table>
       </div>
 
-      <div class="card-footer bg-white small text-muted">
-        <strong>{{ nbValeursValidees }}</strong> valeur(s) validée(s) sur {{ valeurs.length }} —
-        seules les valeurs validées sont transmises à l'IA.
+      <div class="card-footer bg-transparent small text-muted d-flex align-items-center gap-2">
+        <i class="bi bi-shield-check"></i>
+        <span>
+          <strong>{{ nbValeursValidees }}</strong> valeur(s) validée(s) sur
+          {{ valeurs.length }} — seules les valeurs validées sont transmises à l'IA.
+        </span>
       </div>
     </div>
 
