@@ -260,13 +260,14 @@ ci-dessus, qui porte sur la règle métier.
 | [`17-interface-selecteur-unite.png`](captures/17-interface-selecteur-unite.png) | 19 unités en 5 groupes, échappatoire « Autre unité » |
 | [`18-interface-ecart-a-la-cible.png`](captures/18-interface-ecart-a-la-cible.png) | Écart entre la valeur et la cible de l'indicateur |
 | [`19-interface-territoire.png`](captures/19-interface-territoire.png) | Valeur nationale et valeur de gouvernorat côte à côte |
+| [`20-interface-sans-cdn.png`](captures/20-interface-sans-cdn.png) | Interface complète avec **zéro requête externe** : Bootstrap et ses icônes sont empaquetés |
 
-### Impression (captures 20 et 21)
+### Impression (captures 21 et 22)
 
 | Fichier | Contenu |
 |---|---|
-| [`20-impression-liste-indicateurs.pdf`](captures/20-impression-liste-indicateurs.pdf) | Liste des indicateurs, mise en page papier |
-| [`21-impression-valeurs-indicateur.pdf`](captures/21-impression-valeurs-indicateur.pdf) | Valeurs d'un indicateur, mise en page papier |
+| [`21-impression-liste-indicateurs.pdf`](captures/21-impression-liste-indicateurs.pdf) | Liste des indicateurs, mise en page papier |
+| [`22-impression-valeurs-indicateur.pdf`](captures/22-impression-valeurs-indicateur.pdf) | Valeurs d'un indicateur, mise en page papier |
 
 En-tête Pictor Solution ajouté, navigation, boutons, panneau IA et colonne
 Actions masqués : on imprime la donnée, pas l'application.
