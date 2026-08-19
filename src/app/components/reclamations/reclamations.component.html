@@ -1,0 +1,337 @@
+<div class="container pb-5">
+  <div class="entete-impression">
+    <div class="societe-impression">Pictor Solution — Plateforme Indicateurs</div>
+    <div class="meta-impression">
+      Registre des réclamations — édité le {{ imprimeLe | date: 'dd/MM/yyyy à HH:mm' }}
+    </div>
+  </div>
+
+  <div class="fil-ariane">
+    <a routerLink="/"><i class="bi bi-house-door me-1"></i>Tableau de bord</a>
+    <i class="bi bi-chevron-right" style="font-size: 0.7rem"></i>
+    <span class="text-body">Réclamations</span>
+  </div>
+
+  <div class="entete-page">
+    <div>
+      <h2>Réclamations</h2>
+      <p class="sous-titre-page">
+        Signaler un chiffre douteux, une source manquante ou demander une précision.
+      </p>
+    </div>
+    <div class="d-flex gap-2">
+      <button class="btn btn-outline-secondary" (click)="imprimer()">
+        <i class="bi bi-printer"></i> Imprimer
+      </button>
+      <button class="btn btn-primary" (click)="ouvrirFormulaire()" *ngIf="!afficherFormulaire">
+        <i class="bi bi-plus-lg"></i> Déposer une réclamation
+      </button>
+    </div>
+  </div>
+
+  <!-- Filtres -->
+  <div class="barre-filtres sans-impression" *ngIf="!loading">
+    <button class="puce-filtre" [class.actif]="filtreStatut === ''" (click)="filtrer('')">
+      Toutes
+    </button>
+    <button
+      class="puce-filtre"
+      [class.actif]="filtreStatut === 'Nouvelle'"
+      (click)="filtrer('Nouvelle')"
+    >
+      <span class="point point-brouillon"></span>Nouvelles
+    </button>
+    <button
+      class="puce-filtre"
+      [class.actif]="filtreStatut === 'EnCours'"
+      (click)="filtrer('EnCours')"
+    >
+      <span class="point point-revue"></span>En cours
+    </button>
+    <button
+      class="puce-filtre"
+      [class.actif]="filtreStatut === 'Traitee'"
+      (click)="filtrer('Traitee')"
+    >
+      <span class="point point-valide"></span>Traitées
+    </button>
+    <button
+      class="puce-filtre"
+      [class.actif]="filtreStatut === 'Rejetee'"
+      (click)="filtrer('Rejetee')"
+    >
+      <span class="point point-rejete"></span>Rejetées
+    </button>
+  </div>
+
+  <!-- Formulaire de dépôt -->
+  <div class="card mb-4" *ngIf="afficherFormulaire">
+    <div class="card-header d-flex align-items-center gap-2">
+      <i class="bi bi-chat-left-text"></i> Nouvelle réclamation
+    </div>
+    <div class="card-body">
+      <div *ngIf="erreurFormulaire" class="alert alert-danger d-flex align-items-start gap-2 py-2">
+        <i class="bi bi-exclamation-circle-fill mt-1"></i>
+        <div class="small">{{ erreurFormulaire }}</div>
+      </div>
+
+      <form (ngSubmit)="deposer()" #formRec="ngForm" novalidate>
+        <div class="section-formulaire">
+          <div class="titre-section">Objet de la réclamation</div>
+          <div class="row g-3">
+            <div class="col-md-7">
+              <label class="form-label requis" for="recObjet">Objet</label>
+              <input
+                id="recObjet"
+                class="form-control"
+                [class.champ-invalide]="objet.invalid && objet.touched"
+                name="objet"
+                [(ngModel)]="nouvelle.objet"
+                #objet="ngModel"
+                required
+                maxlength="150"
+                placeholder="Écart avec la publication trimestrielle"
+              />
+              <div class="message-erreur-champ" *ngIf="objet.invalid && objet.touched">
+                L'objet est obligatoire.
+              </div>
+            </div>
+
+            <div class="col-md-5">
+              <label class="form-label" for="recIndicateur">Indicateur concerné</label>
+              <select
+                id="recIndicateur"
+                class="form-select"
+                name="indicateurId"
+                [(ngModel)]="nouvelle.indicateurId"
+              >
+                <option [ngValue]="null">— Réclamation générale —</option>
+                <option *ngFor="let i of indicateurs" [ngValue]="i.id">
+                  {{ i.code }} — {{ i.nom }}
+                </option>
+              </select>
+              <div class="aide-champ">Facultatif : laissez vide si aucun indicateur précis.</div>
+            </div>
+
+            <div class="col-12">
+              <label class="form-label requis" for="recMessage">Message</label>
+              <textarea
+                id="recMessage"
+                class="form-control"
+                [class.champ-invalide]="message.invalid && message.touched"
+                name="message"
+                rows="4"
+                [(ngModel)]="nouvelle.message"
+                #message="ngModel"
+                required
+                placeholder="Décrivez précisément le problème constaté, avec la période et la source si possible."
+              ></textarea>
+              <div class="message-erreur-champ" *ngIf="message.invalid && message.touched">
+                Le message est obligatoire.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="section-formulaire">
+          <div class="titre-section">Vos coordonnées</div>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label requis" for="recAuteur">Nom ou service</label>
+              <input
+                id="recAuteur"
+                class="form-control"
+                [class.champ-invalide]="auteur.invalid && auteur.touched"
+                name="soumisPar"
+                [(ngModel)]="nouvelle.soumisPar"
+                #auteur="ngModel"
+                required
+                maxlength="100"
+                placeholder="Direction de la planification"
+              />
+              <div class="message-erreur-champ" *ngIf="auteur.invalid && auteur.touched">
+                Merci d'indiquer qui dépose la réclamation.
+              </div>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label" for="recEmail">Adresse électronique</label>
+              <input
+                id="recEmail"
+                type="email"
+                class="form-control"
+                [class.champ-invalide]="courriel.invalid && courriel.touched"
+                name="email"
+                [(ngModel)]="nouvelle.email"
+                #courriel="ngModel"
+                email
+                maxlength="150"
+                placeholder="contact@exemple.org"
+              />
+              <div class="aide-champ" *ngIf="!(courriel.invalid && courriel.touched)">
+                Facultatif — permet de recevoir la réponse.
+              </div>
+              <div class="message-erreur-champ" *ngIf="courriel.invalid && courriel.touched">
+                Adresse électronique invalide.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="d-flex gap-2 mt-4">
+          <button
+            type="submit"
+            class="btn btn-primary"
+            [disabled]="enregistrementEnCours || formRec.invalid"
+          >
+            <span
+              *ngIf="enregistrementEnCours"
+              class="spinner-border spinner-border-sm"
+              aria-hidden="true"
+            ></span>
+            <i class="bi bi-send" *ngIf="!enregistrementEnCours"></i>
+            {{ enregistrementEnCours ? 'Envoi…' : 'Déposer la réclamation' }}
+          </button>
+          <button
+            type="button"
+            class="btn btn-outline-secondary"
+            (click)="annuler()"
+            [disabled]="enregistrementEnCours"
+          >
+            Annuler
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Chargement -->
+  <div class="card" *ngIf="loading">
+    <div class="card-body">
+      <div class="squelette mb-2" style="height: 4.5rem" *ngFor="let i of [1, 2, 3]"></div>
+    </div>
+  </div>
+
+  <div *ngIf="erreur" class="alert alert-danger d-flex align-items-start gap-2">
+    <i class="bi bi-exclamation-triangle-fill mt-1"></i>
+    <div class="small">{{ erreur }}</div>
+  </div>
+
+  <!-- Liste -->
+  <div class="liste-reclamations" *ngIf="!loading && !erreur">
+    <article class="card carte-reclamation" *ngFor="let rec of reclamations">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap">
+          <div class="flex-grow-1">
+            <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
+              <span class="badge-statut" [ngClass]="classeStatut(rec.statut)">
+                {{ rec.statut ? libelles[rec.statut] : 'Nouvelle' }}
+              </span>
+              <span class="etiquette">
+                <i class="bi bi-graph-up me-1"></i>{{ nomIndicateur(rec.indicateurId) }}
+              </span>
+            </div>
+            <h6 class="fw-bold mb-1">{{ rec.objet }}</h6>
+            <p class="message-reclamation mb-2">{{ rec.message }}</p>
+            <div class="meta-reclamation">
+              <span><i class="bi bi-person me-1"></i>{{ rec.soumisPar }}</span>
+              <span *ngIf="rec.email"><i class="bi bi-envelope me-1"></i>{{ rec.email }}</span>
+              <span><i class="bi bi-calendar3 me-1"></i>{{ rec.creeLe | date: 'dd/MM/yyyy HH:mm' }}</span>
+              <span *ngIf="rec.traiteLe">
+                <i class="bi bi-check2-circle me-1"></i>Traitée le
+                {{ rec.traiteLe | date: 'dd/MM/yyyy' }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Réponse déjà apportée -->
+        <div class="bloc-reponse" *ngIf="rec.reponse && reponseOuverte !== rec.id">
+          <div class="titre-reponse"><i class="bi bi-reply-fill me-1"></i>Réponse</div>
+          <div>{{ rec.reponse }}</div>
+        </div>
+
+        <!-- Rédaction d'une réponse -->
+        <div class="mt-3 sans-impression" *ngIf="reponseOuverte === rec.id">
+          <label class="form-label" [attr.for]="'reponse' + rec.id">Réponse au demandeur</label>
+          <textarea
+            [id]="'reponse' + rec.id"
+            class="form-control"
+            rows="3"
+            [(ngModel)]="texteReponse"
+            placeholder="Explication, correction apportée, suite donnée…"
+          ></textarea>
+          <div class="d-flex gap-2 mt-2 flex-wrap">
+            <button
+              class="btn btn-sm btn-success"
+              (click)="appliquerStatut(rec, 'Traitee')"
+              [disabled]="traitementEnCours !== null"
+            >
+              <i class="bi bi-check-lg"></i> Marquer traitée
+            </button>
+            <button
+              class="btn btn-sm btn-outline-danger"
+              (click)="appliquerStatut(rec, 'Rejetee')"
+              [disabled]="traitementEnCours !== null"
+            >
+              <i class="bi bi-x-lg"></i> Rejeter
+            </button>
+            <button class="btn btn-sm btn-outline-secondary" (click)="fermerReponse()">
+              Annuler
+            </button>
+          </div>
+        </div>
+
+        <!-- Actions de traitement -->
+        <div
+          class="d-flex gap-2 mt-3 flex-wrap sans-impression"
+          *ngIf="peutTraiter() && reponseOuverte !== rec.id"
+        >
+          <button
+            class="btn btn-sm btn-outline-info"
+            *ngIf="rec.statut === 'Nouvelle'"
+            (click)="appliquerStatut(rec, 'EnCours')"
+            [disabled]="traitementEnCours !== null"
+          >
+            <i class="bi bi-arrow-right-circle"></i> Prendre en charge
+          </button>
+          <button
+            class="btn btn-sm btn-outline-success"
+            *ngIf="rec.statut !== 'Traitee'"
+            (click)="ouvrirReponse(rec)"
+            [disabled]="traitementEnCours !== null"
+          >
+            <i class="bi bi-reply"></i> Répondre et clore
+          </button>
+          <button
+            class="btn btn-sm btn-outline-secondary"
+            *ngIf="rec.statut === 'Traitee' || rec.statut === 'Rejetee'"
+            (click)="appliquerStatut(rec, 'EnCours')"
+            [disabled]="traitementEnCours !== null"
+          >
+            <i class="bi bi-arrow-counterclockwise"></i> Rouvrir
+          </button>
+          <button
+            class="btn btn-sm btn-outline-danger btn-icone ms-auto"
+            *ngIf="peutSupprimer()"
+            (click)="supprimer(rec)"
+            title="Supprimer la réclamation"
+            aria-label="Supprimer la réclamation"
+          >
+            <i class="bi bi-trash"></i>
+          </button>
+        </div>
+      </div>
+    </article>
+
+    <div class="card etat-vide" *ngIf="reclamations.length === 0">
+      <i class="bi bi-chat-left-dots icone-vide"></i>
+      <p class="mb-3">
+        {{ filtreStatut ? 'Aucune réclamation dans ce statut.' : 'Aucune réclamation déposée.' }}
+      </p>
+      <button class="btn btn-primary btn-sm" (click)="ouvrirFormulaire()">
+        <i class="bi bi-plus-lg"></i> Déposer une réclamation
+      </button>
+    </div>
+  </div>
+</div>

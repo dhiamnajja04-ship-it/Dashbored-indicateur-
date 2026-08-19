@@ -7,6 +7,8 @@ export interface Notification {
   type: TypeNotification;
   titre: string;
   message?: string;
+  /** Durée d'affichage en ms, utilisée pour animer la barre de progression. */
+  duree: number;
 }
 
 /**
@@ -28,10 +30,10 @@ export class NotificationService {
 
   /** Durée d'affichage : une erreur reste plus longtemps, on doit pouvoir la lire. */
   private dureeParType: Record<TypeNotification, number> = {
-    succes: 4000,
-    info: 5000,
-    avertissement: 7000,
-    erreur: 9000,
+    succes: 6000,
+    info: 7000,
+    avertissement: 9000,
+    erreur: 12000,
   };
 
   succes(titre: string, message?: string): void {
@@ -56,7 +58,8 @@ export class NotificationService {
 
   private ajouter(type: TypeNotification, titre: string, message?: string): void {
     const id = ++this.compteur;
-    this.notifications.update((liste) => [...liste, { id, type, titre, message }]);
-    setTimeout(() => this.fermer(id), this.dureeParType[type]);
+    const duree = this.dureeParType[type];
+    this.notifications.update((liste) => [...liste, { id, type, titre, message, duree }]);
+    setTimeout(() => this.fermer(id), duree);
   }
 }

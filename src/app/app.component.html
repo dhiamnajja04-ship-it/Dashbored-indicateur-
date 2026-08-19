@@ -33,6 +33,9 @@
         <a class="nav-link" routerLink="/indicateurs" routerLinkActive="active">
           <i class="bi bi-list-columns-reverse me-1"></i>Indicateurs
         </a>
+        <a class="nav-link" routerLink="/reclamations" routerLinkActive="active">
+          <i class="bi bi-chat-left-text me-1"></i>Réclamations
+        </a>
 
         <!-- Sélecteur de rôle : confort de démonstration, pas un contrôle
              d'accès. Aucun mot de passe, aucune vérification côté serveur. -->
@@ -79,11 +82,6 @@
 
 <router-outlet></router-outlet>
 
-<footer class="pied-page sans-impression">
-  <div class="container">
-    <span>© {{ anneeCourante }} <strong>Pictor Solution</strong> — Plateforme Indicateurs</span>
-    <span class="text-muted">Analyse IA par modèle local · données validées uniquement</span>
-  </div>
-</footer>
+<app-footer></app-footer>
 
 <app-notifications></app-notifications>

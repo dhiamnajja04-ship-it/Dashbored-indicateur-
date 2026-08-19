@@ -9,6 +9,7 @@ public class AppDbContext : DbContext
 
     public DbSet<Indicateur> Indicateurs { get; set; }
     public DbSet<ValeurIndicateur> ValeursIndicateurs { get; set; }
+    public DbSet<Reclamation> Reclamations { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -47,6 +48,21 @@ public class AppDbContext : DbContext
             entity.Property(e => e.UpdateAt).HasColumnName("update_at");
             entity.Property(e => e.IsValid).HasColumnName("is_valid");
             entity.Property(e => e.ValidePar).HasColumnName("valide_par");
+        });
+
+        modelBuilder.Entity<Reclamation>(entity =>
+        {
+            entity.ToTable("reclamations");
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.IndicateurId).HasColumnName("indicateur_id");
+            entity.Property(e => e.Objet).HasColumnName("objet");
+            entity.Property(e => e.Message).HasColumnName("message");
+            entity.Property(e => e.SoumisPar).HasColumnName("soumis_par");
+            entity.Property(e => e.Email).HasColumnName("email");
+            entity.Property(e => e.Statut).HasColumnName("statut");
+            entity.Property(e => e.Reponse).HasColumnName("reponse");
+            entity.Property(e => e.CreeLe).HasColumnName("cree_le");
+            entity.Property(e => e.TraiteLe).HasColumnName("traite_le");
         });
     }
 }

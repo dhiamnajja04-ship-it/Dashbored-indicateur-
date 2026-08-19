@@ -1,0 +1,91 @@
+<footer class="pied-page sans-impression">
+  <div class="container">
+    <div class="row g-4 pied-principal">
+      <!-- Marque -->
+      <div class="col-lg-4 col-md-6">
+        <div class="pied-marque">
+          <span class="marque-pastille"><i class="bi bi-bar-chart-fill"></i></span>
+          <div>
+            <div class="pied-societe">Pictor Solution</div>
+            <div class="pied-produit">Plateforme Indicateurs</div>
+          </div>
+        </div>
+        <p class="pied-description">
+          Consultation, validation et analyse d'indicateurs statistiques. L'analyse est produite
+          par un modèle d'intelligence artificielle exécuté localement — aucune donnée ne quitte
+          l'infrastructure.
+        </p>
+      </div>
+
+      <!-- Navigation -->
+      <div class="col-lg-2 col-md-6 col-6">
+        <h6 class="pied-titre">Navigation</h6>
+        <ul class="pied-liens">
+          <li><a routerLink="/"><i class="bi bi-speedometer2"></i>Tableau de bord</a></li>
+          <li><a routerLink="/indicateurs"><i class="bi bi-list-columns-reverse"></i>Indicateurs</a></li>
+          <li><a routerLink="/reclamations"><i class="bi bi-chat-left-text"></i>Réclamations</a></li>
+        </ul>
+      </div>
+
+      <!-- Le workflow, rappelé là où on le cherche -->
+      <div class="col-lg-3 col-md-6 col-6">
+        <h6 class="pied-titre">Workflow de validation</h6>
+        <ul class="pied-workflow">
+          <li><span class="point point-brouillon"></span>Brouillon</li>
+          <li><span class="point point-revue"></span>En validation</li>
+          <li><span class="point point-valide"></span>Validation nationale</li>
+          <li><span class="point point-rejete"></span>Rejeté</li>
+        </ul>
+        <p class="pied-note">
+          Seules les valeurs en <strong>validation nationale</strong> sont transmises à l'IA.
+        </p>
+      </div>
+
+      <!-- État réel des services -->
+      <div class="col-lg-3 col-md-6">
+        <h6 class="pied-titre">État de la plateforme</h6>
+
+        <div class="pied-sante" *ngIf="etat">
+          <div class="ligne-service">
+            <span class="pastille" [ngClass]="classeEtat('OK')"></span>Passerelle API
+          </div>
+          <div class="ligne-service">
+            <span class="pastille" [ngClass]="classeEtat(etat.metier)"></span>Service métier
+          </div>
+          <div class="ligne-service">
+            <span class="pastille" [ngClass]="classeEtat(etat.ia)"></span>Service IA
+          </div>
+          <div class="pied-note mt-2">
+            Vérifié le {{ etat.timestamp | date: 'dd/MM/yyyy à HH:mm' }}
+          </div>
+        </div>
+
+        <div class="pied-sante" *ngIf="sondeEnEchec">
+          <div class="ligne-service">
+            <span class="pastille service-ko"></span>Sonde injoignable
+          </div>
+          <div class="pied-note mt-2">
+            Vérifiez que la passerelle API est démarrée.
+          </div>
+        </div>
+
+        <div class="pied-sante" *ngIf="!etat && !sondeEnEchec">
+          <div class="squelette" style="height: 0.9rem; width: 70%; margin-bottom: 0.4rem"></div>
+          <div class="squelette" style="height: 0.9rem; width: 60%"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="pied-bas">
+      <span>
+        © {{ anneeCourante }} <strong>Pictor Solution</strong> — Tous droits réservés.
+      </span>
+      <span class="pied-mentions">
+        Modèle IA local · PostgreSQL externe · Déploiement conteneurisé
+      </span>
+      <button type="button" class="bouton-haut" (click)="remonterEnHaut()">
+        Haut de page <i class="bi bi-arrow-up-short"></i>
+      </button>
+    </div>
+  </div>
+</footer>

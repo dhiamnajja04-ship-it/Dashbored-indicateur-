@@ -48,6 +48,7 @@ appliquée à quatre niveaux, du plus profond au plus visible :
 # 1. Base de données
 psql -h <IP> -U <USER> -d <BASE> -f db/01-migration-alignement.sql
 psql -h <IP> -U <USER> -d <BASE> -f db/02-donnees-demo.sql
+psql -h <IP> -U <USER> -d <BASE> -f db/03-reclamations.sql
 
 # 2. Secret (l'espace initial évite l'historique du shell)
  kubectl create namespace indicateurs
@@ -143,6 +144,20 @@ qui n'est pas versionné.
 | `PATCH` | `/api/indicators/values/{id}/validate` |
 | `PATCH` | `/api/indicators/values/{id}/devalidate` |
 | `PATCH` | `/api/indicators/values/{id}/statut` |
+
+### Réclamations
+
+| Méthode | Route |
+|---|---|
+| `GET` | `/api/reclamations[?statut=Nouvelle&indicateurId=1]` |
+| `GET` | `/api/reclamations/{id}` |
+| `GET` | `/api/reclamations/statistiques` |
+| `POST` | `/api/reclamations` |
+| `PATCH` | `/api/reclamations/{id}/statut` |
+| `DELETE` | `/api/reclamations/{id}` |
+
+Une réclamation ne modifie jamais une valeur : elle n'a donc aucun effet sur
+`is_valid` et n'entre jamais dans le périmètre transmis à l'IA.
 
 ### IA
 

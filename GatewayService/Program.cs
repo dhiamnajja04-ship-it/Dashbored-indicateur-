@@ -67,6 +67,21 @@ app.Map(
         Relayer(ctx, f, c["MetierServiceUrl"] ?? "http://localhost:5039/api/indicators", "")
 );
 
+// --- Routage vers le service métier : les réclamations ---
+// Même service que les indicateurs, mais préfixe distinct : on reconstruit
+// donc la racine du métier à partir de l'URL configurée.
+app.Map(
+    "/api/reclamations/{**catchAll}",
+    (HttpContext ctx, IHttpClientFactory f, IConfiguration c, string? catchAll) =>
+        Relayer(ctx, f, RacineDe(c["MetierServiceUrl"], "http://localhost:5039") + "/api/reclamations", catchAll ?? "")
+);
+
+app.Map(
+    "/api/reclamations",
+    (HttpContext ctx, IHttpClientFactory f, IConfiguration c) =>
+        Relayer(ctx, f, RacineDe(c["MetierServiceUrl"], "http://localhost:5039") + "/api/reclamations", "")
+);
+
 // --- Routage vers le service IA : tout ce qui est sous /api/ia ---
 // Le frontend n'appelle jamais le service IA directement (règle d'architecture S1).
 app.Map(

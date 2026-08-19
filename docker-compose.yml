@@ -28,6 +28,7 @@ services:
       - ./schema_db.sql:/docker-entrypoint-initdb.d/00-schema.sql:ro
       - ./db/01-migration-alignement.sql:/docker-entrypoint-initdb.d/01-migration.sql:ro
       - ./db/02-donnees-demo.sql:/docker-entrypoint-initdb.d/02-demo.sql:ro
+      - ./db/03-reclamations.sql:/docker-entrypoint-initdb.d/03-reclamations.sql:ro
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d indicateurs_db"]

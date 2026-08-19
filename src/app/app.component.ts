@@ -2,13 +2,14 @@ import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { NotificationsComponent } from './components/notifications/notifications.component';
+import { FooterComponent } from './components/footer/footer.component';
 import { RoleService, ROLES, Role } from './services/role.service';
 import { NotificationService } from './services/notification.service';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, RouterModule, NotificationsComponent],
+  imports: [CommonModule, RouterModule, NotificationsComponent, FooterComponent],
   templateUrl: './app.component.html',
 })
 export class AppComponent {
