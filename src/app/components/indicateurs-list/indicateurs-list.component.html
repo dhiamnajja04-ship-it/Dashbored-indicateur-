@@ -24,7 +24,11 @@
       <button class="btn btn-outline-secondary" (click)="imprimer()" title="Imprimer le tableau">
         <i class="bi bi-printer"></i> Imprimer
       </button>
-      <button class="btn btn-primary" (click)="ouvrirCreation()" *ngIf="!afficherFormulaire">
+      <button
+        class="btn btn-primary"
+        (click)="ouvrirCreation()"
+        *ngIf="!afficherFormulaire && peutGererIndicateurs()"
+      >
         <i class="bi bi-plus-lg"></i> Nouvel indicateur
       </button>
     </div>
@@ -282,6 +286,7 @@
                   <i class="bi bi-eye"></i> Détails
                 </a>
                 <button
+                  *ngIf="peutGererIndicateurs()"
                   class="btn btn-sm btn-outline-secondary btn-icone"
                   (click)="ouvrirEdition(ind)"
                   title="Modifier l'indicateur"
@@ -290,6 +295,7 @@
                   <i class="bi bi-pencil"></i>
                 </button>
                 <button
+                  *ngIf="peutSupprimer()"
                   class="btn btn-sm btn-outline-danger btn-icone"
                   (click)="supprimer(ind)"
                   title="Supprimer l'indicateur et toutes ses valeurs"
@@ -306,7 +312,11 @@
               <div class="etat-vide">
                 <i class="bi bi-inbox icone-vide"></i>
                 <p class="mb-3">Aucun indicateur pour le moment.</p>
-                <button class="btn btn-primary btn-sm" (click)="ouvrirCreation()">
+                <button
+                  class="btn btn-primary btn-sm"
+                  (click)="ouvrirCreation()"
+                  *ngIf="peutGererIndicateurs()"
+                >
                   <i class="bi bi-plus-lg"></i> Créer le premier indicateur
                 </button>
               </div>

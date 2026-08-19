@@ -21,7 +21,7 @@
     </button>
 
     <div class="collapse navbar-collapse" id="menuPrincipal">
-      <div class="navbar-nav ms-auto gap-1">
+      <div class="navbar-nav ms-auto gap-1 align-items-lg-center">
         <a
           class="nav-link"
           routerLink="/"
@@ -33,6 +33,45 @@
         <a class="nav-link" routerLink="/indicateurs" routerLinkActive="active">
           <i class="bi bi-list-columns-reverse me-1"></i>Indicateurs
         </a>
+
+        <!-- Sélecteur de rôle : confort de démonstration, pas un contrôle
+             d'accès. Aucun mot de passe, aucune vérification côté serveur. -->
+        <div class="dropdown selecteur-role ms-lg-2">
+          <button
+            class="btn btn-sm btn-outline-secondary dropdown-toggle"
+            type="button"
+            data-bs-toggle="dropdown"
+            aria-expanded="false"
+            title="Change les actions proposées à l'écran (sans authentification)"
+          >
+            <i class="bi" [ngClass]="iconeRole(role())"></i>
+            <span class="d-none d-sm-inline">{{ role() }}</span>
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end">
+            <li class="dropdown-header">Agir en tant que</li>
+            <li *ngFor="let r of roles">
+              <button
+                class="dropdown-item d-flex align-items-start gap-2"
+                type="button"
+                [class.actif]="r === role()"
+                (click)="changerRole(r)"
+              >
+                <i class="bi mt-1" [ngClass]="iconeRole(r)"></i>
+                <span>
+                  <span class="d-block fw-semibold">{{ r }}</span>
+                  <small class="text-muted">{{ descriptionRole(r) }}</small>
+                </span>
+                <i class="bi bi-check2 ms-auto" *ngIf="r === role()"></i>
+              </button>
+            </li>
+            <li><hr class="dropdown-divider" /></li>
+            <li class="px-3 pb-2">
+              <small class="text-muted">
+                Confort de démonstration : aucune authentification n'est en place.
+              </small>
+            </li>
+          </ul>
+        </div>
       </div>
     </div>
   </div>

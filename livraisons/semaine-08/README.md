@@ -256,7 +256,49 @@ C'est la démonstration demandée : *« 5 indicateurs en base, 2 validés → la
 réponse IA ne parle que de ces 2-là »*. Dévalider en retire un du périmètre
 **sans supprimer la donnée**.
 
-## 8. Limite connue — qualité du modèle
+## 8. Rôles et libellés du workflow
+
+### Sélecteur de rôle
+
+Un sélecteur « Agir en tant que » est disponible dans la barre de navigation :
+
+| Rôle | Peut saisir / modifier | Peut valider, rejeter, dévalider | Peut supprimer |
+|---|---|---|---|
+| Agent de saisie | ✅ | ❌ | ❌ |
+| Validateur | ❌ | ✅ | ❌ |
+| Administrateur | ✅ | ✅ | ✅ |
+
+Le rôle choisi est enregistré dans le navigateur et sert d'auteur dans le champ
+`valide_par` lors d'un changement de statut.
+
+> ⚠️ **Ce n'est pas un mécanisme de sécurité.** Il n'y a ni compte, ni mot de
+> passe, ni contrôle côté serveur : n'importe qui peut changer de rôle depuis le
+> menu, et l'API `MetierService` accepte toujours toutes les requêtes. C'est un
+> confort de démonstration qui rend le workflow lisible. Une vraie séparation
+> des droits demanderait une authentification (table utilisateurs, jeton, et
+> attribut `[Authorize]` sur les contrôleurs métier).
+
+### Libellés affichés
+
+Les libellés ont été alignés sur le vocabulaire métier attendu, **sans toucher
+aux valeurs techniques ni à la règle de filtrage** :
+
+| Valeur en base / API | Libellé affiché | `is_valid` |
+|---|---|---|
+| `Brouillon` | Brouillon | `false` |
+| `EnRevue` | **En validation** | `false` |
+| `Valide` | **Validation nationale** | **`true`** — périmètre IA |
+| `Rejete` | Rejeté | `false` |
+
+**L'état « Certifié » n'est pas implémenté.** Il demanderait un cinquième état :
+constante dans `MetierService/Models/StatutValeur.cs`, nouvelles transitions,
+mise à jour de la contrainte `CHECK valeurs_statut_coherent` en base, et une
+décision explicite — est-ce que « Certifié » met aussi `is_valid = true`, ou
+seulement « Validation nationale » ? Comme cette décision change le périmètre
+analysé par l'IA, c'est-à-dire la règle évaluée du sujet, elle n'a pas été prise
+unilatéralement.
+
+## 9. Limite connue — qualité du modèle
 
 Le modèle retenu est `qwen2.5:0.5b`, imposé par la VM (4 cœurs, voir
 [semaine-01](../semaine-01/README.md#révision-du-choix-après-mesure-sur-la-vm)).

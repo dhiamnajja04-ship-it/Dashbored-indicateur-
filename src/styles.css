@@ -746,3 +746,37 @@ h1, h2, h3, h4, h5, h6 {
     white-space: normal;
   }
 }
+
+/* ---------------------------------------------------------------------
+   Sélecteur de rôle
+   --------------------------------------------------------------------- */
+
+.selecteur-role .dropdown-menu {
+  min-width: 290px;
+  border-radius: var(--rayon);
+  border-color: var(--bordure);
+  box-shadow: var(--ombre-forte);
+  padding: 0.4rem;
+}
+
+.selecteur-role .dropdown-header {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--texte-doux);
+}
+
+.selecteur-role .dropdown-item {
+  border-radius: var(--rayon-sm);
+  padding: 0.5rem 0.6rem;
+  white-space: normal;
+}
+
+.selecteur-role .dropdown-item:hover { background: var(--marque-clair); }
+.selecteur-role .dropdown-item.actif {
+  background: var(--marque-clair);
+  color: var(--marque-fonce);
+}
+
+@media print { .selecteur-role { display: none !important; } }

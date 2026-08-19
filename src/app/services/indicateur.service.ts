@@ -6,10 +6,18 @@ import { environment } from '../../environments/environment';
 /** Statuts du workflow de validation (miroir de MetierService/Models/StatutValeur.cs). */
 export type Statut = 'Brouillon' | 'EnRevue' | 'Valide' | 'Rejete';
 
+/**
+ * Libellés affichés à l'écran.
+ *
+ * Ce sont uniquement des étiquettes : les valeurs techniques envoyées à l'API
+ * (`Brouillon`, `EnRevue`, `Valide`, `Rejete`) sont inchangées, tout comme la
+ * règle métier. Seul l'état `Valide` met `is_valid = true` et fait entrer la
+ * valeur dans le périmètre analysé par l'IA.
+ */
 export const LIBELLES_STATUT: Record<Statut, string> = {
   Brouillon: 'Brouillon',
-  EnRevue: 'En revue',
-  Valide: 'Validé',
+  EnRevue: 'En validation',
+  Valide: 'Validation nationale',
   Rejete: 'Rejeté',
 };
 

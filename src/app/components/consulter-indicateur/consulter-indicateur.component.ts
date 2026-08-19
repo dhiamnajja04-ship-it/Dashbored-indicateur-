@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterModule } from '@angular/router';
@@ -11,6 +11,7 @@ import {
   LIBELLES_STATUT,
 } from '../../services/indicateur.service';
 import { NotificationService } from '../../services/notification.service';
+import { RoleService } from '../../services/role.service';
 import { DEGRES_FIABILITE } from '../../reference/referentiels';
 import { AnalyseIaComponent } from '../analyse-ia/analyse-ia.component';
 
@@ -40,6 +41,18 @@ export class ConsulterIndicateurComponent implements OnInit {
     private cdr: ChangeDetectorRef,
     private notifications: NotificationService,
   ) {}
+
+  /**
+   * Injecté via inject() et non par le constructeur : les initialiseurs de
+   * champs ci-dessous s'exécutent avant l'affectation des paramètres du
+   * constructeur, ce qui rendrait `this.roles` indéfini.
+   */
+  private readonly roles = inject(RoleService);
+
+  /** Droits du rôle courant (voir RoleService : confort d'IHM, pas de sécurité). */
+  readonly peutSaisir = this.roles.peutSaisir;
+  readonly peutValider = this.roles.peutValider;
+  readonly peutSupprimer = this.roles.peutSupprimer;
 
   readonly degresFiabilite = DEGRES_FIABILITE;
   readonly imprimeLe = new Date();
@@ -241,7 +254,7 @@ export class ConsulterIndicateurComponent implements OnInit {
     this.erreur = '';
     this.cdr.markForCheck();
 
-    this.indicateurService.changerStatut(valueId, statut).subscribe({
+    this.indicateurService.changerStatut(valueId, statut, this.roles.role()).subscribe({
       next: (resultat) => {
         this.statutEnCours = null;
         this.cdr.markForCheck();

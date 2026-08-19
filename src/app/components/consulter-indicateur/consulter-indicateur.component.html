@@ -215,7 +215,11 @@
           >
             <i class="bi bi-printer"></i> Imprimer
           </button>
-          <button class="btn btn-sm btn-primary" (click)="ouvrirCreationValeur()">
+          <button
+            class="btn btn-sm btn-primary"
+            (click)="ouvrirCreationValeur()"
+            *ngIf="peutSaisir()"
+          >
             <i class="bi bi-plus-lg"></i> Ajouter une valeur
           </button>
         </div>
@@ -268,6 +272,7 @@
               <td class="text-end pe-3 colonne-actions">
                 <div class="actions-ligne">
                   <button
+                    *ngIf="peutSaisir()"
                     (click)="ouvrirEditionValeur(val)"
                     class="btn btn-sm btn-outline-secondary btn-icone"
                     [disabled]="statutEnCours !== null"
@@ -278,7 +283,7 @@
                   </button>
 
                   <button
-                    *ngIf="!val.isValid && val.statut !== 'EnRevue'"
+                    *ngIf="peutSaisir() && !val.isValid && val.statut !== 'EnRevue'"
                     (click)="soumettreEnRevue(val.id!)"
                     class="btn btn-sm btn-outline-info"
                     [disabled]="statutEnCours !== null"
@@ -288,7 +293,7 @@
                   </button>
 
                   <button
-                    *ngIf="!val.isValid"
+                    *ngIf="peutValider() && !val.isValid"
                     (click)="valider(val.id!)"
                     class="btn btn-sm btn-outline-success"
                     [disabled]="statutEnCours !== null"
@@ -298,7 +303,7 @@
                   </button>
 
                   <button
-                    *ngIf="!val.isValid && val.statut === 'EnRevue'"
+                    *ngIf="peutValider() && !val.isValid && val.statut === 'EnRevue'"
                     (click)="rejeter(val.id!)"
                     class="btn btn-sm btn-outline-warning btn-icone"
                     [disabled]="statutEnCours !== null"
@@ -309,7 +314,7 @@
                   </button>
 
                   <button
-                    *ngIf="val.isValid"
+                    *ngIf="peutValider() && val.isValid"
                     (click)="devalider(val.id!)"
                     class="btn btn-sm btn-outline-warning"
                     [disabled]="statutEnCours !== null"
@@ -319,6 +324,7 @@
                   </button>
 
                   <button
+                    *ngIf="peutSupprimer()"
                     (click)="supprimerValeur(val.id!)"
                     class="btn btn-sm btn-outline-danger btn-icone"
                     [disabled]="statutEnCours !== null"
@@ -336,7 +342,11 @@
                 <div class="etat-vide">
                   <i class="bi bi-clipboard-x icone-vide"></i>
                   <p class="mb-3">Aucune valeur enregistrée pour cet indicateur.</p>
-                  <button class="btn btn-primary btn-sm" (click)="ouvrirCreationValeur()">
+                  <button
+                    class="btn btn-primary btn-sm"
+                    (click)="ouvrirCreationValeur()"
+                    *ngIf="peutSaisir()"
+                  >
                     <i class="bi bi-plus-lg"></i> Ajouter une valeur
                   </button>
                 </div>

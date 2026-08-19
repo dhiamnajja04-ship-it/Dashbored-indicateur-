@@ -1,10 +1,11 @@
-import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { IndicateurService, Indicateur } from '../../services/indicateur.service';
 import { NotificationService } from '../../services/notification.service';
+import { RoleService } from '../../services/role.service';
 import { UNITES_COURANTES, TYPES_COLLECTE, FREQUENCES } from '../../reference/referentiels';
 
 @Component({
@@ -37,6 +38,12 @@ export class IndicateursListComponent implements OnInit {
     private cdr: ChangeDetectorRef,
     private notifications: NotificationService,
   ) {}
+
+  /** Voir le commentaire équivalent dans consulter-indicateur.component.ts. */
+  private readonly roles = inject(RoleService);
+
+  readonly peutGererIndicateurs = this.roles.peutGererIndicateurs;
+  readonly peutSupprimer = this.roles.peutSupprimer;
 
   ngOnInit(): void {
     this.charger();
