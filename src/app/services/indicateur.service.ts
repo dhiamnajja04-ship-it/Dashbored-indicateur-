@@ -27,6 +27,9 @@ export interface ValeurIndicateur {
   organisationId: number;
   periodeId: number;
   valeur: number;
+  /** Territoire de la mesure. Gouvernorat vide = valeur nationale. */
+  pays?: string;
+  gouvernorat?: string;
   statut?: string;
   degreDeFiabilite?: string;
   commentaire?: string;

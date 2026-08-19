@@ -58,3 +58,48 @@ export const DEGRES_FIABILITE: { valeur: string; libelle: string }[] = [
   { valeur: 'moyenne', libelle: 'Moyenne' },
   { valeur: 'faible', libelle: 'Faible' },
 ];
+
+/**
+ * Territoires de mesure.
+ *
+ * La localisation porte sur la VALEUR et non sur l'indicateur : « taux de
+ * chômage » est une définition nationale, c'est la mesure qui se rapporte à un
+ * territoire. Un même indicateur peut donc porter une valeur nationale et une
+ * valeur par gouvernorat.
+ */
+export const PAYS: string[] = [
+  'Tunisie',
+  'Algérie',
+  'Maroc',
+  'Libye',
+  'Mauritanie',
+  'Égypte',
+];
+
+/** Les 24 gouvernorats de Tunisie, par ordre alphabétique. */
+export const GOUVERNORATS_TUNISIE: string[] = [
+  'Ariana',
+  'Béja',
+  'Ben Arous',
+  'Bizerte',
+  'Gabès',
+  'Gafsa',
+  'Jendouba',
+  'Kairouan',
+  'Kasserine',
+  'Kébili',
+  'La Manouba',
+  'Le Kef',
+  'Mahdia',
+  'Médenine',
+  'Monastir',
+  'Nabeul',
+  'Sfax',
+  'Sidi Bouzid',
+  'Siliana',
+  'Sousse',
+  'Tataouine',
+  'Tozeur',
+  'Tunis',
+  'Zaghouan',
+];

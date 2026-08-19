@@ -62,6 +62,8 @@ namespace MetierService.Controllers
                         {
                             Id = v.Id,
                             Valeur = v.Valeur,
+                            Pays = v.Pays,
+                            Gouvernorat = v.Gouvernorat,
                             Statut = v.Statut,
                             DegreDeFiabilite = v.DegreDeFiabilite,
                             Commentaire = v.Commentaire,
@@ -232,6 +234,8 @@ namespace MetierService.Controllers
             var chiffreModifie = existante.Valeur != valeur.Valeur;
 
             existante.Valeur = valeur.Valeur;
+            existante.Pays = valeur.Pays;
+            existante.Gouvernorat = valeur.Gouvernorat;
             existante.OrganisationId = valeur.OrganisationId;
             existante.PeriodeId = valeur.PeriodeId;
             existante.DegreDeFiabilite = valeur.DegreDeFiabilite;

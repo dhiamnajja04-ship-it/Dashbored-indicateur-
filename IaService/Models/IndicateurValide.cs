@@ -24,6 +24,8 @@ public class ValeurValide
 {
     public int Id { get; set; }
     public decimal Valeur { get; set; }
+    public string? Pays { get; set; }
+    public string? Gouvernorat { get; set; }
     public string? Statut { get; set; }
     public string? DegreDeFiabilite { get; set; }
     public string? Commentaire { get; set; }

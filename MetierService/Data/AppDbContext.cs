@@ -40,6 +40,8 @@ public class AppDbContext : DbContext
             entity.Property(e => e.OrganisationId).HasColumnName("organisation_id");
             entity.Property(e => e.PeriodeId).HasColumnName("periode_id");
             entity.Property(e => e.Valeur).HasColumnName("valeur");
+            entity.Property(e => e.Pays).HasColumnName("pays");
+            entity.Property(e => e.Gouvernorat).HasColumnName("gouvernorat");
             entity.Property(e => e.Statut).HasColumnName("statut");
             entity.Property(e => e.DegreDeFiabilite).HasColumnName("degre_de_fiabilite");
             entity.Property(e => e.SaisiePar).HasColumnName("saisie_par");

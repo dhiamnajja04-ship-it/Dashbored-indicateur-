@@ -38,6 +38,11 @@ public class ValeurValideDto
 {
     public int Id { get; set; }
     public decimal Valeur { get; set; }
+
+    /// <summary>Territoire de la mesure. Transmis au modèle IA pour qu'il
+    /// puisse situer chaque chiffre au lieu de les confondre.</summary>
+    public string? Pays { get; set; }
+    public string? Gouvernorat { get; set; }
     public string? Statut { get; set; }
     public string? DegreDeFiabilite { get; set; }
     public string? Commentaire { get; set; }

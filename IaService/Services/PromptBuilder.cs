@@ -26,6 +26,7 @@ public static class PromptBuilder
         sb.AppendLine("- N'invente aucun chiffre, aucune date, aucun indicateur absent de la liste.");
         sb.AppendLine("- Si la liste ne permet pas de répondre, dis-le explicitement.");
         sb.AppendLine("- Cite les valeurs avec leur unité.");
+        sb.AppendLine("- Précise toujours le territoire d'une valeur ; ne compare jamais un gouvernorat avec un total national comme s'ils étaient de même nature.");
         sb.AppendLine();
         sb.AppendLine("=== DONNÉES VALIDÉES ===");
 
@@ -63,8 +64,20 @@ public static class PromptBuilder
                 sb.Append("    - ")
                     .Append(valeur.Valeur.ToString("0.##", Fr))
                     .Append(' ')
-                    .Append(indicateur.Unite)
-                    .Append(" (saisie le ")
+                    .Append(indicateur.Unite);
+
+                // Le territoire est indiqué avant le reste : sans lui, le modèle
+                // confond une valeur nationale et une valeur de gouvernorat.
+                var territoire = string.IsNullOrWhiteSpace(valeur.Gouvernorat)
+                    ? (string.IsNullOrWhiteSpace(valeur.Pays) ? null : $"{valeur.Pays} (niveau national)")
+                    : $"{valeur.Gouvernorat}, {valeur.Pays}".TrimEnd(',', ' ');
+
+                if (territoire is not null)
+                {
+                    sb.Append(" — ").Append(territoire);
+                }
+
+                sb.Append(" (saisie le ")
                     .Append(valeur.SaisieLe.ToString("dd/MM/yyyy", Fr))
                     .Append(", organisation #")
                     .Append(valeur.OrganisationId)

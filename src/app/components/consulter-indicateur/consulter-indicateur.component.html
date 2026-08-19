@@ -135,6 +135,40 @@
           </div>
 
           <div class="section-formulaire">
+            <div class="titre-section">Territoire</div>
+            <div class="row g-3">
+              <div class="col-md-4">
+                <label class="form-label" for="champPays">Pays</label>
+                <select
+                  id="champPays"
+                  class="form-select"
+                  name="pays"
+                  [(ngModel)]="valeurCourante.pays"
+                >
+                  <option *ngFor="let p of pays" [value]="p">{{ p }}</option>
+                </select>
+              </div>
+
+              <div class="col-md-4">
+                <label class="form-label" for="champGouvernorat">Gouvernorat</label>
+                <select
+                  id="champGouvernorat"
+                  class="form-select"
+                  name="gouvernorat"
+                  [(ngModel)]="valeurCourante.gouvernorat"
+                  [disabled]="valeurCourante.pays !== 'Tunisie'"
+                >
+                  <option value="">— Niveau national —</option>
+                  <option *ngFor="let g of gouvernorats" [value]="g">{{ g }}</option>
+                </select>
+                <div class="aide-champ">
+                  Laissez « niveau national » pour un agrégat sur tout le pays.
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="section-formulaire">
             <div class="titre-section">Rattachement</div>
             <div class="row g-3">
               <div class="col-md-3">
@@ -231,6 +265,7 @@
             <tr>
               <th class="ps-3">#</th>
               <th>Valeur</th>
+              <th>Territoire</th>
               <th>Statut</th>
               <th>Fiabilité</th>
               <th>Saisi par</th>
@@ -253,6 +288,12 @@
                     'bi-check2': ecart.signe === 'atteint'
                   }"></i>{{ ecart.texte }}
                 </div>
+              </td>
+              <td>
+                <span class="etiquette">
+                  <i class="bi me-1" [ngClass]="val.gouvernorat ? 'bi-geo-alt-fill' : 'bi-globe2'"></i>
+                  {{ territoire(val) }}
+                </span>
               </td>
               <td>
                 <span class="badge-statut" [ngClass]="classeStatut(val)">
@@ -345,7 +386,7 @@
             </tr>
 
             <tr *ngIf="valeurs.length === 0">
-              <td colspan="9">
+              <td colspan="10">
                 <div class="etat-vide">
                   <i class="bi bi-clipboard-x icone-vide"></i>
                   <p class="mb-3">Aucune valeur enregistrée pour cet indicateur.</p>

@@ -12,7 +12,7 @@ import {
 } from '../../services/indicateur.service';
 import { NotificationService } from '../../services/notification.service';
 import { RoleService } from '../../services/role.service';
-import { DEGRES_FIABILITE } from '../../reference/referentiels';
+import { DEGRES_FIABILITE, PAYS, GOUVERNORATS_TUNISIE } from '../../reference/referentiels';
 import { AnalyseIaComponent } from '../analyse-ia/analyse-ia.component';
 
 @Component({
@@ -55,6 +55,8 @@ export class ConsulterIndicateurComponent implements OnInit {
   readonly peutSupprimer = this.roles.peutSupprimer;
 
   readonly degresFiabilite = DEGRES_FIABILITE;
+  readonly pays = PAYS;
+  readonly gouvernorats = GOUVERNORATS_TUNISIE;
   readonly imprimeLe = new Date();
 
   /** Impression du tableau des valeurs (mise en page dans styles.css). */
@@ -73,6 +75,12 @@ export class ConsulterIndicateurComponent implements OnInit {
    * scolarisation est bon. L'interface se contente donc d'indiquer le sens de
    * l'écart, sans le juger — c'est l'analyste qui interprète.
    */
+  /** Libellé du territoire d'une valeur. Sans gouvernorat = niveau national. */
+  territoire(val: ValeurIndicateur): string {
+    if (val.gouvernorat) return `${val.gouvernorat}, ${val.pays ?? ''}`.replace(/,\s*$/, '');
+    return val.pays ? `${val.pays} — national` : '—';
+  }
+
   ecartCible(val: ValeurIndicateur): { texte: string; signe: 'positif' | 'negatif' | 'atteint' } | null {
     const cible = this.indicateur?.valeurCible;
     if (cible === null || cible === undefined) return null;
@@ -116,6 +124,8 @@ export class ConsulterIndicateurComponent implements OnInit {
       organisationId: 1,
       periodeId: 1,
       valeur: 0,
+      pays: 'Tunisie',
+      gouvernorat: '',
       degreDeFiabilite: '',
       commentaire: '',
       saisiePar: '',

@@ -199,7 +199,7 @@ Aucun appel au modèle n'est effectué : rien n'est inventé.
 ## 5. Démonstration bout en bout dans le navigateur
 
 1. `http://<IP>:30080` — les indicateurs affichés viennent de PostgreSQL ;
-   le tableau de bord affiche « 2 valeurs validées / 3 en attente ».
+   le tableau de bord affiche « 2 valeurs validées / 4 en attente ».
 2. Ouvrir un indicateur → chaque valeur porte son badge de statut
    (Validé / En revue / Brouillon / Rejeté) et ses boutons d'action.
 3. Cliquer **✔️ Valider** → le badge passe au vert, le compteur se met à jour.
@@ -233,7 +233,7 @@ navigateur, pas reconstitué.
 
 | Capture | Ce qu'elle montre |
 |---|---|
-| [`01-tableau-de-bord.png`](captures/01-tableau-de-bord.png) | 5 indicateurs, 5 valeurs saisies, **2 validées, 3 en attente** |
+| [`01-tableau-de-bord.png`](captures/01-tableau-de-bord.png) | 5 indicateurs, 6 valeurs saisies, **2 validées, 4 en attente** |
 | [`02-liste-indicateurs.png`](captures/02-liste-indicateurs.png) | Liste alimentée par PostgreSQL via le Gateway |
 | [`03-detail-valeur-validee.png`](captures/03-detail-valeur-validee.png) | IND-CHOM : valeur `12,4 %`, statut **Validé**, « par Administrateur » |
 | [`04-detail-valeur-non-validee.png`](captures/04-detail-valeur-non-validee.png) | IND-INFL : valeur `6,8 %`, statut **EnRevue** — hors périmètre IA |
