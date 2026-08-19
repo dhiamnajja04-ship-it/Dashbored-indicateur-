@@ -69,5 +69,8 @@ tableau de bord. Les données affichées viennent bien de PostgreSQL.
 
 ## Captures
 
-- `capture-liste-live.png` — *(à ajouter)*
-- `capture-detail-live.png` — *(à ajouter)*
+- Liste live : [`../semaine-08/captures/02-liste-indicateurs.png`](../semaine-08/captures/02-liste-indicateurs.png)
+- Détail live : [`../semaine-08/captures/03-detail-valeur-validee.png`](../semaine-08/captures/03-detail-valeur-validee.png)
+
+Les valeurs affichées (`IND-CHOM` = 12,4 %) sont bien celles de PostgreSQL :
+`curl http://localhost:5169/api/indicators` renvoie les mêmes chiffres.

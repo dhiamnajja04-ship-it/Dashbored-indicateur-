@@ -225,8 +225,44 @@ curl -s http://$IP:30169/health/plateforme | jq
 
 PostgreSQL reste hors cluster, sur le serveur du tuteur.
 
-## Captures à joindre
+## 7. Captures — scénario réellement exécuté
 
-- `capture-validees-vs-non-validees.png`
-- `capture-reponse-ia.png`
-- `capture-apres-devalidation.png`
+Captures prises sur la plateforme en fonctionnement (Docker Compose sur la VM),
+dans [`captures/`](captures/). Le scénario a été joué de bout en bout dans le
+navigateur, pas reconstitué.
+
+| Capture | Ce qu'elle montre |
+|---|---|
+| [`01-tableau-de-bord.png`](captures/01-tableau-de-bord.png) | 5 indicateurs, 5 valeurs saisies, **2 validées, 3 en attente** |
+| [`02-liste-indicateurs.png`](captures/02-liste-indicateurs.png) | Liste alimentée par PostgreSQL via le Gateway |
+| [`03-detail-valeur-validee.png`](captures/03-detail-valeur-validee.png) | IND-CHOM : valeur `12,4 %`, statut **Validé**, « par Administrateur » |
+| [`04-detail-valeur-non-validee.png`](captures/04-detail-valeur-non-validee.png) | IND-INFL : valeur `6,8 %`, statut **EnRevue** — hors périmètre IA |
+| [`05-reponse-ia-validees-uniquement.png`](captures/05-reponse-ia-validees-uniquement.png) | Réponse IA + badges **IND-CHOM** et **IND-SCOL** uniquement |
+| [`06-apres-devalidation-statut-brouillon.png`](captures/06-apres-devalidation-statut-brouillon.png) | Après « Dévalider » : statut **Brouillon**, « 0 valeur(s) validée(s) sur 1 » |
+| [`07-reponse-ia-perimetre-reduit.png`](captures/07-reponse-ia-perimetre-reduit.png) | Nouvelle analyse : **IND-CHOM a disparu**, seul IND-SCOL subsiste |
+
+### Preuve chiffrée du filtrage
+
+Le endpoint `GET /api/ia/contexte` renvoie le périmètre exact soumis au modèle,
+sans l'appeler. Mesures relevées pendant le scénario :
+
+| Étape | `nbIndicateurs` | `nbValeursValidees` |
+|---|---|---|
+| État initial (2 valeurs validées) | **2** | **2** |
+| Après « Dévalider » sur IND-CHOM (dans l'interface) | **1** | **1** |
+| Après re-validation | **2** | **2** |
+
+C'est la démonstration demandée : *« 5 indicateurs en base, 2 validés → la
+réponse IA ne parle que de ces 2-là »*. Dévalider en retire un du périmètre
+**sans supprimer la donnée**.
+
+## 8. Limite connue — qualité du modèle
+
+Le modèle retenu est `qwen2.5:0.5b`, imposé par la VM (4 cœurs, voir
+[semaine-01](../semaine-01/README.md#révision-du-choix-après-mesure-sur-la-vm)).
+Son **ancrage** est correct : il ne cite jamais un indicateur non validé, ce qui
+est la règle évaluée. En revanche sa **rédaction** est faible : répétitions, et
+il lui arrive de mal recopier un chiffre ou de confondre valeur et cible.
+
+C'est une limite du dimensionnement de la VM, pas de l'architecture : le modèle
+se change avec une seule variable (`Ollama__Model`), sans reconstruire d'image.

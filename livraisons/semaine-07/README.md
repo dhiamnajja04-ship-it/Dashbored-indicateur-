@@ -61,4 +61,11 @@ Chaque code HTTP devient une phrase actionnable plutôt qu'un numéro :
 
 ## Capture
 
-- `capture-ia.png` — indicateurs + réponse IA visibles à l'écran — *(à ajouter)*
+- [`../semaine-08/captures/05-reponse-ia-validees-uniquement.png`](../semaine-08/captures/05-reponse-ia-validees-uniquement.png)
+  — indicateurs **et** réponse IA visibles sur le même écran, avec les badges
+  indiquant le modèle, le nombre de valeurs validées analysées et les codes des
+  indicateurs transmis (`IND-CHOM`, `IND-SCOL`).
+
+Temps de génération constaté depuis l'interface : **~24 s** (modèle local,
+CPU seul). Le bouton reste désactivé et un message d'attente s'affiche pendant
+la génération.

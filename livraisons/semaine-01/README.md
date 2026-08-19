@@ -117,6 +117,50 @@ kubectl -n indicateurs exec deploy/ollama -- ollama pull mistral
 Le modèle n'est volontairement pas embarqué dans une image Docker : cela
 donnerait une image de plus de 4 Go à reconstruire à chaque changement de code.
 
+### Révision du choix après mesure sur la VM
+
+Le tableau ci-dessus raisonnait sur des ordres de grandeur. Une fois la VM
+disponible (**4 cœurs**, pas de GPU), la mesure a invalidé le choix de Mistral 7B.
+
+| Mesure sur cette VM | Mistral 7B | Qwen2.5 0.5B |
+|---|---|---|
+| Taille du modèle | 4,4 Go | **397 Mo** |
+| Temps d'une analyse via le Gateway | **> 255 s → HTTP 504** | **16–18 s → HTTP 200** |
+| Charge système pendant la génération (4 cœurs) | **8,68** — machine inutilisable | **2,18** — machine réactive |
+
+Deux conclusions :
+
+1. **Mistral 7B est inexploitable ici.** Il ne termine pas dans les 200 s du
+   Gateway, et il sature les 4 cœurs : pendant la génération, l'interface
+   graphique de la VM se fige, ce qui ressemble à un plantage.
+2. **Le facteur limitant est le nombre de cœurs, pas la RAM.** Les 12 Go
+   suffisaient largement à Mistral ; c'est le CPU qui manque. Un modèle
+   ~14 fois plus petit résout le problème sans changer une ligne de code
+   applicatif.
+
+**Modèle retenu : `qwen2.5:0.5b`** — open source sous **licence Apache 2.0**,
+exécuté **en local** dans le conteneur `ollama`, conformément au sujet. Aucune
+donnée ne sort de la machine.
+
+Contrepartie assumée : à 0,5 milliard de paramètres, la synthèse est correcte et
+bien ancrée dans les données validées, mais moins fluide qu'avec un modèle plus
+gros (formulations répétitives). C'est un compromis conscient : une démo qui
+fonctionne en 18 s prime sur une prose élégante qui fait tomber la VM.
+
+**Marge de progression** si le tuteur dispose d'une machine plus puissante, ou
+si l'on accepte ~1 min de génération : `gemma2:2b` (~1,6 Go) offre un bien
+meilleur français. Le basculement reste **une seule ligne** — la variable
+`Ollama__Model` dans [`docker-compose.yml`](../../docker-compose.yml) (ou la clé
+`OLLAMA_MODEL` du ConfigMap en Kubernetes), suivie d'un `ollama pull`.
+
+Mistral 7B reste téléchargé dans le volume `ollama-data` : revenir en arrière ne
+coûte qu'un changement de variable.
+
+```bash
+docker compose exec ollama ollama pull qwen2.5:0.5b   # Compose (cette VM)
+kubectl -n indicateurs exec deploy/ollama -- ollama pull qwen2.5:0.5b   # K8s
+```
+
 ## 4. Squelette du projet
 
 ```
@@ -132,17 +176,29 @@ rw9980/
 
 ## 5. Environnement VM
 
-| Élément | Version | État |
+| Élément | Version relevée | État |
 |---|---|---|
-| OS | `<à compléter>` | |
-| Git | `<git --version>` | |
-| Docker | `<docker --version>` | |
-| Kubernetes | Minikube `<version>` | |
-| Accès Postgres | `nc -zv <IP> 5432` | `<résultat>` |
+| OS | Ubuntu 26.04 LTS (noyau 7.0.0-29-generic) | OK |
+| CPU / RAM | **4 cœurs**, 12 Go | OK — dimensionnement contraignant, voir §3 |
+| Disque | 38 Go libres sur 67 Go | OK |
+| Git | 2.53.0 | OK |
+| Docker | 29.7.2 | OK |
+| Docker Compose | v5.5.0 | OK |
+| Ollama | 0.32.14 (conteneur `ollama/ollama`) | OK |
+| Kubernetes (Minikube) | **non installé sur cette VM** | Manifests `k8s/` écrits et validés en YAML, non déployés ici |
+| Accès PostgreSQL | port 5432/15432 | Atteignable |
+
+> **Écart assumé à documenter au tuteur.** Le déploiement de référence du sujet
+> est Kubernetes, et les manifests sont fournis dans [`k8s/`](../../k8s/). Mais
+> Minikube n'est pas installé sur cette VM : la plateforme tourne ici via
+> [`docker-compose.yml`](../../docker-compose.yml), qui reproduit la même
+> topologie (mêmes images, mêmes URLs internes, métier et IA non exposés).
+> Seule différence : Compose conteneurise PostgreSQL par commodité, alors que
+> le sujet impose un serveur externe — ce que respecte bien `k8s/`.
 
 ```bash
-git checkout -b stagiaire/<ton-prenom>
-git push -u origin stagiaire/<ton-prenom>
+git checkout -b stagiaire/dhia
+git push -u origin stagiaire/dhia
 ```
 
 ## Points à valider avec le tuteur

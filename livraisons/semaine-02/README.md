@@ -57,8 +57,12 @@ kubectl -n indicateurs get pods,svc
 
 ## Captures
 
-- `capture-liste.png` — *(à ajouter)*
-- `capture-detail.png` — *(à ajouter)*
+- Liste : [`../semaine-08/captures/02-liste-indicateurs.png`](../semaine-08/captures/02-liste-indicateurs.png)
+- Détail : [`../semaine-08/captures/03-detail-valeur-validee.png`](../semaine-08/captures/03-detail-valeur-validee.png)
+
+> Les captures définitives ont été prises en semaine 8, sur la version branchée
+> aux APIs. Les écrans sont ceux conçus en semaine 2 ; seule la source des
+> données a changé (fichier statique → PostgreSQL), comme prévu en semaine 6.
 
 ## Remarque
 
