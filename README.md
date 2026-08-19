@@ -4,6 +4,9 @@ Plateforme conteneurisée d'indicateurs avec workflow de validation et analyse p
 un modèle IA local. Stage DevOps — voir [`livraisons/`](livraisons/) pour les
 comptes-rendus hebdomadaires.
 
+> **Pour démarrer** : [`GUIDE-LANCEMENT.md`](GUIDE-LANCEMENT.md)
+> **Pour présenter** : [`GUIDE-PRESENTATION.md`](GUIDE-PRESENTATION.md)
+
 ## Principe
 
 L'utilisateur consulte des indicateurs stockés en PostgreSQL, valide certaines
@@ -175,9 +178,85 @@ Brouillon ──soumettre──▶ EnRevue ──valider──▶ Valide
     └──────────────dévalider────────────────────┘
 ```
 
+**Codes techniques et libellés affichés ne sont pas identiques.** La base et
+l'API manipulent les codes ; l'interface affiche des libellés métier :
+
+| Code en base / API | Libellé affiché | `is_valid` |
+|---|---|---|
+| `Brouillon` | Brouillon | `false` |
+| `EnRevue` | En validation | `false` |
+| `Valide` | **Validation nationale** | **`true`** |
+| `Rejete` | Rejeté | `false` |
+
+Ce découplage évite une migration de toutes les données à chaque changement de
+vocabulaire métier : renommer un libellé est une ligne dans
+[`indicateur.service.ts`](src/app/services/indicateur.service.ts), pas un
+`UPDATE` sur la base.
+
 Seul `Valide` met `is_valid = true`. Modifier le chiffre d'une valeur validée la
 ramène en `Brouillon` : la validation porte sur un chiffre précis, pas sur une
 ligne de table.
+
+## Rôles
+
+Trois rôles filtrent les actions disponibles dans l'interface. Le rôle est
+choisi dans la barre de navigation et mémorisé dans le navigateur.
+
+| Rôle | Saisir | Valider / Dévalider | Gérer les indicateurs | Supprimer |
+|---|---|---|---|---|
+| Agent de saisie | ✅ | ❌ | ❌ | ❌ |
+| Validateur | ❌ | ✅ | ❌ | ❌ |
+| Administrateur | ✅ | ✅ | ✅ | ✅ |
+
+> ⚠️ C'est une séparation **d'interface**, pas une sécurité. Il n'y a pas
+> d'authentification : l'API reste ouverte, et un appel `curl` direct ignore le
+> rôle. Le sujet du stage ne demandait pas d'authentification ; ajouter un
+> véritable contrôle d'accès supposerait une table utilisateurs, des jetons et
+> une vérification côté serveur sur chaque endpoint.
+
+## Localisation des valeurs
+
+La localisation porte sur la **valeur**, pas sur l'indicateur : « taux de
+chômage » est une définition nationale, c'est *la mesure* qui se rapporte à un
+territoire. Un même indicateur porte donc une valeur nationale **et** des
+valeurs par gouvernorat.
+
+- `pays` — 6 pays proposés, `Tunisie` par défaut
+- `gouvernorat` — les 24 gouvernorats de Tunisie ; **vide = niveau national**
+
+Le territoire est transmis au modèle IA, avec une consigne explicite de ne
+jamais comparer un gouvernorat à un total national comme s'ils étaient de même
+nature.
+
+## Réclamations
+
+Module de signalement indépendant du workflow de validation
+([`ReclamationsController`](MetierService/Controllers/ReclamationsController.cs)).
+
+| Méthode | Route |
+|---|---|
+| `GET` | `/api/reclamations` |
+| `GET` | `/api/reclamations/{id}` |
+| `GET` | `/api/reclamations/statistiques` |
+| `POST` | `/api/reclamations` |
+| `PATCH` | `/api/reclamations/{id}/statut` |
+| `DELETE` | `/api/reclamations/{id}` |
+
+## Interface
+
+- **Marque Pictor Solution**, barre de navigation et pied de page complet
+- **Notifications** en surimpression après chaque action (succès, erreur,
+  changement de statut), avec `aria-live` pour les lecteurs d'écran
+- **Recherche et tri** sur la liste des indicateurs — filtrage sur 7 champs,
+  tri sur 5 colonnes. Fait **en mémoire** : correct à cette échelle, à déporter
+  côté API au-delà de quelques centaines d'indicateurs
+- **Impression** des tableaux (`@media print`) : en-tête Pictor Solution, colonne
+  Actions masquée, badges lisibles en noir et blanc
+- **Écart à la cible** affiché par valeur, volontairement **neutre en couleur** :
+  dépasser une cible de scolarisation est bon, dépasser une cible de chômage est
+  mauvais — l'interface donne le sens de l'écart, elle ne le juge pas
+- **Unités** : liste fermée de 19 unités en 5 groupes, avec échappatoire
+  « Autre unité » pour ne jamais bloquer une donnée existante
 
 ## Structure
 
@@ -189,9 +268,11 @@ rw9980/
 ├── IaService/              # .NET 8 — prompt + modèle
 ├── db/                     # Migration SQL + données de démo
 ├── k8s/                    # Manifests + deploy.sh
-├── livraisons/             # Comptes-rendus semaines 1 à 8
+├── livraisons/             # Comptes-rendus semaines 1 à 8 + captures
 ├── Dockerfile              # Image du frontend
-└── nginx.conf              # Sert le SPA + relaie /api
+├── nginx.conf              # Sert le SPA + relaie /api
+├── GUIDE-LANCEMENT.md      # Démarrer la plateforme pas à pas
+└── GUIDE-PRESENTATION.md   # Soutenance : déroulé et questions attendues
 ```
 
 ## Commandes Angular

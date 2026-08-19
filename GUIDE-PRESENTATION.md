@@ -1,0 +1,170 @@
+# Guide de présentation
+
+Comment présenter la plateforme au tuteur : ce qu'il attend, dans quel ordre le
+montrer, et quoi répondre aux questions difficiles.
+
+---
+
+## 1. Ce que le sujet demande, et où c'est traité
+
+Le sujet fixe trois attendus pour la semaine 8. Ils se vérifient à l'écran.
+
+| Attendu du sujet | Où le montrer |
+|---|---|
+| « Les indicateurs stockés en PostgreSQL, affichés à l'écran » | Tableau de bord, puis liste |
+| « Un workflow de validation » | Page de détail, boutons Soumettre / Valider / Dévalider |
+| « Une réponse IA générée par un modèle gratuit installé en local, **uniquement à partir des indicateurs validés** » | Panneau d'analyse IA, badges de traçabilité |
+
+Le troisième point est **le cœur de l'évaluation**. C'est celui à démontrer en
+direct, pas à décrire.
+
+---
+
+## 2. Déroulé de démonstration (10 minutes)
+
+### Avant de commencer
+
+```bash
+docker compose up -d
+curl -s http://localhost:5169/health/plateforme
+```
+
+Attendre `{"status":"OK",...}`. Ouvrir `http://localhost:8080`.
+
+**Lancer une première analyse « à blanc » avant l'arrivée du tuteur** : le
+premier appel charge le modèle en mémoire et prend plus de temps que les
+suivants. Une démonstration ne doit pas commencer par une attente.
+
+### Étape 1 — L'architecture (1 min)
+
+Montrer le schéma de [`livraisons/semaine-01`](livraisons/semaine-01/README.md)
+et énoncer les deux décisions structurantes :
+
+> « Le front ne parle qu'au Gateway. Et le service IA n'a **aucune** chaîne de
+> connexion PostgreSQL : il passe obligatoirement par le service métier. »
+
+### Étape 2 — Les données viennent bien de la base (1 min)
+
+Tableau de bord : `5 indicateurs, 6 valeurs, 2 validées, 4 en attente`.
+
+Puis prouver que ce n'est pas codé en dur :
+
+```bash
+curl -s http://localhost:5169/api/indicators | head -c 300
+```
+
+### Étape 3 — Le workflow (2 min)
+
+Sur *Taux de chômage* : montrer les statuts, puis **Dévalider** une valeur. La
+notification confirme, le badge passe à *Brouillon*.
+
+Insister sur la règle : **modifier le chiffre d'une valeur validée la ramène en
+Brouillon.** La validation porte sur un chiffre précis, pas sur une ligne.
+
+### Étape 4 — La règle centrale, en direct (4 min)
+
+C'est le moment clé. **Ne pas le raconter : le faire.**
+
+1. Lancer l'analyse → la réponse cite `IND-CHOM` et `IND-SCOL`
+2. Montrer les badges sous la réponse : *2 valeurs validées analysées*, et les
+   **codes exacts transmis au modèle**
+3. Dévalider `IND-CHOM`
+4. Relancer l'analyse → **`IND-CHOM` a disparu**, le badge affiche 1 valeur
+
+Puis la preuve sans passer par l'interface :
+
+```bash
+curl -s http://localhost:5169/api/ia/contexte
+```
+
+> « Voilà le prompt exact envoyé au modèle. Si un indicateur n'y est pas, il ne
+> peut pas être dans la réponse. »
+
+### Étape 5 — Le reste (2 min)
+
+Rôles, réclamations, impression, recherche, localisation par gouvernorat.
+
+---
+
+## 3. Les quatre niveaux de la règle centrale
+
+Question quasi certaine : *« Qu'est-ce qui garantit que l'IA ne voit pas les
+valeurs non validées ? »*
+
+Réponse — **la règle est appliquée à quatre niveaux, du plus profond au plus
+visible** :
+
+1. **Base** — une contrainte `CHECK` lie `is_valid` et `statut`. Un `UPDATE`
+   manuel incohérent est rejeté par PostgreSQL.
+2. **Métier** — `GET /api/indicators/validated` filtre `Where(v => v.IsValid)`.
+   `POST` force `is_valid = false` : un client ne peut pas s'auto-valider.
+3. **Infrastructure** — le pod IA n'a aucune chaîne de connexion PostgreSQL.
+   Contourner le métier est **matériellement impossible**, pas seulement
+   déconseillé.
+4. **Interface** — la réponse affiche les codes réellement transmis. Le
+   périmètre est vérifiable à l'œil.
+
+Le niveau 3 est le plus convaincant : ce n'est pas une politique, c'est une
+impossibilité.
+
+---
+
+## 4. Questions difficiles, réponses honnêtes
+
+**« Pourquoi ce modèle plutôt que Mistral ? »**
+La VM a 4 cœurs et pas de carte graphique. Mistral 7B dépassait les 200 s du
+Gateway sans terminer — mesuré, pas supposé. Le basculement ne coûte qu'une
+ligne : la clé `OLLAMA_MODEL`. L'architecture est indépendante du modèle.
+
+**« La réponse IA contient une erreur. »**
+Oui, et c'est documenté. Un modèle de 0,5 milliard de paramètres invente
+parfois des chiffres malgré une consigne stricte. **Ce qui est garanti, c'est le
+périmètre — pas la qualité rédactionnelle.** Les données envoyées sont
+vérifiables via `/api/ia/contexte`. Un modèle plus gros améliorerait la
+rédaction sans changer l'architecture.
+
+**« Les rôles protègent-ils vraiment l'API ? »**
+Non, et il ne faut pas prétendre l'inverse. C'est un filtrage **d'interface**.
+Un `curl` direct ignore le rôle. Le sujet ne demandait pas d'authentification ;
+un vrai contrôle d'accès supposerait une table utilisateurs, des jetons, et une
+vérification sur chaque endpoint.
+
+**« Pourquoi PostgreSQL dans `docker-compose` alors que le sujet l'interdit ? »**
+Le déploiement de référence est `k8s/`, où PostgreSQL est externe. Compose sert
+uniquement à reproduire la chaîne complète sur une machine, et le fichier le dit
+explicitement en commentaire.
+
+**« La recherche fonctionnera-t-elle avec 10 000 indicateurs ? »**
+Non. Filtrage et tri sont faits en mémoire dans le navigateur. C'est adapté à
+l'échelle actuelle et documenté comme tel ; au-delà de quelques centaines, il
+faut des paramètres de requête côté API et de la pagination.
+
+**« Où sont les tests ? »**
+Il n'y en a pas. Le sujet n'en demandait pas. Les vérifications ont été faites
+par scénario reproductible en direct — les captures de
+[`livraisons/semaine-08`](livraisons/semaine-08/README.md) montrent le passage
+de 2 à 1 indicateur après dévalidation.
+
+---
+
+## 5. Ce qu'il ne faut pas faire
+
+- **Ne pas improviser la démonstration de la règle centrale.** C'est le point
+  noté ; il se répète avant.
+- **Ne pas lancer la première analyse devant le tuteur.** Chargement du modèle.
+- **Ne pas survendre les rôles** comme une sécurité. Un tuteur technique le
+  testera en une commande, et la crédibilité du reste en dépend.
+- **Ne pas masquer les limites.** Elles sont écrites dans les livrables :
+  les annoncer soi-même vaut mieux que les voir découvertes.
+
+---
+
+## 6. Repères chiffrés
+
+| | |
+|---|---|
+| Services conteneurisés | 5 + PostgreSQL |
+| Semaines livrées | 8, dans [`livraisons/`](livraisons/) |
+| Endpoints exposés | 20, tous via le Gateway |
+| États du workflow | 4, avec transitions contrôlées |
+| Niveaux appliquant la règle centrale | 4 |
