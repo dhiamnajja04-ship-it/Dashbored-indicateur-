@@ -3,8 +3,14 @@
 Plateforme conteneurisée d'indicateurs avec workflow de validation et analyse par
 un modèle IA local. Stage DevOps.
 
-> **Pour démarrer** : [`GUIDE-LANCEMENT.md`](GUIDE-LANCEMENT.md)
-> **Pour présenter** : [`GUIDE-PRESENTATION.md`](GUIDE-PRESENTATION.md)
+## Guides
+
+| Guide | Pour quoi |
+|---|---|
+| [`GUIDE-UTILISATION.md`](GUIDE-UTILISATION.md) | **Installer** et **se servir** de la plateforme, écran par écran |
+| [`GUIDE-PLATEFORME.md`](GUIDE-PLATEFORME.md) | **Ce que contient le projet** : services, tables, API, fichiers, limites |
+| [`GUIDE-LANCEMENT.md`](GUIDE-LANCEMENT.md) | Démarrer, vérifier, dépanner |
+| [`GUIDE-PRESENTATION.md`](GUIDE-PRESENTATION.md) | Soutenance : déroulé et questions attendues |
 
 ## Principe
 
@@ -284,6 +290,9 @@ rw9980/
 ├── livraisons/             # Comptes-rendus semaines 1 à 8 + captures
 ├── Dockerfile              # Image du frontend
 ├── nginx.conf              # Sert le SPA + relaie /api
+├── docs/besoins/           # Sujet du stage
+├── GUIDE-UTILISATION.md    # Installation et utilisation
+├── GUIDE-PLATEFORME.md     # Inventaire complet du projet
 ├── GUIDE-LANCEMENT.md      # Démarrer la plateforme pas à pas
 └── GUIDE-PRESENTATION.md   # Soutenance : déroulé et questions attendues
 ```
