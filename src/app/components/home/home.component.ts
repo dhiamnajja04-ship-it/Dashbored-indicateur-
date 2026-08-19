@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { IndicateurService, Indicateur } from '../../services/indicateur.service';
@@ -20,7 +20,10 @@ export class HomeComponent implements OnInit {
   valeursValidees = 0;
   valeursEnAttente = 0;
 
-  constructor(private indicateurService: IndicateurService) {}
+  constructor(
+    private indicateurService: IndicateurService,
+    private cdr: ChangeDetectorRef,
+  ) {}
 
   ngOnInit(): void {
     this.charger();
@@ -28,18 +31,22 @@ export class HomeComponent implements OnInit {
 
   charger(): void {
     this.loading = true;
+    this.cdr.markForCheck();
     this.erreur = '';
+    this.cdr.markForCheck();
     this.indicateurService.getAll().subscribe({
       next: (data) => {
         this.indicateurs = data;
         this.calculerStatistiques();
         this.loading = false;
+        this.cdr.markForCheck();
       },
       error: (err) => {
         console.error('Erreur lors du chargement des indicateurs', err);
         this.erreur =
           "Impossible de charger les indicateurs. Vérifie que le GatewayService (port 5169) et le MetierService (port 5039) sont bien démarrés.";
         this.loading = false;
+        this.cdr.markForCheck();
       },
     });
   }

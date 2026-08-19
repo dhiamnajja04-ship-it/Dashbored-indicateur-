@@ -1,46 +1,35 @@
 import { HttpInterceptorFn } from '@angular/common/http';
-import { ApplicationRef, NgZone, inject } from '@angular/core';
-import { Observable } from 'rxjs';
+import { ApplicationRef, inject } from '@angular/core';
+import { tap } from 'rxjs';
 
 /**
- * Force chaque réponse HTTP à être ré-émise à l'intérieur de la zone Angular,
- * PUIS force explicitement un cycle de détection de changements complet.
+ * Déclenche un cycle de détection de changements après chaque réponse HTTP.
  *
- * Bug connu : le backend Fetch de HttpClient (utilisé par défaut par cette
- * version d'Angular) résout ses promesses en dehors de la zone patchée par
- * zone.js. Un simple `zone.run()` ne suffit pas toujours à faire réafficher
- * l'écran : la donnée arrive bien (visible dans l'onglet Network), l'état du
- * composant change bien (`loading = false`), mais Angular ne redessine pas
- * la vue. On appelle donc explicitement `ApplicationRef.tick()` après chaque
- * émission, ce qui force le rendu quel que soit le mécanisme de détection en
- * jeu — solution radicale mais fiable.
+ * L'application tourne en mode « zoneless » (voir app.config.ts) : sans
+ * zone.js, Angular ne détecte plus automatiquement les mutations de propriétés
+ * faites dans un callback `subscribe`. Les composants de ce projet utilisent des
+ * propriétés simples (`loading`, `indicateurs`, …) et non des signaux : sans ce
+ * tick, la donnée arrive bien mais la vue n'est jamais redessinée.
+ *
+ * Le tick est différé dans un `setTimeout` afin de s'exécuter après que le
+ * callback du composant a mis à jour son état, et hors de tout cycle en cours.
  */
-export const zoneInterceptor: HttpInterceptorFn = (req, next) => {
-  const zone = inject(NgZone);
+export const renderInterceptor: HttpInterceptorFn = (req, next) => {
   const appRef = inject(ApplicationRef);
 
-  const forceRender = () => {
-    try {
-      appRef.tick();
-    } catch {
-      // tick() peut lever si un cycle est déjà en cours ; sans conséquence ici.
-    }
-  };
+  const planifierRendu = () =>
+    setTimeout(() => {
+      try {
+        appRef.tick();
+      } catch {
+        // Un cycle déjà en cours redessinera la vue de toute façon.
+      }
+    }, 0);
 
-  return new Observable((subscriber) => {
-    const subscription = next(req).subscribe({
-      next: (event) =>
-        zone.run(() => {
-          subscriber.next(event);
-          forceRender();
-        }),
-      error: (err) =>
-        zone.run(() => {
-          subscriber.error(err);
-          forceRender();
-        }),
-      complete: () => zone.run(() => subscriber.complete()),
-    });
-    return () => subscription.unsubscribe();
-  });
+  return next(req).pipe(
+    tap({
+      next: planifierRendu,
+      error: planifierRendu,
+    }),
+  );
 };

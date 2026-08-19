@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
@@ -25,7 +25,10 @@ export class IndicateursListComponent implements OnInit {
   enregistrementEnCours = false;
   erreurFormulaire = '';
 
-  constructor(private indicateurService: IndicateurService) {}
+  constructor(
+    private indicateurService: IndicateurService,
+    private cdr: ChangeDetectorRef,
+  ) {}
 
   ngOnInit(): void {
     this.charger();
@@ -33,16 +36,21 @@ export class IndicateursListComponent implements OnInit {
 
   charger(): void {
     this.loading = true;
+    this.cdr.markForCheck();
     this.erreur = '';
+    this.cdr.markForCheck();
     this.indicateurService.getAll().subscribe({
       next: (data) => {
         this.indicateurs = data;
         this.loading = false;
+        this.cdr.markForCheck();
       },
       error: (err) => {
         console.error('Erreur lors du chargement des indicateurs', err);
         this.erreur = 'Impossible de charger les indicateurs.';
+        this.cdr.markForCheck();
         this.loading = false;
+        this.cdr.markForCheck();
       },
     });
   }
@@ -73,6 +81,7 @@ export class IndicateursListComponent implements OnInit {
     this.modeEdition = false;
     this.indicateurCourant = this.indicateurVide();
     this.erreurFormulaire = '';
+    this.cdr.markForCheck();
     this.afficherFormulaire = true;
   }
 
@@ -80,43 +89,53 @@ export class IndicateursListComponent implements OnInit {
     this.modeEdition = true;
     this.indicateurCourant = { ...ind };
     this.erreurFormulaire = '';
+    this.cdr.markForCheck();
     this.afficherFormulaire = true;
   }
 
   annuler(): void {
     this.afficherFormulaire = false;
     this.erreurFormulaire = '';
+    this.cdr.markForCheck();
   }
 
   enregistrer(): void {
     if (this.enregistrementEnCours) return; // évite le double-submit
     this.enregistrementEnCours = true;
+    this.cdr.markForCheck();
     this.erreurFormulaire = '';
+    this.cdr.markForCheck();
 
     if (this.modeEdition && this.indicateurCourant.id) {
       this.indicateurService.modifierIndicateur(this.indicateurCourant.id, this.indicateurCourant).subscribe({
         next: () => {
           this.enregistrementEnCours = false;
+          this.cdr.markForCheck();
           this.afficherFormulaire = false;
           this.charger();
         },
         error: (err: HttpErrorResponse) => {
           console.error('Erreur lors de la mise à jour', err);
           this.enregistrementEnCours = false;
+          this.cdr.markForCheck();
           this.erreurFormulaire = this.messageErreur(err);
+          this.cdr.markForCheck();
         },
       });
     } else {
       this.indicateurService.creerIndicateur(this.indicateurCourant).subscribe({
         next: () => {
           this.enregistrementEnCours = false;
+          this.cdr.markForCheck();
           this.afficherFormulaire = false;
           this.charger();
         },
         error: (err: HttpErrorResponse) => {
           console.error('Erreur lors de la création', err);
           this.enregistrementEnCours = false;
+          this.cdr.markForCheck();
           this.erreurFormulaire = this.messageErreur(err);
+          this.cdr.markForCheck();
         },
       });
     }
@@ -130,6 +149,7 @@ export class IndicateursListComponent implements OnInit {
         error: (err: HttpErrorResponse) => {
           console.error('Erreur lors de la suppression', err);
           this.erreur = this.messageErreur(err);
+          this.cdr.markForCheck();
         },
       });
     }

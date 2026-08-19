@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterModule } from '@angular/router';
@@ -35,6 +35,7 @@ export class ConsulterIndicateurComponent implements OnInit {
   constructor(
     private route: ActivatedRoute,
     private indicateurService: IndicateurService,
+    private cdr: ChangeDetectorRef,
   ) {}
 
   ngOnInit(): void {
@@ -50,10 +51,12 @@ export class ConsulterIndicateurComponent implements OnInit {
       next: (data) => {
         this.indicateur = data;
         this.valeurs = data.valeursIndicateurs ?? [];
+        this.cdr.markForCheck();
       },
       error: (err) => {
         console.error('Erreur lors du chargement', err);
         this.erreur = "Impossible de charger cet indicateur. Vérifie que le Gateway et le service métier sont démarrés.";
+        this.cdr.markForCheck();
       },
     });
   }
@@ -84,6 +87,7 @@ export class ConsulterIndicateurComponent implements OnInit {
     this.modeEditionValeur = false;
     this.valeurCourante = this.valeurVide();
     this.erreurFormulaire = '';
+    this.cdr.markForCheck();
     this.afficherFormulaireValeur = true;
   }
 
@@ -91,43 +95,53 @@ export class ConsulterIndicateurComponent implements OnInit {
     this.modeEditionValeur = true;
     this.valeurCourante = { ...val };
     this.erreurFormulaire = '';
+    this.cdr.markForCheck();
     this.afficherFormulaireValeur = true;
   }
 
   annulerFormulaireValeur() {
     this.afficherFormulaireValeur = false;
     this.erreurFormulaire = '';
+    this.cdr.markForCheck();
   }
 
   enregistrerValeur() {
     if (this.enregistrementEnCours) return; // évite le double-submit
     this.enregistrementEnCours = true;
+    this.cdr.markForCheck();
     this.erreurFormulaire = '';
+    this.cdr.markForCheck();
 
     if (this.modeEditionValeur && this.valeurCourante.id) {
       this.indicateurService.modifierValeur(this.valeurCourante as ValeurIndicateur).subscribe({
         next: () => {
           this.enregistrementEnCours = false;
+          this.cdr.markForCheck();
           this.afficherFormulaireValeur = false;
           this.chargerDetails();
         },
         error: (err: HttpErrorResponse) => {
           console.error('Erreur lors de la mise à jour de la valeur', err);
           this.enregistrementEnCours = false;
+          this.cdr.markForCheck();
           this.erreurFormulaire = this.messageErreur(err);
+          this.cdr.markForCheck();
         },
       });
     } else {
       this.indicateurService.creerValeur(this.indicateurId, this.valeurCourante).subscribe({
         next: () => {
           this.enregistrementEnCours = false;
+          this.cdr.markForCheck();
           this.afficherFormulaireValeur = false;
           this.chargerDetails();
         },
         error: (err: HttpErrorResponse) => {
           console.error('Erreur lors de la création de la valeur', err);
           this.enregistrementEnCours = false;
+          this.cdr.markForCheck();
           this.erreurFormulaire = this.messageErreur(err);
+          this.cdr.markForCheck();
         },
       });
     }
@@ -181,17 +195,22 @@ export class ConsulterIndicateurComponent implements OnInit {
   private appliquerStatut(valueId: number, statut: Statut) {
     if (this.statutEnCours !== null) return;
     this.statutEnCours = valueId;
+    this.cdr.markForCheck();
     this.erreur = '';
+    this.cdr.markForCheck();
 
     this.indicateurService.changerStatut(valueId, statut).subscribe({
       next: () => {
         this.statutEnCours = null;
+        this.cdr.markForCheck();
         this.chargerDetails();
       },
       error: (err: HttpErrorResponse) => {
         console.error('Erreur lors du changement de statut', err);
         this.statutEnCours = null;
+        this.cdr.markForCheck();
         this.erreur = this.messageErreur(err);
+        this.cdr.markForCheck();
       },
     });
   }
@@ -203,6 +222,7 @@ export class ConsulterIndicateurComponent implements OnInit {
         error: (err: HttpErrorResponse) => {
           console.error('Erreur suppression', err);
           this.erreur = this.messageErreur(err);
+          this.cdr.markForCheck();
         },
       });
     }

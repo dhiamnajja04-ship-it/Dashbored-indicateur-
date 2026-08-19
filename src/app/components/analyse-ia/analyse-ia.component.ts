@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { ChangeDetectorRef, Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -32,13 +32,18 @@ export class AnalyseIaComponent {
   chargement = false;
   erreur = '';
 
-  constructor(private iaService: IaService) {}
+  constructor(
+    private iaService: IaService,
+    private cdr: ChangeDetectorRef,
+  ) {}
 
   lancerAnalyse(): void {
     if (this.chargement) return;
 
     this.chargement = true;
+    this.cdr.markForCheck();
     this.erreur = '';
+    this.cdr.markForCheck();
     this.resultat = null;
 
     this.iaService
@@ -50,11 +55,14 @@ export class AnalyseIaComponent {
         next: (data) => {
           this.resultat = data;
           this.chargement = false;
+          this.cdr.markForCheck();
         },
         error: (err: HttpErrorResponse) => {
           console.error("Erreur lors de l'analyse IA", err);
           this.erreur = this.messageErreur(err);
+          this.cdr.markForCheck();
           this.chargement = false;
+          this.cdr.markForCheck();
         },
       });
   }
@@ -63,6 +71,7 @@ export class AnalyseIaComponent {
     this.resultat = null;
     this.question = '';
     this.erreur = '';
+    this.cdr.markForCheck();
   }
 
   /** Vrai quand le modèle a répondu mais qu'aucune donnée validée n'existait. */
