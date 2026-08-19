@@ -122,7 +122,8 @@ répondrait sinon un texte plausible et entièrement inventé.
 
 ## 4. Scénario de démonstration
 
-Jeu de données : `db/02-donnees-demo.sql` — 5 indicateurs, **2 validés**.
+Jeu de données : `db/02-donnees-demo.sql` et `db/06-indicateurs-complementaires.sql`
+— **12 indicateurs, 2 validés**.
 
 | Code | Indicateur | Valeur | Statut | Vu par l'IA |
 |---|---|---|---|---|
@@ -233,7 +234,7 @@ navigateur, pas reconstitué.
 
 | Capture | Ce qu'elle montre |
 |---|---|
-| [`01-tableau-de-bord.png`](captures/01-tableau-de-bord.png) | 5 indicateurs, 6 valeurs saisies, **2 validées, 4 en attente** |
+| [`01-tableau-de-bord.png`](captures/01-tableau-de-bord.png) | Compteurs, barre d'avancement et périmètre IA |
 | [`02-liste-indicateurs.png`](captures/02-liste-indicateurs.png) | Liste alimentée par PostgreSQL via le Gateway |
 | [`03-detail-valeur-validee.png`](captures/03-detail-valeur-validee.png) | IND-CHOM : valeur `12,4 %`, statut **Validé**, « par Administrateur » |
 | [`04-detail-valeur-non-validee.png`](captures/04-detail-valeur-non-validee.png) | IND-INFL : valeur `6,8 %`, statut **EnRevue** — hors périmètre IA |
@@ -289,7 +290,8 @@ sans l'appeler. Mesures relevées pendant le scénario :
 | Après « Dévalider » sur IND-CHOM (dans l'interface) | **1** | **1** |
 | Après re-validation | **2** | **2** |
 
-C'est la démonstration demandée : *« 5 indicateurs en base, 2 validés → la
+C'est la démonstration demandée, à une échelle plus large que l'exemple du
+sujet : *« 5 indicateurs en base, 2 validés → la
 réponse IA ne parle que de ces 2-là »*. Dévalider en retire un du périmètre
 **sans supprimer la donnée**.
 

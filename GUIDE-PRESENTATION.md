@@ -45,7 +45,7 @@ et énoncer les deux décisions structurantes :
 
 ### Étape 2 — Les données viennent bien de la base (1 min)
 
-Tableau de bord : `5 indicateurs, 6 valeurs, 2 validées, 4 en attente`.
+Tableau de bord : `12 indicateurs, 13 valeurs, 2 validées, 11 en attente`.
 
 Puis prouver que ce n'est pas codé en dur :
 

@@ -66,6 +66,7 @@ Le drapeau lu par l'IA et le statut du workflow ne peuvent pas diverger. Un
 | `db/00-schema-initial.sql` | Dump de départ |
 | `db/01-migration-alignement.sql` | Aligne la base sur le modèle EF Core |
 | `db/02-donnees-demo.sql` | 5 indicateurs, 5 valeurs dont 2 validées |
+| `db/06-indicateurs-complementaires.sql` | 7 indicateurs de plus, aucun validé |
 | `db/03-reclamations.sql` | Table des réclamations |
 | `db/04-localisation.sql` | Colonnes pays et gouvernorat |
 | `db/05-documents-et-utilisateurs.sql` | Documents, référentiel d'agents, extension `unaccent` |

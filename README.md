@@ -92,7 +92,7 @@ docker compose ps
 | PostgreSQL | localhost:15432 (`postgres` / `testpwd`) |
 
 La base est initialisée automatiquement au premier démarrage : dump, migration,
-puis données de démonstration (5 indicateurs dont 2 validés).
+puis données de démonstration (**12 indicateurs, 13 valeurs dont 2 validées**).
 
 ```bash
 docker compose logs -f metier-service     # suivre un service
