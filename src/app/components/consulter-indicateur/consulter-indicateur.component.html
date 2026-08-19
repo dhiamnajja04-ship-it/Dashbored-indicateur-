@@ -246,6 +246,13 @@
               <td>
                 <span class="fw-bold">{{ val.valeur }}</span>
                 <span class="text-muted small ms-1">{{ indicateur.unite }}</span>
+                <div *ngIf="ecartCible(val) as ecart" class="ecart-cible" [ngClass]="'ecart-' + ecart.signe">
+                  <i class="bi" [ngClass]="{
+                    'bi-arrow-up-short': ecart.signe === 'positif',
+                    'bi-arrow-down-short': ecart.signe === 'negatif',
+                    'bi-check2': ecart.signe === 'atteint'
+                  }"></i>{{ ecart.texte }}
+                </div>
               </td>
               <td>
                 <span class="badge-statut" [ngClass]="classeStatut(val)">

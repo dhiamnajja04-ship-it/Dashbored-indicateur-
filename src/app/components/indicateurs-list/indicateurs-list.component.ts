@@ -45,6 +45,18 @@ export class IndicateursListComponent implements OnInit {
   readonly peutGererIndicateurs = this.roles.peutGererIndicateurs;
   readonly peutSupprimer = this.roles.peutSupprimer;
 
+  // --- Recherche et tri (purement côté client : la liste tient en mémoire) ---
+
+  /** Texte saisi dans la barre de recherche. */
+  recherche = '';
+
+  /** Colonne servant de clé de tri. */
+  triColonne: 'code' | 'nom' | 'unite' | 'sourceDeDonner' | 'valeurs' = 'code';
+  triAscendant = true;
+
+  /** L'unité est saisie librement plutôt que choisie dans la liste. */
+  uniteLibre = false;
+
   ngOnInit(): void {
     this.charger();
   }
@@ -68,6 +80,72 @@ export class IndicateursListComponent implements OnInit {
         this.cdr.markForCheck();
       },
     });
+  }
+
+  /**
+   * Liste effectivement affichée : filtrée puis triée.
+   *
+   * Le filtrage et le tri sont faits en mémoire, sans appel réseau. C'est
+   * suffisant tant que le nombre d'indicateurs reste modeste ; au-delà de
+   * quelques centaines, il faudrait les déporter côté API (paramètres de
+   * requête et pagination).
+   */
+  get indicateursAffiches(): Indicateur[] {
+    const terme = this.recherche.trim().toLowerCase();
+
+    const filtres = terme
+      ? this.indicateurs.filter((i) =>
+          [i.code, i.nom, i.description, i.unite, i.sourceDeDonner, i.frequence, i.typeCollecte]
+            .some((champ) => (champ ?? '').toLowerCase().includes(terme)),
+        )
+      : [...this.indicateurs];
+
+    const sens = this.triAscendant ? 1 : -1;
+
+    return filtres.sort((a, b) => {
+      if (this.triColonne === 'valeurs') {
+        const na = (a.valeursIndicateurs ?? []).length;
+        const nb = (b.valeursIndicateurs ?? []).length;
+        return (na - nb) * sens;
+      }
+      const va = (a[this.triColonne] ?? '') as string;
+      const vb = (b[this.triColonne] ?? '') as string;
+      // localeCompare : « Écart » doit se classer près de « Ecart », pas à la fin.
+      return va.localeCompare(vb, 'fr', { numeric: true, sensitivity: 'base' }) * sens;
+    });
+  }
+
+  /** Clic sur un en-tête : même colonne = on inverse le sens, sinon on change de clé. */
+  trierPar(colonne: 'code' | 'nom' | 'unite' | 'sourceDeDonner' | 'valeurs'): void {
+    if (this.triColonne === colonne) {
+      this.triAscendant = !this.triAscendant;
+    } else {
+      this.triColonne = colonne;
+      this.triAscendant = true;
+    }
+  }
+
+  iconeTri(colonne: string): string {
+    if (this.triColonne !== colonne) return 'bi-arrow-down-up opacite-faible';
+    return this.triAscendant ? 'bi-sort-alpha-down' : 'bi-sort-alpha-up-alt';
+  }
+
+  effacerRecherche(): void {
+    this.recherche = '';
+  }
+
+  /** Bascule entre la liste d'unités et la saisie libre. */
+  basculerUniteLibre(): void {
+    this.uniteLibre = !this.uniteLibre;
+    if (this.uniteLibre) {
+      this.indicateurCourant.unite = '';
+    }
+  }
+
+  /** Vrai si l'unité enregistrée ne figure pas dans le référentiel. */
+  private uniteHorsReferentiel(unite: string | undefined): boolean {
+    if (!unite) return false;
+    return !this.unites.some((u) => u.valeur === unite);
   }
 
   private indicateurVide(): Indicateur {
@@ -96,6 +174,7 @@ export class IndicateursListComponent implements OnInit {
   ouvrirCreation(): void {
     this.modeEdition = false;
     this.indicateurCourant = this.indicateurVide();
+    this.uniteLibre = false;
     this.erreurFormulaire = '';
     this.cdr.markForCheck();
     this.afficherFormulaire = true;
@@ -104,6 +183,7 @@ export class IndicateursListComponent implements OnInit {
   ouvrirEdition(ind: Indicateur): void {
     this.modeEdition = true;
     this.indicateurCourant = { ...ind };
+    this.uniteLibre = this.uniteHorsReferentiel(ind.unite);
     this.erreurFormulaire = '';
     this.cdr.markForCheck();
     this.afficherFormulaire = true;

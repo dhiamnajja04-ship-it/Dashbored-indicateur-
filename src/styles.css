@@ -1087,3 +1087,129 @@ h1, h2, h3, h4, h5, h6 {
   .carte-reclamation { page-break-inside: avoid; border: 1px solid #ccc !important; }
   .liste-reclamations { gap: 0.5rem; }
 }
+
+/* ---------------------------------------------------------------------
+   Recherche et tri
+   --------------------------------------------------------------------- */
+
+.barre-recherche {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.champ-recherche {
+  position: relative;
+  flex: 1 1 320px;
+  max-width: 480px;
+}
+
+.champ-recherche > .bi-search {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--texte-doux);
+  font-size: 0.9rem;
+  pointer-events: none;
+}
+
+.champ-recherche .form-control {
+  padding-left: 2.25rem;
+  padding-right: 2.25rem;
+}
+
+/* La croix native des champs type=search est masquée : elle rend
+   différemment selon les navigateurs. */
+.champ-recherche input[type='search']::-webkit-search-cancel-button {
+  display: none;
+}
+
+.effacer-recherche {
+  position: absolute;
+  right: 0.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  border: 0;
+  background: transparent;
+  color: var(--texte-doux);
+  font-size: 0.8rem;
+  line-height: 1;
+  padding: 0.25rem;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.effacer-recherche:hover {
+  color: var(--texte);
+  background: var(--brouillon-fond);
+}
+
+.compteur-resultats {
+  font-size: 0.82rem;
+  color: var(--texte-doux);
+}
+
+/* En-tête de colonne cliquable : garde l'apparence d'un en-tête, pas d'un bouton. */
+.entete-triable {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  text-transform: inherit;
+  letter-spacing: inherit;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.entete-triable:hover { color: var(--marque); }
+
+.entete-triable:focus-visible {
+  outline: 2px solid var(--marque);
+  outline-offset: 2px;
+}
+
+.opacite-faible { opacity: 0.35; }
+
+/* Bascule « Autre unité… » sous le sélecteur. */
+.lien-bascule {
+  border: 0;
+  background: transparent;
+  padding: 0.25rem 0 0;
+  font-size: 0.76rem;
+  color: var(--marque);
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.lien-bascule:hover { color: var(--marque-fonce); }
+
+@media print {
+  .barre-recherche { display: none !important; }
+  .entete-triable .bi { display: none; }
+}
+
+/* Écart à la cible. Volontairement neutre en couleur (bleu / orange) : selon
+   l'indicateur, dépasser la cible est bon ou mauvais — l'interface indique le
+   sens de l'écart, elle ne le juge pas. */
+.ecart-cible {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.1rem;
+  margin-top: 0.2rem;
+  padding: 0.1rem 0.4rem;
+  border-radius: var(--rayon-sm);
+  font-size: 0.72rem;
+  font-weight: 600;
+  border: 1px solid transparent;
+}
+
+.ecart-positif  { color: #8a5a06; background: #fff6e6; border-color: #f0dcb4; }
+.ecart-negatif  { color: #0b5f8a; background: #e6f2f8; border-color: #b6d9ea; }
+.ecart-atteint  { color: var(--valide); background: var(--valide-fond); border-color: #b7e0c8; }

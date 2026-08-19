@@ -62,6 +62,31 @@ export class ConsulterIndicateurComponent implements OnInit {
     window.print();
   }
 
+  /**
+   * Écart entre une valeur et la cible de l'indicateur.
+   *
+   * Renvoie null si aucune cible n'est définie : afficher « +0 » dans ce cas
+   * laisserait croire que la cible est atteinte alors qu'il n'y en a pas.
+   *
+   * Attention au sens : un écart positif n'est pas toujours une bonne
+   * nouvelle. Dépasser une cible de chômage est mauvais, dépasser une cible de
+   * scolarisation est bon. L'interface se contente donc d'indiquer le sens de
+   * l'écart, sans le juger — c'est l'analyste qui interprète.
+   */
+  ecartCible(val: ValeurIndicateur): { texte: string; signe: 'positif' | 'negatif' | 'atteint' } | null {
+    const cible = this.indicateur?.valeurCible;
+    if (cible === null || cible === undefined) return null;
+
+    const ecart = Number(val.valeur) - Number(cible);
+    const arrondi = Math.round(ecart * 100) / 100;
+
+    if (arrondi === 0) return { texte: 'cible atteinte', signe: 'atteint' };
+
+    const signe = arrondi > 0 ? 'positif' : 'negatif';
+    const prefixe = arrondi > 0 ? '+' : '';
+    return { texte: `${prefixe}${arrondi} ${this.indicateur?.unite ?? ''}`.trim(), signe };
+  }
+
   ngOnInit(): void {
     const idParam = this.route.snapshot.paramMap.get('id');
     if (idParam) {

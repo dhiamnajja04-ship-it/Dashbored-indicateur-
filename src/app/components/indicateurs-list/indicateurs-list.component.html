@@ -95,26 +95,75 @@
 
             <div class="col-md-3">
               <label class="form-label requis" for="champUnite">Unité</label>
-              <input
-                id="champUnite"
-                class="form-control"
-                [class.champ-invalide]="unite.invalid && unite.touched"
-                name="unite"
-                [(ngModel)]="indicateurCourant.unite"
-                #unite="ngModel"
-                required
-                list="listeUnites"
-                placeholder="%"
-                autocomplete="off"
-              />
-              <!-- Liste de suggestions plutôt qu'un select fermé : les unités
-                   déjà en base doivent rester saisissables. -->
-              <datalist id="listeUnites">
-                <option *ngFor="let u of unites" [value]="u.valeur">{{ u.libelle }}</option>
-              </datalist>
-              <div class="message-erreur-champ" *ngIf="unite.invalid && unite.touched">
-                L'unité est obligatoire.
-              </div>
+              <!-- Chaque variante est enfermée dans son ng-container avec son
+                   message d'erreur : une référence #ngModel déclarée dans un
+                   *ngIf n'est pas visible depuis l'extérieur de ce bloc. -->
+              <ng-container *ngIf="!uniteLibre">
+                <select
+                  id="champUnite"
+                  class="form-select"
+                  [class.champ-invalide]="unite.invalid && unite.touched"
+                  name="unite"
+                  [(ngModel)]="indicateurCourant.unite"
+                  #unite="ngModel"
+                  required
+                >
+                  <option value="" disabled>— Choisir une unité —</option>
+                  <optgroup label="Proportions et indices">
+                    <option value="%">% — pourcentage</option>
+                    <option value="ratio">ratio</option>
+                    <option value="indice">indice (base 100)</option>
+                    <option value="points">points</option>
+                  </optgroup>
+                  <optgroup label="Effectifs et densités">
+                    <option value="nombre">nombre — effectif brut</option>
+                    <option value="pour 1 000 hab.">pour 1 000 habitants</option>
+                    <option value="pour 10 000 hab.">pour 10 000 habitants</option>
+                    <option value="pour 100 000 hab.">pour 100 000 habitants</option>
+                  </optgroup>
+                  <optgroup label="Monnaie">
+                    <option value="TND">TND — dinar tunisien</option>
+                    <option value="milliers TND">milliers de TND</option>
+                    <option value="millions TND">millions de TND</option>
+                  </optgroup>
+                  <optgroup label="Durées">
+                    <option value="années">années</option>
+                    <option value="jours">jours</option>
+                    <option value="heures">heures</option>
+                  </optgroup>
+                  <optgroup label="Grandeurs physiques">
+                    <option value="km">km — kilomètres</option>
+                    <option value="km²">km² — kilomètres carrés</option>
+                    <option value="m³">m³ — mètres cubes</option>
+                    <option value="tonnes">tonnes</option>
+                    <option value="kWh">kWh — kilowattheures</option>
+                  </optgroup>
+                </select>
+                <div class="message-erreur-champ" *ngIf="unite.invalid && unite.touched">
+                  L'unité est obligatoire.
+                </div>
+              </ng-container>
+
+              <ng-container *ngIf="uniteLibre">
+                <input
+                  id="champUniteLibre"
+                  class="form-control"
+                  [class.champ-invalide]="uniteL.invalid && uniteL.touched"
+                  name="unite"
+                  [(ngModel)]="indicateurCourant.unite"
+                  #uniteL="ngModel"
+                  required
+                  maxlength="50"
+                  placeholder="Unité personnalisée"
+                />
+                <div class="message-erreur-champ" *ngIf="uniteL.invalid && uniteL.touched">
+                  L'unité est obligatoire.
+                </div>
+              </ng-container>
+
+              <button type="button" class="lien-bascule" (click)="basculerUniteLibre()">
+                {{ uniteLibre ? '← Revenir à la liste' : 'Autre unité…' }}
+              </button>
             </div>
 
             <div class="col-12">
@@ -235,6 +284,35 @@
     </div>
   </div>
 
+  <!-- Recherche : filtre sur le code, le nom, la description, l'unité,
+       la source, la fréquence et le type de collecte. -->
+  <div class="barre-recherche sans-impression" *ngIf="!loading && !erreur">
+    <div class="champ-recherche">
+      <i class="bi bi-search"></i>
+      <input
+        type="search"
+        class="form-control"
+        [(ngModel)]="recherche"
+        name="recherche"
+        placeholder="Rechercher un indicateur (code, nom, source, unité…)"
+        aria-label="Rechercher un indicateur"
+      />
+      <button
+        type="button"
+        class="effacer-recherche"
+        *ngIf="recherche"
+        (click)="effacerRecherche()"
+        aria-label="Effacer la recherche"
+      >
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+    <span class="compteur-resultats">
+      <strong>{{ indicateursAffiches.length }}</strong>
+      sur {{ indicateurs.length }} indicateur(s)
+    </span>
+  </div>
+
   <!-- ---------------------------------------------------------------
        Tableau des indicateurs
        --------------------------------------------------------------- -->
@@ -254,16 +332,36 @@
       <table class="table table-hover align-middle">
         <thead>
           <tr>
-            <th class="ps-3">Code</th>
-            <th>Nom</th>
-            <th>Unité</th>
-            <th>Source</th>
-            <th class="text-center">Valeurs</th>
+            <th class="ps-3">
+              <button class="entete-triable" (click)="trierPar('code')">
+                Code <i class="bi" [ngClass]="iconeTri('code')"></i>
+              </button>
+            </th>
+            <th>
+              <button class="entete-triable" (click)="trierPar('nom')">
+                Nom <i class="bi" [ngClass]="iconeTri('nom')"></i>
+              </button>
+            </th>
+            <th>
+              <button class="entete-triable" (click)="trierPar('unite')">
+                Unité <i class="bi" [ngClass]="iconeTri('unite')"></i>
+              </button>
+            </th>
+            <th>
+              <button class="entete-triable" (click)="trierPar('sourceDeDonner')">
+                Source <i class="bi" [ngClass]="iconeTri('sourceDeDonner')"></i>
+              </button>
+            </th>
+            <th class="text-center">
+              <button class="entete-triable" (click)="trierPar('valeurs')">
+                Valeurs <i class="bi" [ngClass]="iconeTri('valeurs')"></i>
+              </button>
+            </th>
             <th class="text-end pe-3 colonne-actions">Actions</th>
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let ind of indicateurs">
+          <tr *ngFor="let ind of indicateursAffiches">
             <td class="ps-3"><span class="code-indicateur">{{ ind.code }}</span></td>
             <td>
               <div class="fw-semibold">{{ ind.nom }}</div>
@@ -307,11 +405,17 @@
             </td>
           </tr>
 
-          <tr *ngIf="indicateurs.length === 0">
+          <tr *ngIf="indicateursAffiches.length === 0">
             <td colspan="6">
               <div class="etat-vide">
-                <i class="bi bi-inbox icone-vide"></i>
-                <p class="mb-3">Aucun indicateur pour le moment.</p>
+                <i class="bi icone-vide" [ngClass]="recherche ? 'bi-search' : 'bi-inbox'"></i>
+                <p class="mb-3" *ngIf="recherche">
+                  Aucun indicateur ne correspond à « {{ recherche }} ».
+                </p>
+                <button class="btn btn-outline-secondary btn-sm mb-2" *ngIf="recherche" (click)="effacerRecherche()">
+                  Effacer la recherche
+                </button>
+                <p class="mb-3" *ngIf="!recherche">Aucun indicateur pour le moment.</p>
                 <button
                   class="btn btn-primary btn-sm"
                   (click)="ouvrirCreation()"
