@@ -38,7 +38,7 @@ minikube ip
                     │ <IP>:5432             │└──────────┬─────────┘
                     └───────────────────────┘           ▼
                                                 ┌────────────────────┐
-                                                │ ollama — mistral   │
+                                                │ ollama — qwen2.5   │
                                                 │ ClusterIP + PVC    │
                                                 └────────────────────┘
 ```
@@ -260,9 +260,42 @@ réponse IA ne parle que de ces 2-là »*. Dévalider en retire un du périmètr
 
 Le modèle retenu est `qwen2.5:0.5b`, imposé par la VM (4 cœurs, voir
 [semaine-01](../semaine-01/README.md#révision-du-choix-après-mesure-sur-la-vm)).
-Son **ancrage** est correct : il ne cite jamais un indicateur non validé, ce qui
-est la règle évaluée. En revanche sa **rédaction** est faible : répétitions, et
-il lui arrive de mal recopier un chiffre ou de confondre valeur et cible.
+Il faut distinguer deux choses :
+
+- **Le filtrage est fiable** — c'est la règle évaluée par le sujet. Le modèle ne
+  reçoit *que* les valeurs validées : le périmètre est construit côté métier
+  (`GET /api/indicators/validated`), vérifiable via `GET /api/ia/contexte`, et
+  affiché à l'écran. Sur toutes les exécutions, seuls `IND-CHOM` et `IND-SCOL`
+  ont été transmis et cités.
+- **La rédaction est faible** — à 0,5 milliard de paramètres, le modèle répète
+  des sections et lui arrive d'inventer des lignes. Exemple réellement obtenu :
+
+  ```
+  1. Taux de chômage (IND-CHOM) : 12,4%
+     - 12,4% (… période #1 …)
+     - 12,4% (… période #2 …)   <-- n'existe pas en base
+     - 12,4% (… période #3 …)   <-- n'existe pas en base
+  ```
+
+  Une seule valeur existe en base. Le modèle n'a pas ajouté d'indicateur non
+  validé (la règle tient), mais il a dupliqué une ligne.
+
+**Conséquence honnête** : la contrainte « pas de texte inventé » (semaine 5) est
+respectée sur le *périmètre*, pas encore sur le *détail rédactionnel*.
 
 C'est une limite du dimensionnement de la VM, pas de l'architecture : le modèle
 se change avec une seule variable (`Ollama__Model`), sans reconstruire d'image.
+
+**Montée en gamme recommandée** dès qu'une connexion stable est disponible —
+`gemma2:2b` (~1,6 Go) rédige nettement mieux en français :
+
+```bash
+docker compose exec ollama ollama pull gemma2:2b
+# puis dans docker-compose.yml : Ollama__Model: "gemma2:2b"
+docker compose up -d --force-recreate ia-service
+```
+
+Deux tentatives de téléchargement ont échoué ici (`TLS handshake timeout`, puis
+`unexpected EOF`) : le débit de la VM s'est révélé très irrégulier, entre
+200 Ko/s et 3,6 Mo/s. `ollama pull` reprend un téléchargement interrompu, il
+suffit de relancer la commande.

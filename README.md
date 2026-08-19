@@ -25,7 +25,7 @@ Navigateur ─▶ frontend ─▶ gateway ─┬─▶ metier-service ─▶ Pos
 | [`GatewayService/`](GatewayService/) | Gateway | .NET 8 | NodePort 30169 |
 | [`MetierService/`](MetierService/) | Métier | .NET 8 + EF Core | ClusterIP |
 | [`IaService/`](IaService/) | IA | .NET 8 | ClusterIP |
-| — | Modèle | Ollama (mistral) | ClusterIP + PVC |
+| — | Modèle | Ollama (`qwen2.5:0.5b`) | ClusterIP + PVC |
 
 PostgreSQL est un **serveur externe**, jamais conteneurisé.
 
@@ -58,7 +58,7 @@ psql -h <IP> -U <USER> -d <BASE> -f db/02-donnees-demo.sql
 ./k8s/deploy.sh
 
 # 4. Modèle (une seule fois, persiste dans le PVC)
-kubectl -n indicateurs exec deploy/ollama -- ollama pull mistral
+kubectl -n indicateurs exec deploy/ollama -- ollama pull qwen2.5:0.5b
 ```
 
 Interface : `http://$(minikube ip):30080`
@@ -71,7 +71,7 @@ Pour développer ou faire une démonstration sans cluster :
 
 ```bash
 docker compose up -d --build          # construit et démarre les 6 conteneurs
-docker compose exec ollama ollama pull mistral   # une seule fois (~4 Go)
+docker compose exec ollama ollama pull qwen2.5:0.5b   # une seule fois (~400 Mo)
 docker compose ps
 ```
 
@@ -107,7 +107,7 @@ npm start                           # http://localhost:4200
 ```
 
 `ng serve` relaie `/api` vers le Gateway via [`proxy.conf.json`](proxy.conf.json).
-Ollama doit tourner sur la machine (`ollama serve` + `ollama pull mistral`).
+Ollama doit tourner sur la machine (`ollama serve` + `ollama pull qwen2.5:0.5b`).
 
 La chaîne de connexion locale se met dans `MetierService/appsettings.Development.json`,
 qui n'est pas versionné.
@@ -184,5 +184,9 @@ rw9980/
 ```bash
 npm start          # serveur de développement
 npm run build      # build de production -> dist/
-npm test           # tests unitaires (Vitest)
 ```
+
+> Le projet ne contient **pas** de tests unitaires : le sujet du stage n'en
+> demande pas, et aucun fichier `*.spec.ts` n'est présent. Vitest et jsdom
+> figurent encore dans les `devDependencies` du gabarit Angular, mais le script
+> `npm test` (`ng test`) n'aurait rien à exécuter.

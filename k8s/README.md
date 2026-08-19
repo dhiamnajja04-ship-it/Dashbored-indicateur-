@@ -83,7 +83,7 @@ Le modèle n'est pas dans l'image : il est téléchargé dans le volume persista
 et survit donc aux redémarrages du pod.
 
 ```bash
-kubectl -n indicateurs exec deploy/ollama -- ollama pull mistral
+kubectl -n indicateurs exec deploy/ollama -- ollama pull qwen2.5:0.5b
 kubectl -n indicateurs exec deploy/ollama -- ollama list
 ```
 

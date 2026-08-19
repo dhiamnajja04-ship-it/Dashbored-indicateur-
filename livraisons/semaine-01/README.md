@@ -111,7 +111,7 @@ libre au sens strict, et le sujet demande un modèle « gratuit » sans ambiguï
 téléchargé une fois dans un `PersistentVolumeClaim` de 15 Gi :
 
 ```bash
-kubectl -n indicateurs exec deploy/ollama -- ollama pull mistral
+kubectl -n indicateurs exec deploy/ollama -- ollama pull qwen2.5:0.5b
 ```
 
 Le modèle n'est volontairement pas embarqué dans une image Docker : cela

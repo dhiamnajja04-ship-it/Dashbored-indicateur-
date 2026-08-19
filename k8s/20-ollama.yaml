@@ -10,7 +10,7 @@ spec:
     - ReadWriteOnce
   resources:
     requests:
-      # Mistral 7B quantifié ≈ 4 Go. On prévoit large pour pouvoir en tester un second.
+      # qwen2.5:0.5b ≈ 400 Mo. On prévoit large pour pouvoir tester un modèle plus gros.
       storage: 15Gi
 ---
 apiVersion: apps/v1
@@ -45,7 +45,7 @@ spec:
             - name: modeles
               mountPath: /root/.ollama
           # Le téléchargement du modèle est fait une fois, à la main :
-          #   kubectl -n indicateurs exec deploy/ollama -- ollama pull mistral
+          #   kubectl -n indicateurs exec deploy/ollama -- ollama pull qwen2.5:0.5b
           # Il persiste ensuite dans le PVC, même après redémarrage du pod.
           readinessProbe:
             httpGet:

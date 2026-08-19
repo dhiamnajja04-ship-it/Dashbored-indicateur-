@@ -8,7 +8,7 @@ curl ──▶ gateway ──▶ ia-service ──▶ metier-service ──▶ P
                           │             valeurs validées)
                           ▼
                      ollama :11434
-                     modèle mistral (local, PVC)
+                     modèle qwen2.5:0.5b (local, PVC)
 ```
 
 **Le service IA n'a aucun accès à PostgreSQL.** Le manifest
@@ -32,11 +32,11 @@ du modèle.
 ## Installation du modèle
 
 ```bash
-kubectl -n indicateurs exec deploy/ollama -- ollama pull mistral
+kubectl -n indicateurs exec deploy/ollama -- ollama pull qwen2.5:0.5b
 kubectl -n indicateurs exec deploy/ollama -- ollama list
 ```
 
-Le modèle est stocké dans un PVC de 15 Gi : le téléchargement (~4 Go) n'a lieu
+Le modèle est stocké dans un PVC de 15 Gi : le téléchargement (~400 Mo) n'a lieu
 qu'une fois et survit aux redémarrages du pod.
 
 ## Commandes
@@ -65,7 +65,7 @@ curl -s -X POST http://$IP:30169/api/ia/analyse \
 ```json
 {
   "reponse": "Deux indicateurs validés sont disponibles pour l'année 2025. Le taux de chômage s'établit à 12,4 %, soit 2,4 points au-dessus de la cible de 10 %... ",
-  "modele": "mistral",
+  "modele": "qwen2.5:0.5b",
   "nbIndicateursAnalyses": 2,
   "nbValeursValidees": 2,
   "indicateursUtilises": ["IND-CHOM", "IND-SCOL"],

@@ -55,6 +55,9 @@ services:
       # deux inférences simultanées rendent la machine inutilisable.
       OLLAMA_NUM_PARALLEL: "1"
       OLLAMA_MAX_LOADED_MODELS: "1"
+      # Modele garde resident : les mesures ont montre que le cout dominant
+      # etait le chargement a froid du modele, pas la generation elle-meme.
+      OLLAMA_KEEP_ALIVE: "-1"
     deploy:
       resources:
         limits:
@@ -66,7 +69,7 @@ services:
     volumes:
       - ollama-data:/root/.ollama
     # Le modèle se télécharge une fois, après le démarrage :
-    #   docker compose exec ollama ollama pull mistral
+    #   docker compose exec ollama ollama pull qwen2.5:0.5b
     # Il persiste ensuite dans le volume ollama-data.
 
   ia-service:
@@ -75,15 +78,17 @@ services:
     environment:
       MetierServiceUrl: "http://metier-service:8080/api/indicators/"
       Ollama__BaseUrl: "http://ollama:11434"
-      # Mistral 7B conservé : le repli Phi-3 prévu en semaine 1 est inapplicable
-      # ici, la bande passante (~200 Ko/s) ne permet pas de télécharger 2,2 Go.
-      Ollama__Model: "mistral"
+      # Qwen2.5 0.5B : modèle open source (Apache 2.0) téléchargé et exécuté en
+      # local, comme l'impose le sujet. Retenu à la place de Mistral 7B car la
+      # VM n'a que 4 cœurs : Mistral ne terminait pas dans les 200 s du Gateway
+      # et saturait le processeur (charge > 8), rendant la machine inutilisable.
+      # Mistral reste dans le volume ollama-data : revenir en arrière = 1 ligne.
+      Ollama__Model: "qwen2.5:0.5b"
       Ollama__TimeoutSeconds: "180"
-      # LEVIER PRINCIPAL sur une machine à 4 cœurs : le temps de génération est
-      # proportionnel au nombre de jetons produits. Le prompt demande 5 à 10
-      # lignes (~150 jetons) ; plafonner à 200 au lieu de 512 divise le temps
-      # par ~2,5 sans tronquer la réponse attendue.
-      Ollama__MaxTokens: "200"
+      # Le temps de génération est proportionnel au nombre de jetons produits.
+      # 512 laisse la place à une synthèse complète sans troncature ; avec un
+      # modèle 0.5B cela reste de l'ordre de la dizaine de secondes.
+      Ollama__MaxTokens: "512"
       ASPNETCORE_ENVIRONMENT: Production
     depends_on:
       - metier-service
