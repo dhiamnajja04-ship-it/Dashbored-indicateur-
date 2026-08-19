@@ -293,6 +293,7 @@
         type="search"
         class="form-control"
         [(ngModel)]="recherche"
+        (ngModelChange)="surRecherche()"
         name="recherche"
         placeholder="Rechercher un indicateur (code, nom, source, unité…)"
         aria-label="Rechercher un indicateur"
@@ -307,10 +308,23 @@
         <i class="bi bi-x-lg"></i>
       </button>
     </div>
-    <span class="compteur-resultats">
-      <strong>{{ indicateursAffiches.length }}</strong>
-      sur {{ indicateurs.length }} indicateur(s)
+    <span class="compteur-resultats" *ngIf="total > 0">
+      <strong>{{ premierAffiche }}–{{ dernierAffiche }}</strong> sur {{ total }} indicateur(s)
     </span>
+    <span class="compteur-resultats" *ngIf="total === 0">Aucun résultat</span>
+
+    <label class="compteur-resultats d-flex align-items-center gap-2 ms-auto">
+      Par page
+      <select
+        class="form-select form-select-sm"
+        style="width: auto"
+        [ngModel]="taille"
+        (ngModelChange)="changerTaille($event)"
+        name="taillePage"
+      >
+        <option *ngFor="let t of taillesPage" [value]="t">{{ t }}</option>
+      </select>
+    </label>
   </div>
 
   <!-- ---------------------------------------------------------------
@@ -449,5 +463,56 @@
         </tbody>
       </table>
     </div>
+
+    <!-- Pagination : la page demandée est calculée par PostgreSQL, seule
+         cette page transite sur le réseau. -->
+    <nav class="pagination-barre sans-impression" *ngIf="nbPages > 1" aria-label="Pagination">
+      <button
+        class="btn btn-sm btn-outline-secondary"
+        (click)="allerPage(page - 1)"
+        [disabled]="page === 1"
+        aria-label="Page précédente"
+      >
+        <i class="bi bi-chevron-left"></i>
+      </button>
+
+      <button
+        class="btn btn-sm"
+        *ngIf="!pagesVisibles.includes(1)"
+        [ngClass]="'btn-outline-secondary'"
+        (click)="allerPage(1)"
+      >
+        1
+      </button>
+      <span class="ellipse-pagination" *ngIf="!pagesVisibles.includes(1)">…</span>
+
+      <button
+        class="btn btn-sm"
+        *ngFor="let n of pagesVisibles"
+        [ngClass]="n === page ? 'btn-primary' : 'btn-outline-secondary'"
+        [attr.aria-current]="n === page ? 'page' : null"
+        (click)="allerPage(n)"
+      >
+        {{ n }}
+      </button>
+
+      <span class="ellipse-pagination" *ngIf="!pagesVisibles.includes(nbPages)">…</span>
+      <button
+        class="btn btn-sm btn-outline-secondary"
+        *ngIf="!pagesVisibles.includes(nbPages)"
+        (click)="allerPage(nbPages)"
+      >
+        {{ nbPages }}
+      </button>
+
+      <button
+        class="btn btn-sm btn-outline-secondary"
+        (click)="allerPage(page + 1)"
+        [disabled]="page === nbPages"
+        aria-label="Page suivante"
+      >
+        <i class="bi bi-chevron-right"></i>
+      </button>
+    </nav>
   </div>
 </div>

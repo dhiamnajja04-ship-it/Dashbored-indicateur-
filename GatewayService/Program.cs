@@ -82,6 +82,19 @@ app.Map(
         Relayer(ctx, f, RacineDe(c["MetierServiceUrl"], "http://localhost:5039") + "/api/reclamations", "")
 );
 
+// --- Référentiel des agents (table utilisateurs) ---
+app.Map(
+    "/api/utilisateurs/{**catchAll}",
+    (HttpContext ctx, IHttpClientFactory f, IConfiguration c, string? catchAll) =>
+        Relayer(ctx, f, RacineDe(c["MetierServiceUrl"], "http://localhost:5039/api/indicators") + "/api/utilisateurs", catchAll ?? "")
+);
+
+app.Map(
+    "/api/utilisateurs",
+    (HttpContext ctx, IHttpClientFactory f, IConfiguration c) =>
+        Relayer(ctx, f, RacineDe(c["MetierServiceUrl"], "http://localhost:5039/api/indicators") + "/api/utilisateurs", "")
+);
+
 // --- Routage vers le service IA : tout ce qui est sous /api/ia ---
 // Le frontend n'appelle jamais le service IA directement (règle d'architecture S1).
 app.Map(
@@ -124,24 +137,42 @@ static async Task Relayer(
 
     if (context.Request.ContentLength is > 0)
     {
-        using var reader = new StreamReader(context.Request.Body);
-        var bodyStr = await reader.ReadToEndAsync();
-        requestMessage.Content = new StringContent(bodyStr, Encoding.UTF8, "application/json");
+        // Le corps est relayé tel quel, en conservant son Content-Type d'origine.
+        // Le forcer en application/json casserait tout envoi multipart/form-data
+        // (dépôt de fichier), et la lecture en mémoire interdirait les gros corps.
+        requestMessage.Content = new StreamContent(context.Request.Body);
+
+        if (!string.IsNullOrWhiteSpace(context.Request.ContentType)
+            && System.Net.Http.Headers.MediaTypeHeaderValue.TryParse(
+                context.Request.ContentType, out var typeMedia))
+        {
+            requestMessage.Content.Headers.ContentType = typeMedia;
+        }
     }
 
     try
     {
-        using var response = await client.SendAsync(requestMessage, context.RequestAborted);
-        var content = await response.Content.ReadAsStringAsync(context.RequestAborted);
+        using var response = await client.SendAsync(
+            requestMessage, HttpCompletionOption.ResponseHeadersRead, context.RequestAborted);
 
         context.Response.StatusCode = (int)response.StatusCode;
 
-        if (!string.IsNullOrEmpty(content))
+        if (response.Content.Headers.ContentType is not null)
         {
-            context.Response.ContentType =
-                response.Content.Headers.ContentType?.ToString() ?? "application/json";
-            await context.Response.WriteAsync(content, context.RequestAborted);
+            context.Response.ContentType = response.Content.Headers.ContentType.ToString();
         }
+
+        // Le nom du fichier téléchargé voyage dans cet en-tête : sans lui, le
+        // navigateur enregistrerait le document sous le nom de la route.
+        if (response.Content.Headers.ContentDisposition is not null)
+        {
+            context.Response.Headers["Content-Disposition"] =
+                response.Content.Headers.ContentDisposition.ToString();
+        }
+
+        // Copie en flux : un PDF de plusieurs mégaoctets ne passe pas par une
+        // chaîne de caractères.
+        await response.Content.CopyToAsync(context.Response.Body, context.RequestAborted);
     }
     catch (TaskCanceledException) when (!context.RequestAborted.IsCancellationRequested)
     {

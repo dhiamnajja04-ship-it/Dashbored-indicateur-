@@ -8,7 +8,20 @@ public class AppDbContext : DbContext
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
     public DbSet<Indicateur> Indicateurs { get; set; }
-    public DbSet<ValeurIndicateur> ValeursIndicateurs { get; set; }
+    /// <summary>
+        /// Expose la fonction PostgreSQL unaccent() à LINQ.
+        ///
+        /// Elle permet de traduire la recherche en SQL au lieu de la faire en
+        /// mémoire : sans elle, chercher « densite » ne trouverait pas
+        /// « Densité médicale ». L'extension est créée par
+        /// db/05-documents-et-utilisateurs.sql.
+        /// </summary>
+        [DbFunction("unaccent", IsBuiltIn = false)]
+        public static string Unaccent(string texte) => throw new NotSupportedException();
+
+        public DbSet<Utilisateur> Utilisateurs { get; set; } = null!;
+        public DbSet<Document> Documents { get; set; } = null!;
+        public DbSet<ValeurIndicateur> ValeursIndicateurs { get; set; }
     public DbSet<Reclamation> Reclamations { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -65,6 +78,34 @@ public class AppDbContext : DbContext
             entity.Property(e => e.Reponse).HasColumnName("reponse");
             entity.Property(e => e.CreeLe).HasColumnName("cree_le");
             entity.Property(e => e.TraiteLe).HasColumnName("traite_le");
+
+            modelBuilder.Entity<Utilisateur>(entity =>
+            {
+                entity.ToTable("utilisateurs");
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Id).HasColumnName("id");
+                entity.Property(e => e.NomUtilisateur).HasColumnName("nom_utilisateur");
+                entity.Property(e => e.Role).HasColumnName("role");
+                entity.Property(e => e.Actif).HasColumnName("actif");
+            });
+
+            modelBuilder.Entity<Document>(entity =>
+            {
+                // « meta_data » vient du schéma initial : le nom de table reste,
+                // seul son usage est désormais défini.
+                entity.ToTable("meta_data");
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Id).HasColumnName("id");
+                entity.Property(e => e.IndicateurId).HasColumnName("indicateur_id");
+                entity.Property(e => e.Description).HasColumnName("description");
+                entity.Property(e => e.SourceDonnee).HasColumnName("source_donnee");
+                entity.Property(e => e.NomFichier).HasColumnName("nom_fichier");
+                entity.Property(e => e.NomStocke).HasColumnName("nom_stocke");
+                entity.Property(e => e.TypeMime).HasColumnName("type_mime");
+                entity.Property(e => e.TailleOctets).HasColumnName("taille_octets");
+                entity.Property(e => e.DeposePar).HasColumnName("depose_par");
+                entity.Property(e => e.DeposeLe).HasColumnName("depose_le");
+            });
         });
     }
 }

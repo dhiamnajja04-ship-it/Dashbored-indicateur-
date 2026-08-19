@@ -9,6 +9,8 @@ import {
   ValeurIndicateur,
   Statut,
   LIBELLES_STATUT,
+  Document,
+  Utilisateur,
 } from '../../services/indicateur.service';
 import { NotificationService } from '../../services/notification.service';
 import { RoleService } from '../../services/role.service';
@@ -58,6 +60,102 @@ export class ConsulterIndicateurComponent implements OnInit {
   readonly pays = PAYS;
   readonly gouvernorats = GOUVERNORATS_TUNISIE;
   readonly imprimeLe = new Date();
+
+  // --- Documents justificatifs (table meta_data) ---
+
+  documents: Document[] = [];
+  fichierChoisi: File | null = null;
+  descriptionDocument = '';
+  depotEnCours = false;
+  erreurDocument = '';
+
+  // --- Référentiel des agents (table utilisateurs) ---
+
+  agents: Utilisateur[] = [];
+
+  chargerDocuments(): void {
+    if (!this.indicateurId) return;
+    this.indicateurService.getDocuments(this.indicateurId).subscribe({
+      next: (docs) => {
+        this.documents = docs;
+        this.cdr.markForCheck();
+      },
+      error: (err) => console.error('Erreur lors du chargement des documents', err),
+    });
+  }
+
+  chargerAgents(): void {
+    this.indicateurService.getUtilisateurs().subscribe({
+      next: (liste) => {
+        this.agents = liste;
+        this.cdr.markForCheck();
+      },
+      error: (err) => console.error('Erreur lors du chargement des agents', err),
+    });
+  }
+
+  surFichierChoisi(evenement: Event): void {
+    const entree = evenement.target as HTMLInputElement;
+    this.fichierChoisi = entree.files?.[0] ?? null;
+    this.erreurDocument = '';
+    this.cdr.markForCheck();
+  }
+
+  deposerDocument(): void {
+    if (!this.fichierChoisi || !this.indicateurId || this.depotEnCours) return;
+
+    this.depotEnCours = true;
+    this.erreurDocument = '';
+    this.cdr.markForCheck();
+
+    this.indicateurService
+      .deposerDocument(
+        this.indicateurId,
+        this.fichierChoisi,
+        this.descriptionDocument.trim() || undefined,
+        this.valeurCourante.saisiePar || undefined,
+      )
+      .subscribe({
+        next: (doc) => {
+          this.depotEnCours = false;
+          this.fichierChoisi = null;
+          this.descriptionDocument = '';
+          this.notifications.succes('Document déposé', doc.nomFichier ?? '');
+          this.chargerDocuments();
+          this.cdr.markForCheck();
+        },
+        error: (err: HttpErrorResponse) => {
+          this.depotEnCours = false;
+          this.erreurDocument = this.messageErreur(err);
+          this.notifications.erreur('Dépôt refusé', this.erreurDocument);
+          this.cdr.markForCheck();
+        },
+      });
+  }
+
+  urlDocument(id: number): string {
+    return this.indicateurService.urlTelechargement(id);
+  }
+
+  supprimerDocument(doc: Document): void {
+    if (!confirm(`Supprimer définitivement « ${doc.nomFichier} » ?`)) return;
+    this.indicateurService.supprimerDocument(doc.id).subscribe({
+      next: () => {
+        this.notifications.succes('Document supprimé', doc.nomFichier ?? '');
+        this.chargerDocuments();
+      },
+      error: (err: HttpErrorResponse) =>
+        this.notifications.erreur('Suppression impossible', this.messageErreur(err)),
+    });
+  }
+
+  /** Taille lisible : 1 234 octets n'aide personne, « 1,2 ko » si. */
+  tailleLisible(octets?: number): string {
+    if (!octets) return '—';
+    if (octets < 1024) return `${octets} o`;
+    if (octets < 1024 * 1024) return `${(octets / 1024).toFixed(1)} ko`;
+    return `${(octets / 1024 / 1024).toFixed(1)} Mo`;
+  }
 
   // --- Filtre par statut du tableau des valeurs ---
 
@@ -136,6 +234,8 @@ export class ConsulterIndicateurComponent implements OnInit {
     if (idParam) {
       this.indicateurId = +idParam;
       this.chargerDetails();
+      this.chargerDocuments();
+      this.chargerAgents();
     }
   }
 

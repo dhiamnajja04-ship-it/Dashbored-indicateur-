@@ -123,13 +123,19 @@
 
               <div class="col-md-4">
                 <label class="form-label" for="champSaisiePar">Saisi par</label>
-                <input
+                <!-- Liste fermée issue de la table « utilisateurs » : le texte
+                     libre produisait deux agents pour deux orthographes. -->
+                <select
                   id="champSaisiePar"
-                  class="form-control"
+                  class="form-select"
                   name="saisiePar"
                   [(ngModel)]="valeurCourante.saisiePar"
-                  placeholder="Votre nom"
-                />
+                >
+                  <option value="">— Choisir un agent —</option>
+                  <option *ngFor="let a of agents" [value]="a.nomUtilisateur">
+                    {{ a.nomUtilisateur }} — {{ a.role }}
+                  </option>
+                </select>
               </div>
             </div>
           </div>
@@ -430,6 +436,113 @@
           <strong>{{ nbValeursValidees }}</strong> valeur(s) validée(s) sur
           {{ valeurs.length }} — seules les valeurs validées sont transmises à l'IA.
         </span>
+      </div>
+    </div>
+
+    <!-- Documents justificatifs (table meta_data) -->
+    <div class="card mt-4">
+      <div class="card-header d-flex align-items-center gap-2">
+        <i class="bi bi-paperclip"></i>Documents justificatifs
+        <span class="etiquette ms-auto">{{ documents.length }}</span>
+      </div>
+
+      <div class="card-body">
+        <div *ngIf="erreurDocument" class="alert alert-danger d-flex align-items-start gap-2 py-2">
+          <i class="bi bi-exclamation-circle-fill mt-1"></i>
+          <div class="small">{{ erreurDocument }}</div>
+        </div>
+
+        <div class="row g-3 align-items-end sans-impression" *ngIf="peutSaisir()">
+          <div class="col-md-5">
+            <label class="form-label" for="champFichierDoc">Fichier</label>
+            <input
+              id="champFichierDoc"
+              type="file"
+              class="form-control"
+              accept=".pdf,.csv,.xlsx,.xls,.ods,.doc,.docx,.txt,.png,.jpg,.jpeg"
+              (change)="surFichierChoisi($event)"
+              [disabled]="depotEnCours"
+            />
+            <div class="aide-champ">10 Mo maximum. PDF, tableur, texte ou image.</div>
+          </div>
+
+          <div class="col-md-5">
+            <label class="form-label" for="champDescDoc">Description</label>
+            <input
+              id="champDescDoc"
+              class="form-control"
+              [(ngModel)]="descriptionDocument"
+              name="descriptionDocument"
+              placeholder="Note méthodologique, extrait d'enquête…"
+              [disabled]="depotEnCours"
+            />
+          </div>
+
+          <div class="col-md-2 d-grid">
+            <button
+              class="btn btn-primary"
+              (click)="deposerDocument()"
+              [disabled]="!fichierChoisi || depotEnCours"
+            >
+              <span *ngIf="depotEnCours" class="spinner-border spinner-border-sm"></span>
+              <i class="bi bi-upload" *ngIf="!depotEnCours"></i>
+              {{ depotEnCours ? 'Envoi…' : 'Déposer' }}
+            </button>
+          </div>
+        </div>
+
+        <div class="tableau-defilant mt-3" *ngIf="documents.length > 0">
+          <table class="table table-hover align-middle">
+            <thead>
+              <tr>
+                <th class="ps-3">Fichier</th>
+                <th>Description</th>
+                <th>Taille</th>
+                <th>Déposé par</th>
+                <th>Le</th>
+                <th class="text-end pe-3 colonne-actions">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let doc of documents">
+                <td class="ps-3">
+                  <i class="bi bi-file-earmark-text me-1 text-muted"></i>{{ doc.nomFichier }}
+                </td>
+                <td class="small text-muted">{{ doc.description || '—' }}</td>
+                <td class="small">{{ tailleLisible(doc.tailleOctets) }}</td>
+                <td class="small">{{ doc.deposePar || '—' }}</td>
+                <td class="small text-muted">{{ doc.deposeLe | date: 'dd/MM/yyyy HH:mm' }}</td>
+                <td class="text-end pe-3 colonne-actions">
+                  <div class="actions-ligne">
+                    <a
+                      [href]="urlDocument(doc.id)"
+                      class="btn btn-sm btn-outline-primary"
+                      target="_blank"
+                      rel="noopener"
+                      title="Télécharger"
+                    >
+                      <i class="bi bi-download"></i>
+                    </a>
+                    <button
+                      class="btn btn-sm btn-outline-danger btn-icone"
+                      (click)="supprimerDocument(doc)"
+                      *ngIf="peutSupprimer()"
+                      title="Supprimer le document"
+                      aria-label="Supprimer le document"
+                    >
+                      <i class="bi bi-trash"></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="etat-vide py-4" *ngIf="documents.length === 0">
+          <i class="bi bi-paperclip icone-vide"></i>
+          <p class="mb-0">Aucun document attaché à cet indicateur.</p>
+        </div>
       </div>
     </div>
 

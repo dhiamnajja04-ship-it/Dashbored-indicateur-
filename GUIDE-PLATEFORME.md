@@ -42,8 +42,8 @@ commentaire.
 | `organisations` | 4 | Producteurs de données |
 | `periodes` | 6 | Périodes de référence |
 | `reclamations` | 10 | Signalements des utilisateurs |
-| `utilisateurs` | 3 | Table présente dans le schéma initial, non exploitée |
-| `meta_data` | 4 | Table présente dans le schéma initial, non exploitée |
+| `utilisateurs` | 4 | **Référentiel des agents** — pas des comptes, aucune authentification |
+| `meta_data` | 10 | **Documents justificatifs** attachés à un indicateur |
 
 **La table qui compte est `valeurs_indicateurs`.** Un indicateur est une
 définition ; une valeur est une mesure, rattachée à une organisation, une
@@ -68,6 +68,7 @@ Le drapeau lu par l'IA et le statut du workflow ne peuvent pas diverger. Un
 | `db/02-donnees-demo.sql` | 5 indicateurs, 5 valeurs dont 2 validées |
 | `db/03-reclamations.sql` | Table des réclamations |
 | `db/04-localisation.sql` | Colonnes pays et gouvernorat |
+| `db/05-documents-et-utilisateurs.sql` | Documents, référentiel d'agents, extension `unaccent` |
 
 Tous sont **idempotents** : les rejouer ne casse rien.
 
@@ -189,10 +190,10 @@ Annoncé plutôt que découvert :
 |---|---|
 | **Pas d'authentification** | Non demandée par le sujet. Les rôles filtrent l'interface, pas l'API. |
 | **Pas de tests automatisés** | Non demandés. Vérifications par scénario reproductible. |
-| **Pas de pagination** | Recherche et tri en mémoire, suffisant à cette échelle. |
+
 | **Modèle IA léger** | 4 cœurs sans GPU. Le périmètre est garanti, pas la qualité rédactionnelle. |
-| **Dépôt de fichier non actif** | L'emplacement existe dans le formulaire ; le stockage serveur reste à faire. |
-| **Tables `utilisateurs` et `meta_data` inutilisées** | Héritées du schéma initial, conservées sans être exploitées. |
+
+
 
 ## 9. Volumétrie
 

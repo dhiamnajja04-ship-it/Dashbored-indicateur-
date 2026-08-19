@@ -57,62 +57,105 @@ export class IndicateursListComponent implements OnInit {
   /** L'unité est saisie librement plutôt que choisie dans la liste. */
   uniteLibre = false;
 
+  // --- Pagination (côté serveur) ---
+
+  page = 1;
+  taille = 10;
+  total = 0;
+  nbPages = 0;
+
+  /** Tailles de page proposées. */
+  readonly taillesPage = [5, 10, 25, 50];
+
+  private minuteurRecherche?: ReturnType<typeof setTimeout>;
+
   ngOnInit(): void {
     this.charger();
   }
 
   charger(): void {
     this.loading = true;
-    this.cdr.markForCheck();
     this.erreur = '';
     this.cdr.markForCheck();
-    this.indicateurService.getAll().subscribe({
-      next: (data) => {
-        this.indicateurs = data;
-        this.loading = false;
-        this.cdr.markForCheck();
-      },
-      error: (err) => {
-        console.error('Erreur lors du chargement des indicateurs', err);
-        this.erreur = 'Impossible de charger les indicateurs.';
-        this.cdr.markForCheck();
-        this.loading = false;
-        this.cdr.markForCheck();
-      },
-    });
+
+    this.indicateurService
+      .getPage({
+        page: this.page,
+        taille: this.taille,
+        recherche: this.recherche,
+        tri: this.triColonne === 'sourceDeDonner' ? 'source' : this.triColonne,
+        desc: !this.triAscendant,
+      })
+      .subscribe({
+        next: (resultat) => {
+          this.indicateurs = resultat.elements;
+          this.total = resultat.total;
+          this.nbPages = resultat.nbPages;
+          // Supprimer le dernier élément d'une page peut la vider : on recule.
+          if (this.page > this.nbPages && this.nbPages > 0) {
+            this.page = this.nbPages;
+            this.charger();
+            return;
+          }
+          this.loading = false;
+          this.cdr.markForCheck();
+        },
+        error: (err) => {
+          console.error('Erreur lors du chargement des indicateurs', err);
+          this.erreur = 'Impossible de charger les indicateurs.';
+          this.loading = false;
+          this.cdr.markForCheck();
+        },
+      });
   }
 
   /**
-   * Liste effectivement affichée : filtrée puis triée.
-   *
-   * Le filtrage et le tri sont faits en mémoire, sans appel réseau. C'est
-   * suffisant tant que le nombre d'indicateurs reste modeste ; au-delà de
-   * quelques centaines, il faudrait les déporter côté API (paramètres de
-   * requête et pagination).
+   * Recherche différée : sans cela chaque frappe déclencherait une requête.
+   * 350 ms reste réactif tout en n'envoyant qu'un appel par mot saisi.
    */
+  surRecherche(): void {
+    clearTimeout(this.minuteurRecherche);
+    this.minuteurRecherche = setTimeout(() => {
+      this.page = 1;
+      this.charger();
+    }, 350);
+  }
+
+  allerPage(n: number): void {
+    if (n < 1 || n > this.nbPages || n === this.page) return;
+    this.page = n;
+    this.charger();
+  }
+
+  changerTaille(nouvelle: number): void {
+    // Une valeur hors référentiel (select forcé, requête bricolée) donnerait
+    // NaN ou 0, et un compteur incohérent. On retombe sur la taille par défaut.
+    const valeur = Number(nouvelle);
+    this.taille = this.taillesPage.includes(valeur) ? valeur : 10;
+    this.page = 1;
+    this.charger();
+  }
+
+  /** Fenêtre glissante de numéros de page autour de la page courante. */
+  get pagesVisibles(): number[] {
+    const fenetre = 5;
+    let debut = Math.max(1, this.page - Math.floor(fenetre / 2));
+    const fin = Math.min(this.nbPages, debut + fenetre - 1);
+    debut = Math.max(1, fin - fenetre + 1);
+    return Array.from({ length: fin - debut + 1 }, (_, i) => debut + i);
+  }
+
+  get premierAffiche(): number {
+    return this.total === 0 ? 0 : (this.page - 1) * this.taille + 1;
+  }
+
+  get dernierAffiche(): number {
+    return Math.min(this.page * this.taille, this.total);
+  }
+
+  /** La liste affichée vient déjà filtrée et triée du serveur. */
   get indicateursAffiches(): Indicateur[] {
-    const terme = this.recherche.trim().toLowerCase();
-
-    const filtres = terme
-      ? this.indicateurs.filter((i) =>
-          [i.code, i.nom, i.description, i.unite, i.sourceDeDonner, i.frequence, i.typeCollecte]
-            .some((champ) => (champ ?? '').toLowerCase().includes(terme)),
-        )
-      : [...this.indicateurs];
-
-    const sens = this.triAscendant ? 1 : -1;
-
-    return filtres.sort((a, b) => {
-      if (this.triColonne === 'valeurs') {
-        const na = (a.valeursIndicateurs ?? []).length;
-        const nb = (b.valeursIndicateurs ?? []).length;
-        return (na - nb) * sens;
-      }
-      const va = (a[this.triColonne] ?? '') as string;
-      const vb = (b[this.triColonne] ?? '') as string;
-      // localeCompare : « Écart » doit se classer près de « Ecart », pas à la fin.
-      return va.localeCompare(vb, 'fr', { numeric: true, sensitivity: 'base' }) * sens;
-    });
+    return this.indicateurs;
   }
 
   /** Clic sur un en-tête : même colonne = on inverse le sens, sinon on change de clé. */
@@ -123,6 +166,8 @@ export class IndicateursListComponent implements OnInit {
       this.triColonne = colonne;
       this.triAscendant = true;
     }
+    this.page = 1;
+    this.charger();
   }
 
   iconeTri(colonne: string): string {
@@ -132,6 +177,8 @@ export class IndicateursListComponent implements OnInit {
 
   effacerRecherche(): void {
     this.recherche = '';
+    this.page = 1;
+    this.charger();
   }
 
   /** Bascule entre la liste d'unités et la saisie libre. */

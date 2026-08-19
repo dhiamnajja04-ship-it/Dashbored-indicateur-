@@ -20,10 +20,78 @@ namespace MetierService.Controllers
         }
 
         // GET: api/indicators
+        /// <summary>
+        /// Liste des indicateurs.
+        ///
+        /// Sans paramètre, renvoie tout : les clients existants ne sont pas
+        /// cassés. Avec « page », renvoie un objet paginé — c'est un choix
+        /// délibéré plutôt qu'une pagination imposée, pour que le service IA et
+        /// les scripts curl continuent de fonctionner à l'identique.
+        ///
+        /// « recherche » filtre côté base : jusqu'ici le tri et le filtrage
+        /// étaient faits dans le navigateur, ce qui supposait de charger la
+        /// table entière.
+        /// </summary>
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Indicateur>>> GetIndicateurs()
+        public async Task<IActionResult> GetIndicateurs(
+            [FromQuery] int? page,
+            [FromQuery] int taille = 10,
+            [FromQuery] string? recherche = null,
+            [FromQuery] string? tri = null,
+            [FromQuery] bool desc = false)
         {
-            return await _context.Indicateurs.Include(i => i.ValeursIndicateurs).ToListAsync();
+            var requete = _context.Indicateurs.Include(i => i.ValeursIndicateurs).AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(recherche))
+            {
+                // Recherche insensible à la casse ET aux accents : sur un corpus
+                // francophone, « densite » doit trouver « Densité médicale ».
+                // Le terme est normalisé ICI, en .NET : AppDbContext.Unaccent
+                // n'existe que pour être traduite en SQL, l'appeler côté client
+                // lèverait NotSupportedException. Seules les colonnes la traversent.
+                var terme = SansAccents(recherche.Trim().ToLower());
+                requete = requete.Where(i =>
+                    AppDbContext.Unaccent(i.Code.ToLower()).Contains(terme)
+                    || AppDbContext.Unaccent(i.Nom.ToLower()).Contains(terme)
+                    || (i.Description != null && AppDbContext.Unaccent(i.Description.ToLower()).Contains(terme))
+                    || (i.Unite != null && AppDbContext.Unaccent(i.Unite.ToLower()).Contains(terme))
+                    || (i.SourceDeDonner != null && AppDbContext.Unaccent(i.SourceDeDonner.ToLower()).Contains(terme))
+                    || (i.Frequence != null && AppDbContext.Unaccent(i.Frequence.ToLower()).Contains(terme)));
+            }
+
+            requete = (tri, desc) switch
+            {
+                ("nom", false) => requete.OrderBy(i => i.Nom),
+                ("nom", true) => requete.OrderByDescending(i => i.Nom),
+                ("unite", false) => requete.OrderBy(i => i.Unite),
+                ("unite", true) => requete.OrderByDescending(i => i.Unite),
+                ("source", false) => requete.OrderBy(i => i.SourceDeDonner),
+                ("source", true) => requete.OrderByDescending(i => i.SourceDeDonner),
+                (_, true) => requete.OrderByDescending(i => i.Code),
+                _ => requete.OrderBy(i => i.Code),
+            };
+
+            if (page is null)
+            {
+                return Ok(await requete.ToListAsync());
+            }
+
+            var numero = Math.Max(1, page.Value);
+            var parPage = Math.Clamp(taille, 1, 100);
+            var total = await requete.CountAsync();
+
+            var elements = await requete
+                .Skip((numero - 1) * parPage)
+                .Take(parPage)
+                .ToListAsync();
+
+            return Ok(new PageResultat<Indicateur>
+            {
+                Elements = elements,
+                Page = numero,
+                Taille = parPage,
+                Total = total,
+            });
         }
 
         // GET: api/indicators/validated
@@ -424,6 +492,27 @@ namespace MetierService.Controllers
             }
 
             return StatusCode(500, new { message = "Erreur lors de l'enregistrement en base de données." });
+        }
+
+        /// <summary>
+        /// Retire les diacritiques d'une chaîne, côté application.
+        /// Pendant du unaccent() de PostgreSQL appliqué aux colonnes.
+        /// </summary>
+        private static string SansAccents(string texte)
+        {
+            var decompose = texte.Normalize(System.Text.NormalizationForm.FormD);
+            var sortie = new System.Text.StringBuilder(decompose.Length);
+
+            foreach (var c in decompose)
+            {
+                if (System.Globalization.CharUnicodeInfo.GetUnicodeCategory(c)
+                    != System.Globalization.UnicodeCategory.NonSpacingMark)
+                {
+                    sortie.Append(c);
+                }
+            }
+
+            return sortie.ToString().Normalize(System.Text.NormalizationForm.FormC);
         }
     }
 }

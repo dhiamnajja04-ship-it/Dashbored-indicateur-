@@ -262,6 +262,14 @@ Module de signalement indépendant du workflow de validation
   mauvais — l'interface donne le sens de l'écart, elle ne le juge pas
 - **Unités** : liste fermée de 19 unités en 5 groupes, avec échappatoire
   « Autre unité » pour ne jamais bloquer une donnée existante
+- **Pagination côté serveur** : la page, la recherche et le tri sont calculés
+  par PostgreSQL. Seule la page demandée transite. La recherche est insensible
+  à la casse **et aux accents** (`unaccent`) : « densite » trouve « Densité
+  médicale ».
+- **Documents justificatifs** : dépôt de fichier réel (10 Mo max, extensions
+  documentaires uniquement), stocké sur un volume, métadonnées en base.
+- **Référentiel d'agents** : « saisi par » est choisi dans une liste fermée au
+  lieu d'être du texte libre.
 - **Page Statistiques** : écart de chaque indicateur à sa cible, répartition
   par degré de fiabilité, couverture territoriale, et une **vue tabulaire** qui
   double le graphique pour rester lisible sans les couleurs.

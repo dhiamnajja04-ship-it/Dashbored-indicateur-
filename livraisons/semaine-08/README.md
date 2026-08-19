@@ -264,6 +264,8 @@ ci-dessus, qui porte sur la règle métier.
 | [`23-interface-progression-validation.png`](captures/23-interface-progression-validation.png) | Barre d'avancement : répartition réelle des valeurs par statut |
 | [`24-interface-filtre-statut.png`](captures/24-interface-filtre-statut.png) | Filtre par statut sur le tableau des valeurs |
 | [`25-interface-statistiques.png`](captures/25-interface-statistiques.png) | Page Statistiques : écart à la cible, fiabilité, couverture territoriale |
+| [`26-interface-pagination.png`](captures/26-interface-pagination.png) | Pagination côté serveur — capture prise avec des indicateurs temporaires, supprimés depuis, pour ne pas altérer le jeu de démonstration |
+| [`27-interface-documents.png`](captures/27-interface-documents.png) | Documents justificatifs attachés à un indicateur |
 
 ### Impression (captures 21 et 22)
 

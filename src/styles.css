@@ -1570,3 +1570,27 @@ textarea:focus-visible,
 @media (prefers-reduced-motion: reduce) {
   .marque-divergente, .marque-barre { transition: none; }
 }
+
+/* Barre de pagination */
+.pagination-barre {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  padding: 0.85rem 1.15rem;
+  border-top: 1px solid var(--bordure);
+}
+
+.pagination-barre .btn {
+  min-width: 34px;
+}
+
+.ellipse-pagination {
+  color: var(--texte-doux);
+  padding: 0 0.15rem;
+}
+
+@media print {
+  .pagination-barre { display: none !important; }
+}
