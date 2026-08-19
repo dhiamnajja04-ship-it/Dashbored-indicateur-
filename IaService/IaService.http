@@ -1,0 +1,35 @@
+@IaService_HostAddress = http://localhost:5210
+
+### Le service tourne ?
+GET {{IaService_HostAddress}}/health
+Accept: application/json
+
+### Le modèle local répond ?
+GET {{IaService_HostAddress}}/health/ready
+Accept: application/json
+
+### Ce que l'IA voit exactement (sans appeler le modèle)
+GET {{IaService_HostAddress}}/api/ia/contexte
+Accept: application/json
+
+### Synthèse générale sur tous les indicateurs validés
+POST {{IaService_HostAddress}}/api/ia/analyse
+Content-Type: application/json
+
+{}
+
+### Question libre
+POST {{IaService_HostAddress}}/api/ia/analyse
+Content-Type: application/json
+
+{
+  "question": "Quels indicateurs sont en dessous de leur valeur cible ?"
+}
+
+### Analyse limitée à un indicateur
+POST {{IaService_HostAddress}}/api/ia/analyse
+Content-Type: application/json
+
+{
+  "indicateurId": 1
+}

@@ -1,0 +1,81 @@
+# Modèle IA local (Ollama). Aucune donnée ne sort du cluster : le stage impose
+# un modèle open source gratuit tournant en local.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: ollama-modeles
+  namespace: indicateurs
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      # Mistral 7B quantifié ≈ 4 Go. On prévoit large pour pouvoir en tester un second.
+      storage: 15Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ollama
+  namespace: indicateurs
+  labels:
+    app: ollama
+spec:
+  replicas: 1
+  strategy:
+    # Le PVC est ReadWriteOnce : deux pods simultanés ne pourraient pas le monter.
+    type: Recreate
+  selector:
+    matchLabels:
+      app: ollama
+  template:
+    metadata:
+      labels:
+        app: ollama
+    spec:
+      containers:
+        - name: ollama
+          image: ollama/ollama:latest
+          ports:
+            - containerPort: 11434
+          env:
+            - name: OLLAMA_HOST
+              value: "0.0.0.0"
+          volumeMounts:
+            - name: modeles
+              mountPath: /root/.ollama
+          # Le téléchargement du modèle est fait une fois, à la main :
+          #   kubectl -n indicateurs exec deploy/ollama -- ollama pull mistral
+          # Il persiste ensuite dans le PVC, même après redémarrage du pod.
+          readinessProbe:
+            httpGet:
+              path: /api/tags
+              port: 11434
+            initialDelaySeconds: 20
+            periodSeconds: 15
+          resources:
+            requests:
+              cpu: "500m"
+              memory: "4Gi"
+            limits:
+              # Sur CPU, un 7B quantifié tient en ~6 Go. Ajuste selon la RAM de la VM.
+              cpu: "3"
+              memory: "8Gi"
+      volumes:
+        - name: modeles
+          persistentVolumeClaim:
+            claimName: ollama-modeles
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ollama
+  namespace: indicateurs
+spec:
+  type: ClusterIP
+  selector:
+    app: ollama
+  ports:
+    - port: 11434
+      targetPort: 11434
+      protocol: TCP

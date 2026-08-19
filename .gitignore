@@ -1,0 +1,58 @@
+# See https://docs.github.com/get-started/getting-started-with-git/ignoring-files for more about ignoring files.
+
+# Compiled output
+/dist
+/tmp
+/out-tsc
+/bazel-out
+
+# Node
+/node_modules
+npm-debug.log
+yarn-error.log
+
+# IDEs and editors
+.idea/
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+
+# Visual Studio Code
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+!.vscode/mcp.json
+.history/*
+
+# Miscellaneous
+/.angular/cache
+.sass-cache/
+/connect.lock
+/coverage
+/libpeerconnection.log
+testem.log
+/typings
+__screenshots__/
+
+# System files
+.DS_Store
+Thumbs.db
+
+# .NET build artifacts
+bin/
+obj/
+*.user
+
+# Secrets — jamais de chaîne de connexion dans Git (consigne semaine 4).
+# Chaque service fournit un appsettings.Development.example.json à recopier.
+**/appsettings.Development.json
+
+# Secret Kubernetes réel (seul le modèle .example.yaml est versionné)
+k8s/01-secret-postgres.yaml
+k8s/*-secret.yaml
+!k8s/*-secret*.example.yaml

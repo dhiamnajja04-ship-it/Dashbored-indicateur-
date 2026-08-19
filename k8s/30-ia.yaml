@@ -1,0 +1,85 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ia-service
+  namespace: indicateurs
+  labels:
+    app: ia-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ia-service
+  template:
+    metadata:
+      labels:
+        app: ia-service
+    spec:
+      containers:
+        - name: ia
+          image: indicateurs/ia:1.0
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8080
+          env:
+            # L'IA lit les indicateurs via le service métier (HTTP interne),
+            # jamais via une connexion PostgreSQL directe.
+            - name: MetierServiceUrl
+              valueFrom:
+                configMapKeyRef:
+                  name: plateforme-config
+                  key: IA_METIER_URL
+            - name: Ollama__BaseUrl
+              valueFrom:
+                configMapKeyRef:
+                  name: plateforme-config
+                  key: OLLAMA_BASE_URL
+            - name: Ollama__Model
+              valueFrom:
+                configMapKeyRef:
+                  name: plateforme-config
+                  key: OLLAMA_MODEL
+            - name: Ollama__TimeoutSeconds
+              valueFrom:
+                configMapKeyRef:
+                  name: plateforme-config
+                  key: OLLAMA_TIMEOUT_SECONDS
+            - name: ASPNETCORE_ENVIRONMENT
+              value: "Production"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          readinessProbe:
+            # Tant qu'Ollama n'a pas fini de démarrer / de charger le modèle,
+            # le pod IA n'est pas déclaré prêt.
+            httpGet:
+              path: /health/ready
+              port: 8080
+            initialDelaySeconds: 20
+            periodSeconds: 15
+            failureThreshold: 10
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ia-service
+  namespace: indicateurs
+spec:
+  # ClusterIP : l'IA n'est atteignable que par le Gateway.
+  type: ClusterIP
+  selector:
+    app: ia-service
+  ports:
+    - port: 8080
+      targetPort: 8080
+      protocol: TCP

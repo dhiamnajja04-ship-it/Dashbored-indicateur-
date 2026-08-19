@@ -1,0 +1,117 @@
+# =====================================================================
+# Lancement manuel de toute la plateforme sur UNE machine (dev / test).
+#
+#   docker compose up -d --build
+#
+# ATTENTION — ce fichier n'est PAS le déploiement de production.
+# Il conteneurise PostgreSQL par commodité, alors que la consigne du stage
+# impose un serveur PostgreSQL externe. En production, c'est k8s/ qui fait foi,
+# et le service « postgres » ci-dessous n'existe pas : la connexion pointe vers
+# le serveur du tuteur via le Secret Kubernetes.
+#
+# Utilité de ce fichier : reproduire la chaîne complète en une commande, pour
+# développer et tester sans cluster.
+# =====================================================================
+
+services:
+  postgres:
+    image: postgres:17
+    container_name: indic-postgres
+    environment:
+      POSTGRES_PASSWORD: testpwd
+      POSTGRES_DB: indicateurs_db
+    ports:
+      - "15432:5432"
+    volumes:
+      # Exécutés une seule fois, dans l'ordre alphabétique, au premier démarrage :
+      # dump initial, puis migration, puis données de démonstration.
+      - ./schema_db.sql:/docker-entrypoint-initdb.d/00-schema.sql:ro
+      - ./db/01-migration-alignement.sql:/docker-entrypoint-initdb.d/01-migration.sql:ro
+      - ./db/02-donnees-demo.sql:/docker-entrypoint-initdb.d/02-demo.sql:ro
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d indicateurs_db"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  metier-service:
+    build: ./MetierService
+    container_name: indic-metier
+    environment:
+      ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=indicateurs_db;Username=postgres;Password=testpwd"
+      ASPNETCORE_ENVIRONMENT: Production
+    depends_on:
+      postgres:
+        condition: service_healthy
+    # Pas de ports: exposés — comme en Kubernetes, le métier n'est joignable
+    # que depuis l'intérieur du réseau, via le Gateway.
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: indic-ollama
+    environment:
+      # Une seule génération et un seul modèle chargés à la fois : sur 4 cœurs,
+      # deux inférences simultanées rendent la machine inutilisable.
+      OLLAMA_NUM_PARALLEL: "1"
+      OLLAMA_MAX_LOADED_MODELS: "1"
+    deploy:
+      resources:
+        limits:
+          # Aligné sur k8s/20-ollama.yaml, qui plafonne déjà ollama. Sans cette
+          # limite, ollama prend les 4 cœurs de la VM pendant toute la génération
+          # et l'interface graphique gèle — ce qui ressemble à un plantage.
+          cpus: "3"
+          memory: 6G
+    volumes:
+      - ollama-data:/root/.ollama
+    # Le modèle se télécharge une fois, après le démarrage :
+    #   docker compose exec ollama ollama pull mistral
+    # Il persiste ensuite dans le volume ollama-data.
+
+  ia-service:
+    build: ./IaService
+    container_name: indic-ia
+    environment:
+      MetierServiceUrl: "http://metier-service:8080/api/indicators/"
+      Ollama__BaseUrl: "http://ollama:11434"
+      # Mistral 7B conservé : le repli Phi-3 prévu en semaine 1 est inapplicable
+      # ici, la bande passante (~200 Ko/s) ne permet pas de télécharger 2,2 Go.
+      Ollama__Model: "mistral"
+      Ollama__TimeoutSeconds: "180"
+      # LEVIER PRINCIPAL sur une machine à 4 cœurs : le temps de génération est
+      # proportionnel au nombre de jetons produits. Le prompt demande 5 à 10
+      # lignes (~150 jetons) ; plafonner à 200 au lieu de 512 divise le temps
+      # par ~2,5 sans tronquer la réponse attendue.
+      Ollama__MaxTokens: "200"
+      ASPNETCORE_ENVIRONMENT: Production
+    depends_on:
+      - metier-service
+      - ollama
+    # Aucune variable de connexion PostgreSQL ici : l'IA passe obligatoirement
+    # par le service métier, qui filtre les valeurs non validées.
+
+  gateway:
+    build: ./GatewayService
+    container_name: indic-gateway
+    environment:
+      MetierServiceUrl: "http://metier-service:8080/api/indicators"
+      IaServiceUrl: "http://ia-service:8080/api/ia"
+      ASPNETCORE_ENVIRONMENT: Production
+    ports:
+      - "5169:8080"
+    depends_on:
+      - metier-service
+      - ia-service
+
+  frontend:
+    build: .
+    container_name: indic-frontend
+    ports:
+      - "8080:80"
+    depends_on:
+      - gateway
+
+volumes:
+  postgres-data:
+  ollama-data:

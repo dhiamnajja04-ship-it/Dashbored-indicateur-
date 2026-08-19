@@ -1,0 +1,6 @@
+@MetierService_HostAddress = http://localhost:5039
+
+GET {{MetierService_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

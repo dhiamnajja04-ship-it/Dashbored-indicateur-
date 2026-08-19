@@ -1,0 +1,20 @@
+# URLs internes du cluster. Aucune donnée sensible ici : les mots de passe sont
+# dans le Secret « postgres-secret ».
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: plateforme-config
+  namespace: indicateurs
+data:
+  # Le Gateway est le seul à connaître les adresses des services internes.
+  METIER_SERVICE_URL: "http://metier-service:8080/api/indicators"
+  IA_SERVICE_URL: "http://ia-service:8080/api/ia"
+
+  # Le service IA passe par le métier en HTTP interne : jamais de connexion
+  # directe à PostgreSQL depuis l'IA.
+  IA_METIER_URL: "http://metier-service:8080/api/indicators/"
+
+  # Modèle local. Voir livraisons/semaine-01 pour la justification du choix.
+  OLLAMA_BASE_URL: "http://ollama:11434"
+  OLLAMA_MODEL: "mistral"
+  OLLAMA_TIMEOUT_SECONDS: "180"

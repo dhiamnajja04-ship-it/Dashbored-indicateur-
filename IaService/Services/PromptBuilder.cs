@@ -1,0 +1,106 @@
+using System.Globalization;
+using System.Text;
+using IaService.Models;
+
+namespace IaService.Services;
+
+/// <summary>
+/// Construit le prompt envoyé au modèle local à partir des indicateurs validés.
+/// Tout ce que le modèle « sait » vient d'ici : s'il n'est pas dans ce texte,
+/// il n'est pas dans la réponse (exigence semaine 8).
+/// </summary>
+public static class PromptBuilder
+{
+    private static readonly CultureInfo Fr = CultureInfo.GetCultureInfo("fr-FR");
+
+    public static string Construire(IReadOnlyList<IndicateurValide> indicateurs, string? question)
+    {
+        var sb = new StringBuilder();
+
+        sb.AppendLine(
+            "Tu es un analyste de données publiques. Tu rédiges en français, de façon factuelle et concise."
+        );
+        sb.AppendLine();
+        sb.AppendLine("RÈGLES STRICTES :");
+        sb.AppendLine("- Utilise UNIQUEMENT les données listées ci-dessous. Elles sont toutes validées.");
+        sb.AppendLine("- N'invente aucun chiffre, aucune date, aucun indicateur absent de la liste.");
+        sb.AppendLine("- Si la liste ne permet pas de répondre, dis-le explicitement.");
+        sb.AppendLine("- Cite les valeurs avec leur unité.");
+        sb.AppendLine();
+        sb.AppendLine("=== DONNÉES VALIDÉES ===");
+
+        foreach (var indicateur in indicateurs)
+        {
+            sb.Append("Indicateur « ").Append(indicateur.Nom).Append(" » (code ").Append(indicateur.Code).Append(')');
+            if (!string.IsNullOrWhiteSpace(indicateur.Unite))
+            {
+                sb.Append(", unité : ").Append(indicateur.Unite);
+            }
+            if (!string.IsNullOrWhiteSpace(indicateur.Frequence))
+            {
+                sb.Append(", fréquence : ").Append(indicateur.Frequence);
+            }
+            sb.AppendLine();
+
+            if (!string.IsNullOrWhiteSpace(indicateur.Description))
+            {
+                sb.Append("  Description : ").AppendLine(indicateur.Description);
+            }
+            if (indicateur.ValeurCible.HasValue)
+            {
+                sb.Append("  Valeur cible : ")
+                    .Append(indicateur.ValeurCible.Value.ToString("0.##", Fr));
+                if (indicateur.AnneeReference.HasValue)
+                {
+                    sb.Append(" (année de référence ").Append(indicateur.AnneeReference.Value).Append(')');
+                }
+                sb.AppendLine();
+            }
+
+            sb.AppendLine("  Valeurs validées :");
+            foreach (var valeur in indicateur.Valeurs)
+            {
+                sb.Append("    - ")
+                    .Append(valeur.Valeur.ToString("0.##", Fr))
+                    .Append(' ')
+                    .Append(indicateur.Unite)
+                    .Append(" (saisie le ")
+                    .Append(valeur.SaisieLe.ToString("dd/MM/yyyy", Fr))
+                    .Append(", organisation #")
+                    .Append(valeur.OrganisationId)
+                    .Append(", période #")
+                    .Append(valeur.PeriodeId);
+                if (!string.IsNullOrWhiteSpace(valeur.DegreDeFiabilite))
+                {
+                    sb.Append(", fiabilité : ").Append(valeur.DegreDeFiabilite);
+                }
+                sb.AppendLine(")");
+
+                if (!string.IsNullOrWhiteSpace(valeur.Commentaire))
+                {
+                    sb.Append("      Commentaire : ").AppendLine(valeur.Commentaire);
+                }
+            }
+
+            sb.AppendLine();
+        }
+
+        sb.AppendLine("=== FIN DES DONNÉES ===");
+        sb.AppendLine();
+
+        if (string.IsNullOrWhiteSpace(question))
+        {
+            sb.AppendLine(
+                "TÂCHE : rédige une synthèse de 5 à 10 lignes. Indique les tendances, "
+                    + "les écarts éventuels par rapport aux valeurs cibles, et les points à surveiller."
+            );
+        }
+        else
+        {
+            sb.Append("QUESTION DE L'UTILISATEUR : ").AppendLine(question.Trim());
+            sb.AppendLine("Réponds à cette question en te basant exclusivement sur les données ci-dessus.");
+        }
+
+        return sb.ToString();
+    }
+}

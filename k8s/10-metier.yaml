@@ -1,0 +1,72 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: metier-service
+  namespace: indicateurs
+  labels:
+    app: metier-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: metier-service
+  template:
+    metadata:
+      labels:
+        app: metier-service
+    spec:
+      containers:
+        - name: metier
+          image: indicateurs/metier:1.0
+          # Images construites localement dans le démon Docker de Minikube :
+          # sans Never, k8s tenterait de les tirer d'un registre distant.
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8080
+          env:
+            # La chaîne de connexion vient du Secret, jamais du dépôt Git.
+            # Le double underscore est la convention .NET pour ConnectionStrings:DefaultConnection.
+            - name: ConnectionStrings__DefaultConnection
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: connection-string
+            - name: ASPNETCORE_ENVIRONMENT
+              value: "Production"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          # Tant que PostgreSQL est injoignable, le pod ne reçoit pas de trafic.
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            failureThreshold: 6
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: metier-service
+  namespace: indicateurs
+spec:
+  # ClusterIP : le métier n'est JAMAIS exposé hors du cluster.
+  # L'accès extérieur se fait uniquement via le Gateway (règle S4).
+  type: ClusterIP
+  selector:
+    app: metier-service
+  ports:
+    - port: 8080
+      targetPort: 8080
+      protocol: TCP

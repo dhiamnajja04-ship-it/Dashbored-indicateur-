@@ -1,0 +1,81 @@
+<div class="card shadow-sm border-0 mb-4">
+  <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+    <h5 class="mb-0">🤖 {{ titre }}</h5>
+    <small class="text-white-50">Modèle local — indicateurs validés uniquement</small>
+  </div>
+
+  <div class="card-body">
+    <p class="text-muted small mb-3">
+      L'analyse ne porte que sur les valeurs dont le statut est
+      <span class="badge bg-success">Validé</span>. Les brouillons, valeurs en revue et
+      valeurs rejetées sont ignorés.
+    </p>
+
+    <div class="row g-2 align-items-end mb-3">
+      <div class="col-md-9">
+        <label class="form-label small fw-bold">Question (facultatif)</label>
+        <input
+          class="form-control"
+          name="question"
+          [(ngModel)]="question"
+          [disabled]="chargement"
+          (keyup.enter)="lancerAnalyse()"
+          placeholder="Ex : quels indicateurs sont en dessous de leur cible ?"
+        />
+      </div>
+      <div class="col-md-3 d-grid">
+        <button class="btn btn-primary" (click)="lancerAnalyse()" [disabled]="chargement">
+          <span *ngIf="!chargement">Lancer l'analyse</span>
+          <span *ngIf="chargement">
+            <span class="spinner-border spinner-border-sm me-1"></span>
+            Génération…
+          </span>
+        </button>
+      </div>
+    </div>
+
+    <div *ngIf="chargement" class="alert alert-info py-2 small mb-0">
+      Le modèle tourne en local sur la VM : la première réponse peut prendre plusieurs dizaines
+      de secondes.
+    </div>
+
+    <div *ngIf="erreur" class="alert alert-danger py-2 mb-0">{{ erreur }}</div>
+
+    <div *ngIf="resultat && !chargement">
+      <div *ngIf="aucuneDonneeValidee" class="alert alert-warning">
+        {{ resultat.reponse }}
+      </div>
+
+      <div *ngIf="!aucuneDonneeValidee">
+        <div class="border rounded p-3 bg-light" style="white-space: pre-wrap">{{
+          resultat.reponse
+        }}</div>
+
+        <div class="d-flex flex-wrap gap-2 mt-3 align-items-center">
+          <span class="badge bg-dark">Modèle : {{ resultat.modele }}</span>
+          <span class="badge bg-success">
+            {{ resultat.nbValeursValidees }} valeur(s) validée(s) analysée(s)
+          </span>
+          <span class="badge bg-secondary">
+            {{ resultat.nbIndicateursAnalyses }} indicateur(s)
+          </span>
+          <span
+            class="badge bg-info text-dark"
+            *ngFor="let code of resultat.indicateursUtilises"
+            title="Indicateur transmis au modèle"
+          >
+            {{ code }}
+          </span>
+          <button class="btn btn-sm btn-outline-secondary ms-auto" (click)="reinitialiser()">
+            Effacer
+          </button>
+        </div>
+
+        <p class="text-muted small mt-2 mb-0">
+          Généré le {{ resultat.genereLe | date: 'short' }}. Les codes ci-dessus sont exactement
+          les indicateurs transmis au modèle.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>

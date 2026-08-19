@@ -1,0 +1,13 @@
+node_modules
+dist
+.angular
+.git
+.vscode
+**/bin
+**/obj
+livraisons
+k8s
+*.md
+*.zip
+Dockerfile
+.dockerignore

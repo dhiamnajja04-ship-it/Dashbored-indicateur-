@@ -1,0 +1,64 @@
+<div class="container pb-5">
+  <h2 class="fw-bold mb-4">Tableau de bord</h2>
+
+  <div *ngIf="loading" class="text-center text-muted py-5">Chargement des indicateurs...</div>
+
+  <div *ngIf="erreur" class="alert alert-danger">{{ erreur }}</div>
+
+  <ng-container *ngIf="!loading && !erreur">
+    <div class="row g-3 mb-4">
+      <div class="col-md-3 col-6">
+        <div class="card text-center shadow-sm border-0 p-3 h-100">
+          <div class="fs-2 fw-bold text-primary">{{ totalIndicateurs }}</div>
+          <div class="text-muted small">Indicateurs</div>
+        </div>
+      </div>
+      <div class="col-md-3 col-6">
+        <div class="card text-center shadow-sm border-0 p-3 h-100">
+          <div class="fs-2 fw-bold text-dark">{{ totalValeurs }}</div>
+          <div class="text-muted small">Valeurs saisies</div>
+        </div>
+      </div>
+      <div class="col-md-3 col-6">
+        <div class="card text-center shadow-sm border-0 p-3 h-100">
+          <div class="fs-2 fw-bold text-success">{{ valeursValidees }}</div>
+          <div class="text-muted small">Valeurs validées</div>
+        </div>
+      </div>
+      <div class="col-md-3 col-6">
+        <div class="card text-center shadow-sm border-0 p-3 h-100">
+          <div class="fs-2 fw-bold text-warning">{{ valeursEnAttente }}</div>
+          <div class="text-muted small">En attente de validation</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Semaine 7 : la réponse IA est visible directement dans l'interface. -->
+    <app-analyse-ia titre="Synthèse IA des indicateurs validés"></app-analyse-ia>
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h5 class="fw-bold mb-0">Indicateurs</h5>
+      <a routerLink="/indicateurs" class="btn btn-sm btn-primary">Gérer les indicateurs</a>
+    </div>
+
+    <div class="row g-3">
+      <div class="col-md-4" *ngFor="let ind of indicateurs">
+        <div class="card h-100 shadow-sm border-0">
+          <div class="card-body">
+            <h6 class="fw-bold">{{ ind.nom }}</h6>
+            <p class="text-muted small mb-2">{{ ind.description || 'Pas de description' }}</p>
+            <span class="badge bg-secondary me-1">{{ ind.unite }}</span>
+            <span class="badge bg-light text-dark">{{ (ind.valeursIndicateurs || []).length }} valeur(s)</span>
+          </div>
+          <div class="card-footer bg-white border-0">
+            <a [routerLink]="['/indicateurs', ind.id]" class="btn btn-sm btn-outline-primary w-100">Voir détails</a>
+          </div>
+        </div>
+      </div>
+
+      <div *ngIf="indicateurs.length === 0" class="text-muted">
+        Aucun indicateur pour le moment. <a routerLink="/indicateurs">Ajoutes-en un</a>.
+      </div>
+    </div>
+  </ng-container>
+</div>
