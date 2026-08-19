@@ -256,6 +256,14 @@ Module de signalement indépendant du workflow de validation
   mauvais — l'interface donne le sens de l'écart, elle ne le juge pas
 - **Unités** : liste fermée de 19 unités en 5 groupes, avec échappatoire
   « Autre unité » pour ne jamais bloquer une donnée existante
+- **Avancement de la validation** sur le tableau de bord : une barre segmentée
+  montre la répartition **réelle** par statut, pas seulement « validé / reste ».
+  Une valeur non validée peut être en revue, en brouillon ou rejetée.
+- **Filtre par statut** sur le tableau des valeurs. Les statuts absents ne sont
+  pas proposés : afficher « Rejeté (0) » n'aide personne.
+- **Accessibilité clavier** : lien d'évitement vers le contenu, repère `<main>`,
+  `aria-sort` sur les colonnes triables, `aria-pressed` sur les filtres, et un
+  contour de focus visible uniquement au clavier (`:focus-visible`).
 - **Aucune dépendance à Internet** : Bootstrap et ses icônes sont empaquetés
   dans le bundle, pas chargés depuis un CDN. L'interface reste complète sur une
   machine isolée — indispensable pour une démonstration hors ligne.

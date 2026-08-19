@@ -57,6 +57,40 @@
       </div>
     </div>
 
+    <!-- Avancement de la validation : la barre montre la répartition réelle
+         par statut, pas seulement « validé / non validé ». -->
+    <div class="card p-3 mb-4" *ngIf="totalValeurs > 0">
+      <div class="d-flex justify-content-between align-items-baseline mb-2 flex-wrap gap-2">
+        <span class="fw-semibold">Avancement de la validation</span>
+        <span class="text-muted small">
+          <strong class="text-body">{{ valeursValidees }}</strong> sur
+          {{ totalValeurs }} valeur(s) transmises à l'IA
+          — <strong class="text-body">{{ pourcentageValide }} %</strong>
+        </span>
+      </div>
+
+      <div
+        class="barre-progression"
+        role="progressbar"
+        [attr.aria-valuenow]="pourcentageValide"
+        aria-valuemin="0"
+        aria-valuemax="100"
+        [attr.aria-label]="'Avancement de la validation : ' + pourcentageValide + ' pour cent'"
+      >
+        <span class="segment seg-valide"    [style.width]="largeur('Valide')"></span>
+        <span class="segment seg-revue"     [style.width]="largeur('EnRevue')"></span>
+        <span class="segment seg-brouillon" [style.width]="largeur('Brouillon')"></span>
+        <span class="segment seg-rejete"    [style.width]="largeur('Rejete')"></span>
+      </div>
+
+      <div class="legende-progression">
+        <span *ngIf="parStatut['Valide']"><i class="pastille p-valide"></i>Validation nationale ({{ parStatut['Valide'] }})</span>
+        <span *ngIf="parStatut['EnRevue']"><i class="pastille p-revue"></i>En validation ({{ parStatut['EnRevue'] }})</span>
+        <span *ngIf="parStatut['Brouillon']"><i class="pastille p-brouillon"></i>Brouillon ({{ parStatut['Brouillon'] }})</span>
+        <span *ngIf="parStatut['Rejete']"><i class="pastille p-rejete"></i>Rejeté ({{ parStatut['Rejete'] }})</span>
+      </div>
+    </div>
+
     <!-- Semaine 7 : la réponse IA est visible directement dans l'interface. -->
     <app-analyse-ia titre="Synthèse IA des indicateurs validés"></app-analyse-ia>
 

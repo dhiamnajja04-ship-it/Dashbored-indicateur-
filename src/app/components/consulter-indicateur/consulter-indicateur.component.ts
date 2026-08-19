@@ -59,6 +59,42 @@ export class ConsulterIndicateurComponent implements OnInit {
   readonly gouvernorats = GOUVERNORATS_TUNISIE;
   readonly imprimeLe = new Date();
 
+  // --- Filtre par statut du tableau des valeurs ---
+
+  /** Statut sélectionné. Chaîne vide = toutes les valeurs. */
+  filtreStatut = '';
+
+  /**
+   * Filtres proposés, avec leur effectif. Un filtre dont l'effectif est nul
+   * n'est pas affiché : proposer « Rejeté (0) » n'aide personne.
+   */
+  get filtresDisponibles(): { valeur: string; libelle: string; nombre: number }[] {
+    const compte = (predicat: (v: ValeurIndicateur) => boolean) =>
+      this.valeurs.filter(predicat).length;
+
+    return [
+      { valeur: '', libelle: 'Toutes', nombre: this.valeurs.length },
+      { valeur: 'Valide', libelle: LIBELLES_STATUT.Valide, nombre: compte((v) => !!v.isValid) },
+      { valeur: 'EnRevue', libelle: LIBELLES_STATUT.EnRevue, nombre: compte((v) => !v.isValid && v.statut === 'EnRevue') },
+      { valeur: 'Brouillon', libelle: LIBELLES_STATUT.Brouillon, nombre: compte((v) => !v.isValid && (!v.statut || v.statut === 'Brouillon')) },
+      { valeur: 'Rejete', libelle: LIBELLES_STATUT.Rejete, nombre: compte((v) => !v.isValid && v.statut === 'Rejete') },
+    ].filter((f) => f.valeur === '' || f.nombre > 0);
+  }
+
+  /** Valeurs réellement affichées dans le tableau. */
+  get valeursAffichees(): ValeurIndicateur[] {
+    if (!this.filtreStatut) return this.valeurs;
+    if (this.filtreStatut === 'Valide') return this.valeurs.filter((v) => !!v.isValid);
+    if (this.filtreStatut === 'Brouillon') {
+      return this.valeurs.filter((v) => !v.isValid && (!v.statut || v.statut === 'Brouillon'));
+    }
+    return this.valeurs.filter((v) => !v.isValid && v.statut === this.filtreStatut);
+  }
+
+  appliquerFiltre(statut: string): void {
+    this.filtreStatut = statut;
+  }
+
   /** Impression du tableau des valeurs (mise en page dans styles.css). */
   imprimer(): void {
     window.print();

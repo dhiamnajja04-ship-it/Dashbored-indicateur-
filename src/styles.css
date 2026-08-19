@@ -1213,3 +1213,160 @@ h1, h2, h3, h4, h5, h6 {
 .ecart-positif  { color: #8a5a06; background: #fff6e6; border-color: #f0dcb4; }
 .ecart-negatif  { color: #0b5f8a; background: #e6f2f8; border-color: #b6d9ea; }
 .ecart-atteint  { color: var(--valide); background: var(--valide-fond); border-color: #b7e0c8; }
+
+/* ---------------------------------------------------------------------
+   Barre d'avancement de la validation
+   --------------------------------------------------------------------- */
+
+.barre-progression {
+  display: flex;
+  height: 12px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: var(--brouillon-fond);
+  border: 1px solid var(--bordure);
+}
+
+.barre-progression .segment {
+  display: block;
+  height: 100%;
+  transition: width 220ms ease;
+}
+
+.seg-valide    { background: var(--valide); }
+.seg-revue     { background: var(--revue); }
+.seg-brouillon { background: #b6bcc6; }
+.seg-rejete    { background: var(--rejete); }
+
+.legende-progression {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.15rem 1.1rem;
+  margin-top: 0.6rem;
+  font-size: 0.78rem;
+  color: var(--texte-doux);
+}
+
+.legende-progression span {
+  display: inline-flex;
+  align-items: center;
+}
+
+/* Pastille de légende : la couleur seule ne suffit pas, le libellé la double. */
+.pastille {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  margin-right: 0.4rem;
+  flex: none;
+}
+
+.p-valide    { background: var(--valide); }
+.p-revue     { background: var(--revue); }
+.p-brouillon { background: #b6bcc6; }
+.p-rejete    { background: var(--rejete); }
+
+@media (prefers-reduced-motion: reduce) {
+  .barre-progression .segment { transition: none; }
+}
+
+/* ---------------------------------------------------------------------
+   Accessibilité clavier
+   --------------------------------------------------------------------- */
+
+/* Lien d'évitement : hors écran, il revient dès qu'il reçoit le focus. */
+.lien-evitement {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  z-index: 1090;
+  padding: 0.7rem 1.1rem;
+  background: var(--marque);
+  color: #fff;
+  font-weight: 600;
+  border-radius: 0 0 var(--rayon) 0;
+  text-decoration: none;
+}
+
+.lien-evitement:focus {
+  left: 0;
+}
+
+/* Le conteneur principal reçoit le focus via le lien d'évitement, mais ne doit
+   pas afficher de contour puisqu'il n'est pas interactif. */
+#contenu-principal:focus {
+  outline: none;
+}
+
+/* Contour de focus homogène sur tout ce qui est actionnable. Il n'apparaît
+   qu'au clavier (:focus-visible), jamais au clic souris. */
+a:focus-visible,
+button:focus-visible,
+select:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--marque);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Puces de filtre par statut */
+.barre-filtres {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  padding: 0.85rem 1.15rem;
+  border-bottom: 1px solid var(--bordure);
+}
+
+.puce-filtre {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.7rem;
+  border: 1px solid var(--bordure);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--texte-doux);
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background var(--transition), color var(--transition),
+    border-color var(--transition);
+}
+
+.puce-filtre:hover {
+  background: var(--marque-clair);
+  color: var(--marque-fonce);
+  border-color: #c2d0e8;
+}
+
+.puce-filtre.actif {
+  background: var(--marque);
+  border-color: var(--marque);
+  color: #fff;
+}
+
+.puce-filtre .compte {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.25rem;
+  height: 1.25rem;
+  padding: 0 0.3rem;
+  border-radius: 999px;
+  background: var(--brouillon-fond);
+  color: var(--texte-doux);
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.puce-filtre.actif .compte {
+  background: rgba(255, 255, 255, 0.22);
+  color: #fff;
+}
+
+@media print {
+  .barre-filtres { display: none !important; }
+}

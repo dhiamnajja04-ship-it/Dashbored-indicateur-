@@ -259,6 +259,20 @@
         </div>
       </div>
 
+      <!-- Filtre par statut : n'affiche que les statuts réellement présents. -->
+      <div class="barre-filtres sans-impression" *ngIf="valeurs.length > 0" role="group" aria-label="Filtrer par statut">
+        <button
+          *ngFor="let f of filtresDisponibles"
+          type="button"
+          class="puce-filtre"
+          [class.actif]="filtreStatut === f.valeur"
+          [attr.aria-pressed]="filtreStatut === f.valeur"
+          (click)="appliquerFiltre(f.valeur)"
+        >
+          {{ f.libelle }} <span class="compte">{{ f.nombre }}</span>
+        </button>
+      </div>
+
       <div class="card-body p-0 tableau-defilant">
         <table class="table table-hover align-middle">
           <thead>
@@ -276,7 +290,7 @@
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let val of valeurs; let i = index">
+            <tr *ngFor="let val of valeursAffichees; let i = index">
               <td class="ps-3 text-muted">{{ i + 1 }}</td>
               <td>
                 <span class="fw-bold">{{ val.valeur }}</span>
@@ -385,11 +399,17 @@
               </td>
             </tr>
 
-            <tr *ngIf="valeurs.length === 0">
+            <tr *ngIf="valeursAffichees.length === 0">
               <td colspan="10">
                 <div class="etat-vide">
                   <i class="bi bi-clipboard-x icone-vide"></i>
-                  <p class="mb-3">Aucune valeur enregistrée pour cet indicateur.</p>
+                  <p class="mb-3" *ngIf="filtreStatut">
+                    Aucune valeur avec ce statut.
+                  </p>
+                  <button class="btn btn-outline-secondary btn-sm mb-2" *ngIf="filtreStatut" (click)="appliquerFiltre('')">
+                    Voir toutes les valeurs
+                  </button>
+                  <p class="mb-3" *ngIf="!filtreStatut">Aucune valeur enregistrée pour cet indicateur.</p>
                   <button
                     class="btn btn-primary btn-sm"
                     (click)="ouvrirCreationValeur()"

@@ -1,4 +1,8 @@
-<nav class="navbar navbar-expand-lg navbar-plateforme mb-4">
+<!-- Lien d'évitement : invisible tant qu'il n'a pas le focus, il permet de
+     sauter la navigation au clavier plutôt que de la retraverser à chaque page. -->
+<a class="lien-evitement" href="#contenu-principal">Aller au contenu principal</a>
+
+<nav class="navbar navbar-expand-lg navbar-plateforme mb-4" aria-label="Navigation principale">
   <div class="container">
     <a class="navbar-brand" routerLink="/">
       <span class="marque-pastille"><i class="bi bi-bar-chart-fill"></i></span>
@@ -80,7 +84,9 @@
   </div>
 </nav>
 
-<router-outlet></router-outlet>
+<main id="contenu-principal" tabindex="-1">
+  <router-outlet></router-outlet>
+</main>
 
 <app-footer></app-footer>
 

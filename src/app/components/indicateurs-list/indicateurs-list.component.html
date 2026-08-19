@@ -332,28 +332,48 @@
       <table class="table table-hover align-middle">
         <thead>
           <tr>
-            <th class="ps-3">
-              <button class="entete-triable" (click)="trierPar('code')">
+            <th class="ps-3" [attr.aria-sort]="triColonne === 'code' ? (triAscendant ? 'ascending' : 'descending') : 'none'">
+              <button
+                class="entete-triable"
+                (click)="trierPar('code')"
+                [attr.aria-label]="'Trier par code' + (triColonne === 'code' ? (triAscendant ? ', tri croissant actif' : ', tri décroissant actif') : '')"
+              >
                 Code <i class="bi" [ngClass]="iconeTri('code')"></i>
               </button>
             </th>
-            <th>
-              <button class="entete-triable" (click)="trierPar('nom')">
+            <th [attr.aria-sort]="triColonne === 'nom' ? (triAscendant ? 'ascending' : 'descending') : 'none'">
+              <button
+                class="entete-triable"
+                (click)="trierPar('nom')"
+                [attr.aria-label]="'Trier par nom' + (triColonne === 'nom' ? (triAscendant ? ', tri croissant actif' : ', tri décroissant actif') : '')"
+              >
                 Nom <i class="bi" [ngClass]="iconeTri('nom')"></i>
               </button>
             </th>
-            <th>
-              <button class="entete-triable" (click)="trierPar('unite')">
+            <th [attr.aria-sort]="triColonne === 'unite' ? (triAscendant ? 'ascending' : 'descending') : 'none'">
+              <button
+                class="entete-triable"
+                (click)="trierPar('unite')"
+                [attr.aria-label]="'Trier par unité' + (triColonne === 'unite' ? (triAscendant ? ', tri croissant actif' : ', tri décroissant actif') : '')"
+              >
                 Unité <i class="bi" [ngClass]="iconeTri('unite')"></i>
               </button>
             </th>
-            <th>
-              <button class="entete-triable" (click)="trierPar('sourceDeDonner')">
+            <th [attr.aria-sort]="triColonne === 'sourceDeDonner' ? (triAscendant ? 'ascending' : 'descending') : 'none'">
+              <button
+                class="entete-triable"
+                (click)="trierPar('sourceDeDonner')"
+                [attr.aria-label]="'Trier par source' + (triColonne === 'sourceDeDonner' ? (triAscendant ? ', tri croissant actif' : ', tri décroissant actif') : '')"
+              >
                 Source <i class="bi" [ngClass]="iconeTri('sourceDeDonner')"></i>
               </button>
             </th>
-            <th class="text-center">
-              <button class="entete-triable" (click)="trierPar('valeurs')">
+            <th class="text-center" [attr.aria-sort]="triColonne === 'valeurs' ? (triAscendant ? 'ascending' : 'descending') : 'none'">
+              <button
+                class="entete-triable"
+                (click)="trierPar('valeurs')"
+                [attr.aria-label]="'Trier par valeurs' + (triColonne === 'valeurs' ? (triAscendant ? ', tri croissant actif' : ', tri décroissant actif') : '')"
+              >
                 Valeurs <i class="bi" [ngClass]="iconeTri('valeurs')"></i>
               </button>
             </th>

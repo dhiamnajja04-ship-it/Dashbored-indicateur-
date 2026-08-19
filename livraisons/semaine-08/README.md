@@ -261,6 +261,8 @@ ci-dessus, qui porte sur la règle métier.
 | [`18-interface-ecart-a-la-cible.png`](captures/18-interface-ecart-a-la-cible.png) | Écart entre la valeur et la cible de l'indicateur |
 | [`19-interface-territoire.png`](captures/19-interface-territoire.png) | Valeur nationale et valeur de gouvernorat côte à côte |
 | [`20-interface-sans-cdn.png`](captures/20-interface-sans-cdn.png) | Interface complète avec **zéro requête externe** : Bootstrap et ses icônes sont empaquetés |
+| [`23-interface-progression-validation.png`](captures/23-interface-progression-validation.png) | Barre d'avancement : répartition réelle des valeurs par statut |
+| [`24-interface-filtre-statut.png`](captures/24-interface-filtre-statut.png) | Filtre par statut sur le tableau des valeurs |
 
 ### Impression (captures 21 et 22)
 
