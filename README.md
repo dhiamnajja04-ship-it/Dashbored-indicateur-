@@ -1,8 +1,7 @@
 # Plateforme Indicateurs
 
 Plateforme conteneurisée d'indicateurs avec workflow de validation et analyse par
-un modèle IA local. Stage DevOps — voir [`livraisons/`](livraisons/) pour les
-comptes-rendus hebdomadaires.
+un modèle IA local. Stage DevOps.
 
 > **Pour démarrer** : [`GUIDE-LANCEMENT.md`](GUIDE-LANCEMENT.md)
 > **Pour présenter** : [`GUIDE-PRESENTATION.md`](GUIDE-PRESENTATION.md)
