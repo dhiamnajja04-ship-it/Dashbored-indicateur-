@@ -1370,3 +1370,203 @@ textarea:focus-visible,
 @media print {
   .barre-filtres { display: none !important; }
 }
+
+/* ---------------------------------------------------------------------
+   Graphiques de la page Statistiques
+
+   Les couleurs sont validees avec scripts/validate_palette.js :
+   - poles divergents #b06d0a / #1c5cab : ecart CVD 24,6 (protanopie),
+     23,8 (tritanopie), contraste > 3:1 sur fond blanc ;
+   - rampe de fiabilite : une seule teinte, luminance monotone du clair au
+     fonce, chaque barre etant doublee de son effectif chiffre.
+
+   La paire divergente est volontairement ambre/bleu et non rouge/bleu :
+   le rouge jugerait l'ecart, alors que depasser une cible est souhaitable
+   pour certains indicateurs et non pour d'autres.
+   --------------------------------------------------------------------- */
+
+.titre-graphique {
+  font-size: 1rem;
+  font-weight: 700;
+  margin-bottom: 0.35rem;
+}
+
+.note-graphique {
+  font-size: 0.8rem;
+  color: var(--texte-doux);
+  margin-bottom: 1rem;
+  max-width: 62ch;
+}
+
+.legende-graphique {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.15rem 1.1rem;
+  margin-bottom: 0.9rem;
+  font-size: 0.78rem;
+  color: var(--texte-doux);
+}
+
+.legende-graphique span {
+  display: inline-flex;
+  align-items: center;
+}
+
+.p-dessous { background: #1c5cab; }
+.p-dessus  { background: #b06d0a; }
+
+/* --- Barres divergentes --- */
+
+.graphique-divergent {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.ligne-divergente {
+  display: grid;
+  grid-template-columns: minmax(140px, 1.4fr) minmax(160px, 3fr) 72px;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.etiquette-ligne {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.nom-ligne {
+  font-size: 0.78rem;
+  color: var(--texte-doux);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.piste-divergente {
+  position: relative;
+  display: flex;
+  align-items: center;
+  height: 20px;
+}
+
+.piste-divergente .demi {
+  flex: 1;
+  display: flex;
+  height: 100%;
+}
+
+.piste-divergente .gauche { justify-content: flex-end; }
+
+/* Axe du zero : la reference visuelle, volontairement discrete. */
+.axe-zero {
+  width: 1px;
+  align-self: stretch;
+  background: #b6bcc6;
+  flex: none;
+}
+
+.marque-divergente {
+  display: block;
+  height: 12px;
+  align-self: center;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  transition: width 220ms ease;
+}
+
+/* Extremites arrondies du cote oppose a l'axe : l'ancrage reste lisible. */
+.vers-gauche {
+  background: #1c5cab;
+  border-radius: 4px 0 0 4px;
+  margin-right: 2px;
+}
+
+.vers-droite {
+  background: #b06d0a;
+  border-radius: 0 4px 4px 0;
+  margin-left: 2px;
+}
+
+.valeur-ligne {
+  text-align: right;
+  font-size: 0.82rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Le texte porte les jetons de texte, jamais la couleur de la serie. */
+.txt-au-dessus, .txt-en-dessous, .txt-atteinte { color: var(--texte); }
+
+.note-axe {
+  font-size: 0.74rem;
+  color: var(--texte-doux);
+  margin: 0.7rem 0 0;
+  text-align: center;
+}
+
+/* --- Barres simples (fiabilite) --- */
+
+.graphique-barres {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.ligne-barre {
+  display: grid;
+  grid-template-columns: 120px 1fr 40px;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.etiquette-barre {
+  font-size: 0.82rem;
+  color: var(--texte);
+}
+
+.piste-barre {
+  height: 20px;
+  display: flex;
+  align-items: center;
+}
+
+.marque-barre {
+  display: block;
+  height: 12px;
+  border-radius: 0 4px 4px 0;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  min-width: 2px;
+  transition: width 220ms ease;
+}
+
+/* Rampe d'une seule teinte, du plus fiable au moins fiable. */
+.fiab-0 { background: #1c5cab; }
+.fiab-1 { background: #3987e5; }
+.fiab-2 { background: #9ec5f4; }
+.fiab-3 { background: #d8dce2; }
+
+.valeur-barre {
+  text-align: right;
+  font-size: 0.85rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.bloc-territoire {
+  flex: 1 1 130px;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--bordure);
+  border-radius: var(--rayon);
+  background: #fbfcfd;
+}
+
+@media (max-width: 575.98px) {
+  .ligne-divergente { grid-template-columns: 1fr 90px; }
+  .ligne-divergente .piste-divergente { grid-column: 1 / -1; }
+  .ligne-barre { grid-template-columns: 96px 1fr 34px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marque-divergente, .marque-barre { transition: none; }
+}

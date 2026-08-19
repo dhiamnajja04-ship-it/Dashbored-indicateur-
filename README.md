@@ -256,6 +256,9 @@ Module de signalement indépendant du workflow de validation
   mauvais — l'interface donne le sens de l'écart, elle ne le juge pas
 - **Unités** : liste fermée de 19 unités en 5 groupes, avec échappatoire
   « Autre unité » pour ne jamais bloquer une donnée existante
+- **Page Statistiques** : écart de chaque indicateur à sa cible, répartition
+  par degré de fiabilité, couverture territoriale, et une **vue tabulaire** qui
+  double le graphique pour rester lisible sans les couleurs.
 - **Avancement de la validation** sur le tableau de bord : une barre segmentée
   montre la répartition **réelle** par statut, pas seulement « validé / reste ».
   Une valeur non validée peut être en revue, en brouillon ou rejetée.

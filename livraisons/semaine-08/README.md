@@ -263,6 +263,7 @@ ci-dessus, qui porte sur la règle métier.
 | [`20-interface-sans-cdn.png`](captures/20-interface-sans-cdn.png) | Interface complète avec **zéro requête externe** : Bootstrap et ses icônes sont empaquetés |
 | [`23-interface-progression-validation.png`](captures/23-interface-progression-validation.png) | Barre d'avancement : répartition réelle des valeurs par statut |
 | [`24-interface-filtre-statut.png`](captures/24-interface-filtre-statut.png) | Filtre par statut sur le tableau des valeurs |
+| [`25-interface-statistiques.png`](captures/25-interface-statistiques.png) | Page Statistiques : écart à la cible, fiabilité, couverture territoriale |
 
 ### Impression (captures 21 et 22)
 
