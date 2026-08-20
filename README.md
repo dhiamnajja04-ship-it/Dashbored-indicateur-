@@ -87,6 +87,7 @@ docker compose ps
 | Quoi | URL |
 |---|---|
 | Interface | http://localhost:8080 |
+| pgAdmin (inspection de la base) | http://localhost:5050 |
 | Gateway | http://localhost:5169/health |
 | Santé globale | http://localhost:5169/health/plateforme |
 | PostgreSQL | localhost:15432 (`postgres` / `testpwd`) |

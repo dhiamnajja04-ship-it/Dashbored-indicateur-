@@ -127,7 +127,29 @@ services:
     depends_on:
       - gateway
 
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: indic-pgadmin
+    environment:
+      # Identifiants de l'interface pgAdmin elle-meme (pas ceux de PostgreSQL).
+      PGADMIN_DEFAULT_EMAIL: "admin@pictorsolution.tn"
+      PGADMIN_DEFAULT_PASSWORD: "admin"
+      # Evite l'ecran de bienvenue : on va droit aux tables.
+      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: "False"
+
+    ports:
+      - "5050:80"
+    volumes:
+      # Connexion a la base deja enregistree : rien a saisir a la premiere
+      # ouverture, sinon le releveur doit connaitre l'hote, le port et la base.
+      - ./pgadmin/servers.json:/pgadmin4/servers.json:ro
+      - pgadmin-data:/var/lib/pgadmin
+    depends_on:
+      postgres:
+        condition: service_healthy
+
 volumes:
+  pgadmin-data:
   documents-data:
   postgres-data:
   ollama-data:

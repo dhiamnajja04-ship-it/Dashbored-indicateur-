@@ -212,7 +212,35 @@ Annoncé plutôt que découvert :
 | Livraisons hebdomadaires | 8 semaines |
 | Captures documentées | 25 |
 
-## 10. Tester l'API avec Postman
+## 10. Inspecter la base avec pgAdmin
+
+pgAdmin est inclus dans la plateforme, avec la **connexion déjà enregistrée** :
+
+| | |
+|---|---|
+| Adresse | **http://localhost:5050** |
+| Identifiant pgAdmin | `admin@pictorsolution.tn` |
+| Mot de passe pgAdmin | `admin` |
+| Mot de passe PostgreSQL | `testpwd` (demandé une fois au premier clic sur le serveur) |
+
+Le serveur « Plateforme Indicateurs » apparaît déjà dans l'arbre à gauche.
+Chemin vers les données : *Servers → Plateforme Indicateurs → Databases →
+indicateurs_db → Schemas → public → Tables*.
+
+Pour voir la règle centrale directement en SQL :
+
+```sql
+-- Ce que l'IA reçoit, et rien d'autre
+SELECT i.code, i.nom, v.valeur, v.statut, v.is_valid, v.valide_par
+FROM valeurs_indicateurs v
+JOIN indicateurs i ON i.id = v.indicateur_id
+WHERE v.is_valid IS TRUE;
+```
+
+⚠️ Ces identifiants conviennent à une démonstration locale. En production, ils
+devraient venir d'un Secret, comme la chaîne de connexion PostgreSQL.
+
+## 11. Tester l'API avec Postman
 
 Une collection prête à importer : [`postman/Plateforme-Indicateurs.postman_collection.json`](postman/Plateforme-Indicateurs.postman_collection.json)
 — **7 dossiers, 33 requêtes**, chacune documentée.
@@ -227,7 +255,7 @@ Le parcours à suivre pour vérifier la règle centrale :
 3. `GET /api/ia/contexte` — le prompt a changé, sans avoir appelé le modèle
 4. `PATCH .../devalidate` — et il revient en arrière
 
-## 11. Les autres guides
+## 12. Les autres guides
 
 | Guide | Pour quoi |
 |---|---|

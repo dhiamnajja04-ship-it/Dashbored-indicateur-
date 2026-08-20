@@ -1,0 +1,14 @@
+{
+  "Servers": {
+    "1": {
+      "Name": "Plateforme Indicateurs",
+      "Group": "Pictor Solution",
+      "Host": "postgres",
+      "Port": 5432,
+      "MaintenanceDB": "indicateurs_db",
+      "Username": "postgres",
+      "SSLMode": "prefer",
+      "Comment": "Base de la plateforme. Mot de passe : testpwd (environnement de developpement)."
+    }
+  }
+}
