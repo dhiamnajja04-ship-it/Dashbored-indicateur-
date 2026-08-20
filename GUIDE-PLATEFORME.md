@@ -258,7 +258,50 @@ Il porte volontairement le nom `loadbalancer`, celui vers lequel l'image du
 frontend relaie `/api`. **La même image fonctionne donc dans les deux
 environnements, sans reconstruction.**
 
-## 11. Répartition de charge
+## 11. Intégration continue
+
+Un pipeline GitHub Actions ([`.github/workflows/ci.yml`](.github/workflows/ci.yml))
+se déclenche à chaque push sur `main` et sur les branches `stagiaire/**`.
+
+### Travail 1 — vérifier
+
+Construit les 4 images, démarre la plateforme, puis rejoue le scénario métier
+complet via [`ci/verifier-plateforme.sh`](ci/verifier-plateforme.sh) : **17
+contrôles**, dont
+
+- le CRUD entier avec relecture de la modification,
+- `POST` d'une valeur → `isValid` forcé à `false` par le serveur,
+- **la règle centrale** : valider une valeur l'ajoute au périmètre de l'IA,
+  la dévalider l'en retire.
+
+Le pipeline échoue aussi si le frontend référence un CDN externe — l'interface
+doit rester complète hors ligne.
+
+> Ollama n'est pas démarré en CI : le modèle pèse près d'un gigaoctet et une
+> génération dure une minute. On teste `GET /api/ia/contexte`, qui construit le
+> prompt **sans appeler le modèle** — c'est justement l'endpoint qui prouve le
+> périmètre.
+
+### Travail 2 — publier
+
+Publie les 4 images sur GitHub Container Registry, étiquetées `latest` et par
+empreinte de commit. Uniquement si la vérification a réussi, et jamais depuis
+une pull request.
+
+```
+ghcr.io/dhiamnajja04-ship-it/dashbored-indicateur-/metier:latest
+ghcr.io/…/ia:latest   ghcr.io/…/gateway:latest   ghcr.io/…/frontend:latest
+```
+
+Aucun secret à créer : le `GITHUB_TOKEN` est fourni automatiquement.
+
+### Lancer les mêmes contrôles en local
+
+```bash
+./ci/verifier-plateforme.sh
+```
+
+## 12. Répartition de charge
 
 Le Gateway était le point d'entrée unique : sa panne coupait toute la
 plateforme. Il est désormais **répliqué**, avec un répartiteur nginx devant.
@@ -296,7 +339,7 @@ docker stop rw9980-gateway-2                  # simuler une panne
 curl http://localhost:5169/health/plateforme  # répond toujours
 ```
 
-## 12. Inspecter la base avec pgAdmin
+## 13. Inspecter la base avec pgAdmin
 
 pgAdmin est inclus dans la plateforme, avec la **connexion déjà enregistrée** :
 
@@ -324,7 +367,7 @@ WHERE v.is_valid IS TRUE;
 ⚠️ Ces identifiants conviennent à une démonstration locale. En production, ils
 devraient venir d'un Secret, comme la chaîne de connexion PostgreSQL.
 
-## 13. Tester l'API avec Postman
+## 14. Tester l'API avec Postman
 
 Une collection prête à importer : [`postman/Plateforme-Indicateurs.postman_collection.json`](postman/Plateforme-Indicateurs.postman_collection.json)
 — **7 dossiers, 33 requêtes**, chacune documentée.
@@ -339,7 +382,7 @@ Le parcours à suivre pour vérifier la règle centrale :
 3. `GET /api/ia/contexte` — le prompt a changé, sans avoir appelé le modèle
 4. `PATCH .../devalidate` — et il revient en arrière
 
-## 14. Les autres guides
+## 15. Les autres guides
 
 | Guide | Pour quoi |
 |---|---|
