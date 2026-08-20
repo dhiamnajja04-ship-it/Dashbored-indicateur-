@@ -94,7 +94,7 @@ services:
       # VM n'a que 4 cœurs : Mistral ne terminait pas dans les 200 s du Gateway
       # et saturait le processeur (charge > 8), rendant la machine inutilisable.
       # Mistral reste dans le volume ollama-data : revenir en arrière = 1 ligne.
-      Ollama__Model: "qwen2.5:0.5b"
+      Ollama__Model: "qwen2.5:1.5b"
       Ollama__TimeoutSeconds: "180"
       # Le temps de génération est proportionnel au nombre de jetons produits.
       # 512 laisse la place à une synthèse complète sans troncature ; avec un

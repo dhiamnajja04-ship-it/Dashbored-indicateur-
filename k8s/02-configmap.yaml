@@ -16,5 +16,5 @@ data:
 
   # Modèle local. Voir livraisons/semaine-01 pour la justification du choix.
   OLLAMA_BASE_URL: "http://ollama:11434"
-  OLLAMA_MODEL: "qwen2.5:0.5b"
+  OLLAMA_MODEL: "qwen2.5:1.5b"
   OLLAMA_TIMEOUT_SECONDS: "180"

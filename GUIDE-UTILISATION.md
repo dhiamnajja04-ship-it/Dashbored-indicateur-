@@ -35,10 +35,10 @@ de démonstration.
 ## Télécharger le modèle IA (une seule fois)
 
 ```bash
-docker compose exec ollama ollama pull qwen2.5:0.5b
+docker compose exec ollama ollama pull qwen2.5:1.5b
 ```
 
-397 Mo. Le modèle persiste dans le volume `ollama-data` : il survit à un
+986 Mo. Le modèle persiste dans le volume `ollama-data` : il survit à un
 redémarrage, et même à `docker compose down` (mais **pas** à `down -v`).
 
 ## Vérifier
@@ -67,7 +67,7 @@ kubectl create namespace indicateurs
  kubectl -n indicateurs create secret generic postgres-secret \
    --from-literal=connection-string="Host=<IP>;Port=5432;Database=<BASE>;Username=<USER>;Password=<MDP>"
 ./k8s/deploy.sh
-kubectl -n indicateurs exec deploy/ollama -- ollama pull qwen2.5:0.5b
+kubectl -n indicateurs exec deploy/ollama -- ollama pull qwen2.5:1.5b
 ```
 
 L'espace avant `kubectl create secret` est volontaire : il empêche le mot de

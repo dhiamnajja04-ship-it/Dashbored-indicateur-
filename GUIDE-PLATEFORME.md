@@ -25,7 +25,7 @@ service métier ni le service IA directement.
 | `gateway` | .NET 8 | Point d'entrée unique des API | port 5169 |
 | `metier-service` | .NET 8 + EF Core | CRUD, workflow de validation, réclamations | interne |
 | `ia-service` | .NET 8 | Construction du prompt, appel du modèle | interne |
-| `ollama` | Ollama + qwen2.5:0.5b | Modèle IA local (397 Mo) | interne |
+| `ollama` | Ollama + qwen2.5:1.5b | Modèle IA local (986 Mo) | interne |
 
 PostgreSQL 17 complète l'ensemble. En Kubernetes c'est un **serveur externe**,
 jamais conteneurisé — contrainte du sujet. Le `docker-compose.yml` le
