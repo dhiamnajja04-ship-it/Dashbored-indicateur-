@@ -33,6 +33,7 @@ services:
       - ./db/05-documents-et-utilisateurs.sql:/docker-entrypoint-initdb.d/05-documents.sql:ro
       - ./db/06-indicateurs-complementaires.sql:/docker-entrypoint-initdb.d/06-indicateurs.sql:ro
       - ./db/07-organisations-et-periodes.sql:/docker-entrypoint-initdb.d/07-referentiels.sql:ro
+      - ./db/08-cascades.sql:/docker-entrypoint-initdb.d/08-cascades.sql:ro
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d indicateurs_db"]

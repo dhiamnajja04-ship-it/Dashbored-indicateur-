@@ -27,6 +27,7 @@ public static class PromptBuilder
         sb.AppendLine("- Si la liste ne permet pas de répondre, dis-le explicitement.");
         sb.AppendLine("- Cite les valeurs avec leur unité.");
         sb.AppendLine("- Précise toujours le territoire d'une valeur ; ne compare jamais un gouvernorat avec un total national comme s'ils étaient de même nature.");
+        sb.AppendLine("- La ligne « Position » donne déjà l'écart à la cible : recopie-la, ne recalcule rien.");
         sb.AppendLine();
         sb.AppendLine("=== DONNÉES VALIDÉES ===");
 
@@ -88,6 +89,30 @@ public static class PromptBuilder
                     sb.Append(", fiabilité : ").Append(valeur.DegreDeFiabilite);
                 }
                 sb.AppendLine(")");
+
+                // L'écart à la cible est CALCULÉ ici, pas laissé au modèle.
+                // Un petit modèle compare mal deux nombres : il écrivait
+                // « 12,4 est en dessous de la cible 10 ». En lui donnant la
+                // conclusion, il n'a plus qu'à la rapporter.
+                if (indicateur.ValeurCible.HasValue && indicateur.ValeurCible.Value != 0)
+                {
+                    var ecart = valeur.Valeur - indicateur.ValeurCible.Value;
+                    var sens = ecart switch
+                    {
+                        > 0 => "AU-DESSUS de la cible",
+                        < 0 => "EN DESSOUS de la cible",
+                        _ => "ÉGAL à la cible",
+                    };
+                    sb.Append("      Position : ")
+                      .Append(sens)
+                      .Append(" de ")
+                      .Append(Math.Abs(ecart).ToString("0.##", Fr))
+                      .Append(' ')
+                      .Append(indicateur.Unite)
+                      .Append(" (cible ")
+                      .Append(indicateur.ValeurCible.Value.ToString("0.##", Fr))
+                      .AppendLine(").");
+                }
 
                 if (!string.IsNullOrWhiteSpace(valeur.Commentaire))
                 {
