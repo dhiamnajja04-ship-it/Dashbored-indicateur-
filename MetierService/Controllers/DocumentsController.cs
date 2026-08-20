@@ -180,3 +180,53 @@ public class UtilisateursController : ControllerBase
         return Ok(await requete.OrderBy(u => u.NomUtilisateur).ToListAsync());
     }
 }
+
+/// <summary>Organisations productrices de données (table « organisations »).</summary>
+[Route("api/organisations")]
+[ApiController]
+public class OrganisationsController : ControllerBase
+{
+    private readonly AppDbContext _context;
+
+    public OrganisationsController(AppDbContext context) => _context = context;
+
+    [HttpGet]
+    public async Task<IActionResult> Lister() =>
+        Ok(await _context.Organisations.OrderBy(o => o.Nom).ToListAsync());
+
+    [HttpGet("{id:int}")]
+    public async Task<IActionResult> Detail(int id)
+    {
+        var organisation = await _context.Organisations.FindAsync(id);
+        return organisation is null
+            ? NotFound(new { message = $"Aucune organisation d'identifiant {id}." })
+            : Ok(organisation);
+    }
+}
+
+/// <summary>Périodes de référence (table « periodes »).</summary>
+[Route("api/periodes")]
+[ApiController]
+public class PeriodesController : ControllerBase
+{
+    private readonly AppDbContext _context;
+
+    public PeriodesController(AppDbContext context) => _context = context;
+
+    /// <summary>Triées par date de début : l'ordre chronologique est le seul utile.</summary>
+    [HttpGet]
+    public async Task<IActionResult> Lister([FromQuery] int? annee) =>
+        Ok(await _context.Periodes
+            .Where(p => annee == null || p.Annee == annee)
+            .OrderBy(p => p.DateDebut)
+            .ToListAsync());
+
+    [HttpGet("{id:int}")]
+    public async Task<IActionResult> Detail(int id)
+    {
+        var periode = await _context.Periodes.FindAsync(id);
+        return periode is null
+            ? NotFound(new { message = $"Aucune période d'identifiant {id}." })
+            : Ok(periode);
+    }
+}

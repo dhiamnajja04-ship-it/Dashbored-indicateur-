@@ -18,8 +18,23 @@ export const ROLES: Role[] = ['Agent de saisie', 'Validateur', 'Administrateur']
 @Injectable({ providedIn: 'root' })
 export class RoleService {
   private static readonly CLE_STOCKAGE = 'plateforme-indicateurs.role';
+  private static readonly CLE_AGENT = 'plateforme-indicateurs.agent';
 
   readonly role = signal<Role>(this.lireRoleEnregistre());
+
+  /**
+   * Agent identifié à l'entrée, choisi dans le référentiel « utilisateurs ».
+   * C'est lui qui alimente « saisi par » et « validé par » : le champ a été
+   * retiré des formulaires, où il était ressaisi à chaque valeur.
+   */
+  readonly agent = signal<string>(this.lireAgentEnregistre());
+
+  /**
+   * Vrai quand un agent a été choisi. Tant que c'est faux, l'application
+   * affiche l'écran d'entrée au lieu du contenu : on ne saisit pas de donnée
+   * sans savoir qui la saisit.
+   */
+  readonly sessionEtablie = computed(() => this.agent().trim().length > 0);
 
   /** Saisir et modifier des valeurs. */
   readonly peutSaisir = computed(
@@ -41,10 +56,36 @@ export class RoleService {
 
   definirRole(role: Role): void {
     this.role.set(role);
+    this.enregistrer(RoleService.CLE_STOCKAGE, role);
+  }
+
+  /** Ouvre la session de travail : rôle + agent identifié. */
+  demarrerSession(role: Role, agent: string): void {
+    this.role.set(role);
+    this.agent.set(agent);
+    this.enregistrer(RoleService.CLE_STOCKAGE, role);
+    this.enregistrer(RoleService.CLE_AGENT, agent);
+  }
+
+  /** Referme la session : on repasse par l'écran d'entrée. */
+  terminerSession(): void {
+    this.agent.set('');
+    this.enregistrer(RoleService.CLE_AGENT, '');
+  }
+
+  private enregistrer(cle: string, valeur: string): void {
     try {
-      localStorage.setItem(RoleService.CLE_STOCKAGE, role);
+      localStorage.setItem(cle, valeur);
     } catch {
-      // Navigation privée ou stockage indisponible : le rôle reste en mémoire.
+      // Navigation privée ou stockage indisponible : l'état reste en mémoire.
+    }
+  }
+
+  private lireAgentEnregistre(): string {
+    try {
+      return localStorage.getItem(RoleService.CLE_AGENT) ?? '';
+    } catch {
+      return '';
     }
   }
 

@@ -19,6 +19,8 @@ public class AppDbContext : DbContext
         [DbFunction("unaccent", IsBuiltIn = false)]
         public static string Unaccent(string texte) => throw new NotSupportedException();
 
+        public DbSet<Organisation> Organisations { get; set; } = null!;
+        public DbSet<Periode> Periodes { get; set; } = null!;
         public DbSet<Utilisateur> Utilisateurs { get; set; } = null!;
         public DbSet<Document> Documents { get; set; } = null!;
         public DbSet<ValeurIndicateur> ValeursIndicateurs { get; set; }
@@ -105,6 +107,32 @@ public class AppDbContext : DbContext
                 entity.Property(e => e.TailleOctets).HasColumnName("taille_octets");
                 entity.Property(e => e.DeposePar).HasColumnName("depose_par");
                 entity.Property(e => e.DeposeLe).HasColumnName("depose_le");
+            });
+
+            modelBuilder.Entity<Organisation>(entity =>
+            {
+                entity.ToTable("organisations");
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Id).HasColumnName("id");
+                entity.Property(e => e.Nom).HasColumnName("nom");
+                // Colonne de type enum PostgreSQL : lue en texte côté C# pour
+                // éviter d'avoir à déclarer le type côté Npgsql.
+                entity.Property(e => e.NiveauAdministratif)
+                      .HasColumnName("niveau_administratif")
+                      .HasColumnType("text");
+                entity.Property(e => e.IdParent).HasColumnName("id_parent");
+            });
+
+            modelBuilder.Entity<Periode>(entity =>
+            {
+                entity.ToTable("periodes");
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.Id).HasColumnName("id");
+                entity.Property(e => e.Annee).HasColumnName("annee");
+                entity.Property(e => e.Libelle).HasColumnName("libelle");
+                entity.Property(e => e.TypePeriode).HasColumnName("type_periode");
+                entity.Property(e => e.DateDebut).HasColumnName("date_debut");
+                entity.Property(e => e.DateFin).HasColumnName("date_fin");
             });
         });
     }

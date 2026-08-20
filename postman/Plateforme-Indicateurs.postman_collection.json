@@ -1,0 +1,901 @@
+{
+  "info": {
+    "name": "Plateforme Indicateurs — Pictor Solution",
+    "description": "API de la plateforme d'indicateurs.\n\nTOUTES les requetes passent par le Gateway (port 5169). Le service metier et le service IA ne sont pas exposes : c'est l'architecture definie en semaine 1 du stage.\n\nVariable a regler : base_url (http://localhost:5169 depuis la VM, http://<IP_VM>:5169 depuis l'exterieur).\n\nRegle centrale a verifier : GET /api/indicators/validated ne renvoie que les valeurs is_valid = true, et c'est exactement ce que recoit l'IA. GET /api/ia/contexte permet de le controler sans appeler le modele.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:5169"
+    },
+    {
+      "key": "indicateur_id",
+      "value": "1"
+    },
+    {
+      "key": "valeur_id",
+      "value": "4"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Sante",
+      "item": [
+        {
+          "name": "Sante du Gateway",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/health",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "health"
+              ]
+            },
+            "description": "Le Gateway repond-il ?"
+          }
+        },
+        {
+          "name": "Sante de la plateforme",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/health/plateforme",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "health",
+                "plateforme"
+              ]
+            },
+            "description": "Un seul appel verifie Gateway + metier + IA. 200 si tout va bien, 503 sinon : le champ fautif designe le maillon en panne."
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Indicateurs (CRUD)",
+      "item": [
+        {
+          "name": "Lister (tout)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/indicators",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "indicators"
+              ]
+            },
+            "description": "Sans parametre : liste brute. Retro-compatible avec les scripts existants."
+          }
+        },
+        {
+          "name": "Lister (pagine)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/indicators?page=1&taille=5&tri=nom&desc=false",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "indicators"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "taille",
+                  "value": "5"
+                },
+                {
+                  "key": "tri",
+                  "value": "nom"
+                },
+                {
+                  "key": "desc",
+                  "value": "false"
+                }
+              ]
+            },
+            "description": "Avec page : objet pagine {elements, page, taille, total, nbPages}. Le filtrage et le tri sont faits par PostgreSQL."
+          }
+        },
+        {
+          "name": "Rechercher",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/indicators?page=1&taille=10&recherche=densite",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "indicators"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "taille",
+                  "value": "10"
+                },
+                {
+                  "key": "recherche",
+                  "value": "densite"
+                }
+              ]
+            },
+            "description": "Recherche insensible a la casse ET aux accents (extension unaccent) : 'densite' trouve 'Densite medicale'."
+          }
+        },
+        {
+          "name": "Detail",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/indicators/{{indicateur_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "indicators",
+                "{{indicateur_id}}"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Creer",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/indicators",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "indicators"
+              ]
+            },
+            "description": "201 + l'objet cree. Un code deja pris renvoie 409 avec un message lisible, pas une erreur SQL.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"IND-TEST\",\n  \"nom\": \"Indicateur de test\",\n  \"description\": \"Cree depuis Postman\",\n  \"unite\": \"%\",\n  \"sourceDeDonner\": \"Institut National de la Statistique\",\n  \"typeCollecte\": \"Enquête\",\n  \"frequence\": \"Annuelle\",\n  \"valeurCible\": 50,\n  \"anneeReference\": 2025,\n  \"categorieId\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Modifier",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/indicators/{{indicateur_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "indicators",
+                "{{indicateur_id}}"
+              ]
+            },
+            "description": "204 sans contenu.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": 1,\n  \"code\": \"IND-CHOM\",\n  \"nom\": \"Taux de chômage\",\n  \"description\": \"Part de la population active sans emploi\",\n  \"unite\": \"%\",\n  \"typeCollecte\": \"Enquête\",\n  \"frequence\": \"Annuelle\",\n  \"valeurCible\": 10,\n  \"anneeReference\": 2025,\n  \"categorieId\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Supprimer",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/indicators/{{indicateur_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "indicators",
+                "{{indicateur_id}}"
+              ]
+            },
+            "description": "204. Supprime aussi les valeurs et documents rattaches (ON DELETE CASCADE)."
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Valeurs et workflow",
+      "item": [
+        {
+          "name": "Valeurs d'un indicateur",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/indicators/{{indicateur_id}}/valeurs",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "indicators",
+                "{{indicateur_id}}",
+                "valeurs"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Valeurs validees uniquement",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/indicators/{{indicateur_id}}/valeurs?validesUniquement=true",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "indicators",
+                "{{indicateur_id}}",
+                "valeurs"
+              ],
+              "query": [
+                {
+                  "key": "validesUniquement",
+                  "value": "true"
+                }
+              ]
+            },
+            "description": "Le filtre applique cote serveur."
+          }
+        },
+        {
+          "name": "Creer une valeur",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/indicators/{{indicateur_id}}/valeurs",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "indicators",
+                "{{indicateur_id}}",
+                "valeurs"
+              ]
+            },
+            "description": "IMPORTANT : la reponse a toujours isValid = false. Le serveur refuse toute auto-validation par le client, meme si isValid:true est envoye.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"valeur\": 12.4,\n  \"organisationId\": 1,\n  \"periodeId\": 1,\n  \"pays\": \"Tunisie\",\n  \"gouvernorat\": \"\",\n  \"degreDeFiabilite\": \"haute\",\n  \"saisiePar\": \"Amine Bouzid\",\n  \"commentaire\": \"Saisie depuis Postman\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Modifier une valeur",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/indicators/values/{{valeur_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "indicators",
+                "values",
+                "{{valeur_id}}"
+              ]
+            },
+            "description": "Modifier le CHIFFRE d'une valeur validee la ramene en Brouillon : la validation porte sur un chiffre precis.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"valeur\": 13.1,\n  \"organisationId\": 1,\n  \"periodeId\": 1,\n  \"pays\": \"Tunisie\",\n  \"degreDeFiabilite\": \"moyenne\",\n  \"commentaire\": \"Chiffre corrige\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Soumettre / changer de statut",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/indicators/values/{{valeur_id}}/statut",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "indicators",
+                "values",
+                "{{valeur_id}}",
+                "statut"
+              ]
+            },
+            "description": "Statuts : Brouillon, EnRevue, Valide, Rejete. Une transition interdite renvoie 400 avec le statut actuel ET les transitions possibles.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"statut\": \"EnRevue\",\n  \"utilisateur\": \"Karim Hamdi\",\n  \"commentaire\": \"\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Valider",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/indicators/values/{{valeur_id}}/validate",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "indicators",
+                "values",
+                "{{valeur_id}}",
+                "validate"
+              ]
+            },
+            "description": "Met is_valid = true et renseigne valide_par. La valeur entre alors dans le perimetre de l'IA.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"utilisateur\": \"Karim Hamdi\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Devalider",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/indicators/values/{{valeur_id}}/devalidate",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "indicators",
+                "values",
+                "{{valeur_id}}",
+                "devalidate"
+              ]
+            },
+            "description": "Sort la valeur du perimetre de l'IA sans la supprimer.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"utilisateur\": \"Karim Hamdi\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Supprimer une valeur",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/indicators/values/{{valeur_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "indicators",
+                "values",
+                "{{valeur_id}}"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Regle centrale (IA)",
+      "item": [
+        {
+          "name": "Perimetre exact de l'IA",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/indicators/validated",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "indicators",
+                "validated"
+              ]
+            },
+            "description": "LE point a verifier : uniquement les valeurs is_valid = true, et seulement les indicateurs qui en ont au moins une. C'est exactement ce que le service IA recoit."
+          }
+        },
+        {
+          "name": "Prompt envoye au modele",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/ia/contexte",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "ia",
+                "contexte"
+              ]
+            },
+            "description": "Renvoie le prompt exact SANS appeler le modele. Permet de controler le perimetre instantanement. Validez une valeur puis rappelez cette route : le prompt change."
+          }
+        },
+        {
+          "name": "Lancer une analyse",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/ia/analyse",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "ia",
+                "analyse"
+              ]
+            },
+            "description": "question vide = synthese generale. indicateurId limite l'analyse a un indicateur. La reponse contient indicateursUtilises : les codes reellement transmis au modele.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"question\": \"\",\n  \"indicateurId\": null\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Analyse d'un seul indicateur",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/ia/analyse",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "ia",
+                "analyse"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"question\": \"Cet indicateur est-il au-dessus de sa cible ?\",\n  \"indicateurId\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Referentiels",
+      "item": [
+        {
+          "name": "Organisations",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/organisations",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "organisations"
+              ]
+            },
+            "description": "Table organisations, avec hierarchie via idParent."
+          }
+        },
+        {
+          "name": "Periodes",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/periodes",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "periodes"
+              ]
+            },
+            "description": "Table periodes, bornees par de vraies dates."
+          }
+        },
+        {
+          "name": "Agents",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/utilisateurs",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "utilisateurs"
+              ]
+            },
+            "description": "Table utilisateurs. Referentiel de saisie, PAS des comptes : aucun mot de passe."
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. Documents",
+      "item": [
+        {
+          "name": "Documents d'un indicateur",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/indicators/{{indicateur_id}}/documents",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "indicators",
+                "{{indicateur_id}}",
+                "documents"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Deposer un fichier",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "fichier",
+                  "type": "file",
+                  "src": []
+                },
+                {
+                  "key": "description",
+                  "value": "Note methodologique",
+                  "type": "text"
+                },
+                {
+                  "key": "deposePar",
+                  "value": "Amine Bouzid",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/indicators/{{indicateur_id}}/documents",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "indicators",
+                "{{indicateur_id}}",
+                "documents"
+              ]
+            },
+            "description": "multipart/form-data. 10 Mo max. Extensions acceptees : pdf, csv, xlsx, xls, ods, doc, docx, txt, png, jpg, jpeg. Un .sh est refuse en 400, et un nom contenant ../ est neutralise."
+          }
+        },
+        {
+          "name": "Telecharger",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/indicators/documents/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "indicators",
+                "documents",
+                "1"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Supprimer",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/indicators/documents/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "indicators",
+                "documents",
+                "1"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "7. Reclamations",
+      "item": [
+        {
+          "name": "Lister",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/reclamations",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "reclamations"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Statistiques",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/reclamations/statistiques",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "reclamations",
+                "statistiques"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Deposer",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/reclamations",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "reclamations"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sujet\": \"Chiffre incoherent\",\n  \"message\": \"La valeur 2025 semble erronee.\",\n  \"auteur\": \"Citoyen\",\n  \"indicateurId\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Changer le statut",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/reclamations/1/statut",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "reclamations",
+                "1",
+                "statut"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"statut\": \"Traitee\",\n  \"reponse\": \"Verifie et corrige.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Supprimer",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/reclamations/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "reclamations",
+                "1"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    }
+  ]
+}

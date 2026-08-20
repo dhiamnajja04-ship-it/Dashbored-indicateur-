@@ -38,6 +38,24 @@ export interface Utilisateur {
   actif: boolean;
 }
 
+/** Organisation productrice (table « organisations »). */
+export interface Organisation {
+  id: number;
+  nom?: string;
+  niveauAdministratif?: string;
+  idParent?: number;
+}
+
+/** Période de référence (table « periodes »), bornée par de vraies dates. */
+export interface Periode {
+  id: number;
+  annee?: number;
+  libelle?: string;
+  typePeriode?: string;
+  dateDebut?: string;
+  dateFin?: string;
+}
+
 /** Document justificatif attaché à un indicateur (table « meta_data »). */
 export interface Document {
   id: number;
@@ -140,6 +158,14 @@ export class IndicateurService {
   }
 
   // --- Référentiel des agents ---
+
+  getOrganisations(): Observable<Organisation[]> {
+    return this.http.get<Organisation[]>(`${environment.apiBaseUrl}/api/organisations`);
+  }
+
+  getPeriodes(): Observable<Periode[]> {
+    return this.http.get<Periode[]>(`${environment.apiBaseUrl}/api/periodes`);
+  }
 
   getUtilisateurs(role?: string): Observable<Utilisateur[]> {
     const url = `${environment.apiBaseUrl}/api/utilisateurs`;

@@ -82,6 +82,22 @@ app.Map(
         Relayer(ctx, f, RacineDe(c["MetierServiceUrl"], "http://localhost:5039") + "/api/reclamations", "")
 );
 
+// --- Référentiels exposés au frontend (organisations, périodes) ---
+foreach (var referentiel in new[] { "organisations", "periodes" })
+{
+    var chemin = referentiel;
+    app.Map(
+        $"/api/{chemin}/{{**catchAll}}",
+        (HttpContext ctx, IHttpClientFactory f, IConfiguration c, string? catchAll) =>
+            Relayer(ctx, f, RacineDe(c["MetierServiceUrl"], "http://localhost:5039/api/indicators") + $"/api/{chemin}", catchAll ?? "")
+    );
+    app.Map(
+        $"/api/{chemin}",
+        (HttpContext ctx, IHttpClientFactory f, IConfiguration c) =>
+            Relayer(ctx, f, RacineDe(c["MetierServiceUrl"], "http://localhost:5039/api/indicators") + $"/api/{chemin}", "")
+    );
+}
+
 // --- Référentiel des agents (table utilisateurs) ---
 app.Map(
     "/api/utilisateurs/{**catchAll}",

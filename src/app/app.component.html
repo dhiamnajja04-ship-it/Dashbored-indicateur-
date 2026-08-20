@@ -1,3 +1,6 @@
+<app-entree *ngIf="!sessionEtablie()"></app-entree>
+
+<ng-container *ngIf="sessionEtablie()">
 <!-- Lien d'évitement : invisible tant qu'il n'a pas le focus, il permet de
      sauter la navigation au clavier plutôt que de la retraverser à chaque page. -->
 <a class="lien-evitement" href="#contenu-principal">Aller au contenu principal</a>
@@ -55,10 +58,15 @@
             title="Change les actions proposées à l'écran (sans authentification)"
           >
             <i class="bi" [ngClass]="iconeRole(role())"></i>
-            <span class="d-none d-sm-inline">{{ role() }}</span>
+            <span class="d-none d-sm-inline">{{ agent() }}</span>
           </button>
           <ul class="dropdown-menu dropdown-menu-end">
-            <li class="dropdown-header">Agir en tant que</li>
+            <li class="dropdown-header">
+              Connecté comme <strong>{{ agent() }}</strong><br />
+              <small class="text-muted">{{ role() }}</small>
+            </li>
+            <li><hr class="dropdown-divider" /></li>
+            <li class="dropdown-header">Changer de rôle</li>
             <li *ngFor="let r of roles">
               <button
                 class="dropdown-item d-flex align-items-start gap-2"
@@ -75,9 +83,15 @@
               </button>
             </li>
             <li><hr class="dropdown-divider" /></li>
+            <li>
+              <button class="dropdown-item d-flex align-items-center gap-2" type="button" (click)="quitter()">
+                <i class="bi bi-box-arrow-left"></i>
+                <span>Changer d'agent</span>
+              </button>
+            </li>
             <li class="px-3 pb-2">
               <small class="text-muted">
-                Confort de démonstration : aucune authentification n'est en place.
+                Identification déclarative : aucune authentification n'est en place.
               </small>
             </li>
           </ul>
@@ -94,3 +108,5 @@
 <app-footer></app-footer>
 
 <app-notifications></app-notifications>
+
+</ng-container>

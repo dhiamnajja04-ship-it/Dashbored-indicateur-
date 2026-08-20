@@ -39,8 +39,8 @@ commentaire.
 | `indicateurs` | 12 | Définition : code, nom, unité, cible, fréquence, source |
 | `valeurs_indicateurs` | 15 | **Cœur du système** — une mesure, son statut, son territoire |
 | `categories` | 2 | Regroupement thématique |
-| `organisations` | 4 | Producteurs de données |
-| `periodes` | 6 | Périodes de référence |
+| `organisations` | 4 | **Producteurs de données**, hiérarchisés via `id_parent` — exposés par l'API |
+| `periodes` | 6 | **Périodes de référence** bornées par de vraies dates — exposées par l'API |
 | `reclamations` | 10 | Signalements des utilisateurs |
 | `utilisateurs` | 4 | **Référentiel des agents** — pas des comptes, aucune authentification |
 | `meta_data` | 10 | **Documents justificatifs** attachés à un indicateur |
@@ -70,6 +70,7 @@ Le drapeau lu par l'IA et le statut du workflow ne peuvent pas diverger. Un
 | `db/03-reclamations.sql` | Table des réclamations |
 | `db/04-localisation.sql` | Colonnes pays et gouvernorat |
 | `db/05-documents-et-utilisateurs.sql` | Documents, référentiel d'agents, extension `unaccent` |
+| `db/07-organisations-et-periodes.sql` | Organisations hiérarchisées et périodes datées |
 
 Tous sont **idempotents** : les rejouer ne casse rien.
 
@@ -211,7 +212,22 @@ Annoncé plutôt que découvert :
 | Livraisons hebdomadaires | 8 semaines |
 | Captures documentées | 25 |
 
-## 10. Les autres guides
+## 10. Tester l'API avec Postman
+
+Une collection prête à importer : [`postman/Plateforme-Indicateurs.postman_collection.json`](postman/Plateforme-Indicateurs.postman_collection.json)
+— **7 dossiers, 33 requêtes**, chacune documentée.
+
+Import : Postman → *Import* → sélectionner le fichier. Régler ensuite la
+variable `base_url` (`http://localhost:5169` depuis la VM).
+
+Le parcours à suivre pour vérifier la règle centrale :
+
+1. `GET /api/indicators/validated` — le périmètre exact de l'IA
+2. `PATCH /api/indicators/values/{id}/validate` — valider une valeur de plus
+3. `GET /api/ia/contexte` — le prompt a changé, sans avoir appelé le modèle
+4. `PATCH .../devalidate` — et il revient en arrière
+
+## 11. Les autres guides
 
 | Guide | Pour quoi |
 |---|---|

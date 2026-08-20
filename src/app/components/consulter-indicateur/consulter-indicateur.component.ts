@@ -11,6 +11,8 @@ import {
   LIBELLES_STATUT,
   Document,
   Utilisateur,
+  Organisation,
+  Periode,
 } from '../../services/indicateur.service';
 import { NotificationService } from '../../services/notification.service';
 import { RoleService } from '../../services/role.service';
@@ -69,9 +71,36 @@ export class ConsulterIndicateurComponent implements OnInit {
   depotEnCours = false;
   erreurDocument = '';
 
-  // --- Référentiel des agents (table utilisateurs) ---
+  // --- Référentiels de saisie, tous issus de la base ---
 
   agents: Utilisateur[] = [];
+  organisations: Organisation[] = [];
+  periodes: Periode[] = [];
+
+  chargerReferentiels(): void {
+    this.indicateurService.getOrganisations().subscribe({
+      next: (liste) => {
+        this.organisations = liste;
+        this.cdr.markForCheck();
+      },
+      error: (err) => console.error('Erreur lors du chargement des organisations', err),
+    });
+
+    this.indicateurService.getPeriodes().subscribe({
+      next: (liste) => {
+        this.periodes = liste;
+        this.cdr.markForCheck();
+      },
+      error: (err) => console.error('Erreur lors du chargement des périodes', err),
+    });
+  }
+
+  /** Libellé d'une période avec ses bornes, pour lever toute ambiguïté. */
+  libellePeriode(p: Periode): string {
+    if (!p.dateDebut || !p.dateFin) return p.libelle ?? `Période ${p.id}`;
+    const fr = (d: string) => new Date(d).toLocaleDateString('fr-FR');
+    return `${p.libelle} (${fr(p.dateDebut)} → ${fr(p.dateFin)})`;
+  }
 
   chargerDocuments(): void {
     if (!this.indicateurId) return;
@@ -113,7 +142,7 @@ export class ConsulterIndicateurComponent implements OnInit {
         this.indicateurId,
         this.fichierChoisi,
         this.descriptionDocument.trim() || undefined,
-        this.valeurCourante.saisiePar || undefined,
+        this.roles.agent() || undefined,
       )
       .subscribe({
         next: (doc) => {
@@ -236,6 +265,7 @@ export class ConsulterIndicateurComponent implements OnInit {
       this.chargerDetails();
       this.chargerDocuments();
       this.chargerAgents();
+      this.chargerReferentiels();
     }
   }
 
@@ -264,7 +294,9 @@ export class ConsulterIndicateurComponent implements OnInit {
       gouvernorat: '',
       degreDeFiabilite: '',
       commentaire: '',
-      saisiePar: '',
+      // Renseigné automatiquement depuis la session : le champ a été retiré
+      // du formulaire, où il était ressaisi à chaque valeur.
+      saisiePar: this.roles.agent(),
     };
   }
 
@@ -425,7 +457,7 @@ export class ConsulterIndicateurComponent implements OnInit {
     this.erreur = '';
     this.cdr.markForCheck();
 
-    this.indicateurService.changerStatut(valueId, statut, this.roles.role()).subscribe({
+    this.indicateurService.changerStatut(valueId, statut, this.roles.agent() || this.roles.role()).subscribe({
       next: (resultat) => {
         this.statutEnCours = null;
         this.cdr.markForCheck();

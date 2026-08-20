@@ -1,0 +1,74 @@
+<div class="ecran-entree">
+  <div class="carte-entree">
+    <div class="entete-entree">
+      <span class="marque-pastille"><i class="bi bi-bar-chart-fill"></i></span>
+      <div>
+        <div class="nom-societe">Pictor Solution</div>
+        <div class="nom-produit">Plateforme Indicateurs</div>
+      </div>
+    </div>
+
+    <h1 class="titre-entree">Identification</h1>
+    <p class="sous-titre-entree">
+      Choisissez votre rôle et votre identité. Les valeurs que vous saisirez ou
+      validerez seront enregistrées à votre nom.
+    </p>
+
+    <div *ngIf="erreur" class="alert alert-danger d-flex align-items-start gap-2 py-2">
+      <i class="bi bi-exclamation-triangle-fill mt-1"></i>
+      <div class="small">{{ erreur }}</div>
+    </div>
+
+    <div *ngIf="chargement" class="py-3">
+      <div class="squelette mb-2" style="height: 3rem"></div>
+      <div class="squelette" style="height: 3rem"></div>
+    </div>
+
+    <form *ngIf="!chargement && !erreur" (ngSubmit)="entrer()">
+      <div class="titre-section mt-2">Rôle</div>
+      <div class="choix-roles">
+        <label
+          class="option-role"
+          *ngFor="let r of listeRoles"
+          [class.actif]="roleChoisi === r"
+        >
+          <input
+            type="radio"
+            name="role"
+            [value]="r"
+            [(ngModel)]="roleChoisi"
+            (ngModelChange)="surChangementRole()"
+          />
+          <span class="libelle-role">{{ r }}</span>
+          <span class="description-role">{{ descriptionRole(r) }}</span>
+        </label>
+      </div>
+
+      <div class="titre-section mt-4">Agent</div>
+      <select
+        class="form-select"
+        name="agent"
+        [(ngModel)]="agentChoisi"
+        aria-label="Choisir l'agent"
+      >
+        <option value="" disabled>— Choisir un agent —</option>
+        <option *ngFor="let a of agentsDuRole" [value]="a.nomUtilisateur">
+          {{ a.nomUtilisateur }}<span *ngIf="a.role"> — {{ a.role }}</span>
+        </option>
+      </select>
+      <div class="aide-champ">
+        Liste issue de la table <code>utilisateurs</code> de la base.
+      </div>
+
+      <button type="submit" class="btn btn-primary w-100 mt-4" [disabled]="!agentChoisi">
+        <i class="bi bi-box-arrow-in-right"></i> Entrer dans la plateforme
+      </button>
+
+      <p class="note-entree">
+        Il ne s'agit pas d'une authentification : aucun mot de passe n'est
+        demandé et aucun contrôle n'est fait côté serveur. C'est une
+        identification déclarative, comme un registre de saisie que l'on signe.
+      </p>
+    </form>
+  </div>
+</div>

@@ -121,22 +121,6 @@
                 </select>
               </div>
 
-              <div class="col-md-4">
-                <label class="form-label" for="champSaisiePar">Saisi par</label>
-                <!-- Liste fermée issue de la table « utilisateurs » : le texte
-                     libre produisait deux agents pour deux orthographes. -->
-                <select
-                  id="champSaisiePar"
-                  class="form-select"
-                  name="saisiePar"
-                  [(ngModel)]="valeurCourante.saisiePar"
-                >
-                  <option value="">— Choisir un agent —</option>
-                  <option *ngFor="let a of agents" [value]="a.nomUtilisateur">
-                    {{ a.nomUtilisateur }} — {{ a.role }}
-                  </option>
-                </select>
-              </div>
             </div>
           </div>
 
@@ -177,33 +161,39 @@
           <div class="section-formulaire">
             <div class="titre-section">Rattachement</div>
             <div class="row g-3">
-              <div class="col-md-3">
+              <div class="col-md-4">
                 <label class="form-label" for="champOrganisation">Organisation</label>
-                <input
+                <!-- Liste issue de la table « organisations ». Auparavant, il
+                     fallait deviner un identifiant numérique. -->
+                <select
                   id="champOrganisation"
-                  type="number"
-                  min="1"
-                  class="form-control"
+                  class="form-select"
                   name="organisationId"
                   [(ngModel)]="valeurCourante.organisationId"
-                />
-                <div class="aide-champ">Identifiant en base (1 = Ministère du Plan).</div>
+                >
+                  <option *ngFor="let o of organisations" [ngValue]="o.id">
+                    {{ o.nom }}<span *ngIf="o.niveauAdministratif"> — {{ o.niveauAdministratif }}</span>
+                  </option>
+                </select>
               </div>
 
-              <div class="col-md-3">
+              <div class="col-md-4">
                 <label class="form-label" for="champPeriode">Période</label>
-                <input
+                <!-- Les périodes portent de vraies dates de début et de fin :
+                     on les affiche pour lever toute ambiguïté. -->
+                <select
                   id="champPeriode"
-                  type="number"
-                  min="1"
-                  class="form-control"
+                  class="form-select"
                   name="periodeId"
                   [(ngModel)]="valeurCourante.periodeId"
-                />
-                <div class="aide-champ">Identifiant en base (1 = Année 2025).</div>
+                >
+                  <option *ngFor="let p of periodes" [ngValue]="p.id">
+                    {{ libellePeriode(p) }}
+                  </option>
+                </select>
               </div>
 
-              <div class="col-md-6">
+              <div class="col-md-4">
                 <label class="form-label" for="champCommentaire">Commentaire</label>
                 <input
                   id="champCommentaire"
