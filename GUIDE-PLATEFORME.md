@@ -213,7 +213,52 @@ Annoncé plutôt que découvert :
 | Livraisons hebdomadaires | 8 semaines |
 | Captures documentées | 25 |
 
-## 10. Répartition de charge
+## 10. Déploiement Kubernetes
+
+La plateforme tourne **réellement** sur un cluster Kubernetes, pas seulement
+sur Docker Compose.
+
+```bash
+./k8s/deploy-kind.sh
+```
+
+| | |
+|---|---|
+| Interface | http://localhost:30080 |
+| API | http://localhost:30169 |
+
+### Pourquoi kind plutôt que minikube ou k3s
+
+Ces deux-là exigent des droits root. Sur la VM de stage, `sudo` demande un mot
+de passe interactif. **kind** constitue le cluster avec des conteneurs Docker :
+il s'installe et tourne sans être administrateur.
+
+### PostgreSQL reste hors du cluster
+
+Comme l'impose le sujet. Seule la chaîne de connexion entre dans Kubernetes,
+via un `Secret` créé à la volée — jamais dans un fichier versionné.
+
+### Ce que le cluster apporte, mesuré
+
+| Test | Résultat |
+|---|---|
+| 5 pods démarrés | `metier`, `ia`, `frontend`, **2× `gateway`** |
+| Le métier joint le PostgreSQL externe | readinessProbe satisfaite |
+| Le Service répartit sur les 2 pods | `10.244.0.7:8080, 10.244.0.8:8080` |
+| **Suppression d'un pod gateway** | **10/10 requêtes réussies, zéro interruption** |
+| Auto-réparation | Kubernetes recrée le pod en ~15 s |
+
+### Une différence avec Docker Compose
+
+Sous Compose, la répartition de charge exige un conteneur nginx dédié. Sous
+Kubernetes, **un `Service` le fait nativement** : `45-loadbalancer.yaml` ne
+contient qu'un Service, aucun conteneur.
+
+Il porte volontairement le nom `loadbalancer`, celui vers lequel l'image du
+frontend relaie `/api`. **La même image fonctionne donc dans les deux
+environnements, sans reconstruction.**
+
+## 11. Répartition de charge
 
 Le Gateway était le point d'entrée unique : sa panne coupait toute la
 plateforme. Il est désormais **répliqué**, avec un répartiteur nginx devant.
@@ -251,7 +296,7 @@ docker stop rw9980-gateway-2                  # simuler une panne
 curl http://localhost:5169/health/plateforme  # répond toujours
 ```
 
-## 11. Inspecter la base avec pgAdmin
+## 12. Inspecter la base avec pgAdmin
 
 pgAdmin est inclus dans la plateforme, avec la **connexion déjà enregistrée** :
 
@@ -279,7 +324,7 @@ WHERE v.is_valid IS TRUE;
 ⚠️ Ces identifiants conviennent à une démonstration locale. En production, ils
 devraient venir d'un Secret, comme la chaîne de connexion PostgreSQL.
 
-## 12. Tester l'API avec Postman
+## 13. Tester l'API avec Postman
 
 Une collection prête à importer : [`postman/Plateforme-Indicateurs.postman_collection.json`](postman/Plateforme-Indicateurs.postman_collection.json)
 — **7 dossiers, 33 requêtes**, chacune documentée.
@@ -294,7 +339,7 @@ Le parcours à suivre pour vérifier la règle centrale :
 3. `GET /api/ia/contexte` — le prompt a changé, sans avoir appelé le modèle
 4. `PATCH .../devalidate` — et il revient en arrière
 
-## 13. Les autres guides
+## 14. Les autres guides
 
 | Guide | Pour quoi |
 |---|---|

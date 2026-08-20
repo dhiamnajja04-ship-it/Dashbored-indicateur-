@@ -77,6 +77,10 @@ services:
           # et l'interface graphique gèle — ce qui ressemble à un plantage.
           cpus: "3"
           memory: 6G
+    ports:
+      # Publie pour que le cluster Kubernetes (kind) puisse joindre le modèle
+      # depuis l'extérieur du réseau Compose.
+      - "11434:11434"
     volumes:
       - ollama-data:/root/.ollama
     # Le modèle se télécharge une fois, après le démarrage :

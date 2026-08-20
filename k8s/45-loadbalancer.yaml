@@ -1,0 +1,23 @@
+# Répartition de charge en Kubernetes.
+#
+# Aucun conteneur nginx n'est nécessaire ici : un Service Kubernetes répartit
+# NATIVEMENT le trafic sur les pods qui portent son sélecteur. Le répartiteur
+# nginx ajouté pour Docker Compose n'existe que parce que Compose n'offre pas
+# cette fonction.
+#
+# Ce Service porte volontairement le nom « loadbalancer » : l'image du frontend
+# relaie /api vers ce nom, elle fonctionne donc à l'identique sous Compose et
+# sous Kubernetes, sans être reconstruite.
+apiVersion: v1
+kind: Service
+metadata:
+  name: loadbalancer
+  namespace: indicateurs
+spec:
+  type: ClusterIP
+  selector:
+    app: gateway
+  ports:
+    - port: 80
+      targetPort: 8080
+      protocol: TCP

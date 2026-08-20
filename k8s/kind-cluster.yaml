@@ -1,0 +1,20 @@
+# Cluster Kubernetes local pour la démonstration.
+#
+# kind est retenu plutôt que minikube ou k3s : il ne demande AUCUN droit root
+# (le cluster est lui-même constitué de conteneurs Docker), ce qui le rend
+# installable sur une VM où l'on n'est pas administrateur.
+#
+# Les ports 30080 et 30169 sont exposés vers la machine hôte pour retrouver
+# exactement les NodePort prévus dans les manifestes.
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+name: indicateurs
+nodes:
+  - role: control-plane
+    extraPortMappings:
+      - containerPort: 30080
+        hostPort: 30080
+        protocol: TCP
+      - containerPort: 30169
+        hostPort: 30169
+        protocol: TCP
