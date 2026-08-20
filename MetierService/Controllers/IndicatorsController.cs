@@ -132,6 +132,14 @@ namespace MetierService.Controllers
                             Valeur = v.Valeur,
                             Pays = v.Pays,
                             Gouvernorat = v.Gouvernorat,
+                            OrganisationNom = _context.Organisations
+                                .Where(o => o.Id == v.OrganisationId)
+                                .Select(o => o.Nom)
+                                .FirstOrDefault(),
+                            PeriodeLibelle = _context.Periodes
+                                .Where(p => p.Id == v.PeriodeId)
+                                .Select(p => p.Libelle)
+                                .FirstOrDefault(),
                             Statut = v.Statut,
                             DegreDeFiabilite = v.DegreDeFiabilite,
                             Commentaire = v.Commentaire,

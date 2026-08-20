@@ -28,6 +28,8 @@ public static class PromptBuilder
         sb.AppendLine("- Cite les valeurs avec leur unité.");
         sb.AppendLine("- Précise toujours le territoire d'une valeur ; ne compare jamais un gouvernorat avec un total national comme s'ils étaient de même nature.");
         sb.AppendLine("- La ligne « Position » donne déjà l'écart à la cible : recopie-la, ne recalcule rien.");
+        sb.AppendLine("- N'attribue jamais la valeur d'un indicateur à un autre : chaque chiffre appartient à l'indicateur sous lequel il est listé.");
+        sb.AppendLine("- Ne déduis aucune corrélation entre deux indicateurs : ils mesurent des choses différentes.");
         sb.AppendLine();
         sb.AppendLine("=== DONNÉES VALIDÉES ===");
 
@@ -78,12 +80,16 @@ public static class PromptBuilder
                     sb.Append(" — ").Append(territoire);
                 }
 
-                sb.Append(" (saisie le ")
-                    .Append(valeur.SaisieLe.ToString("dd/MM/yyyy", Fr))
-                    .Append(", organisation #")
-                    .Append(valeur.OrganisationId)
-                    .Append(", période #")
-                    .Append(valeur.PeriodeId);
+                // Libellés plutôt qu'identifiants : « organisation #1 » n'apprend
+                // rien au modèle, qui finissait par le recracher tel quel.
+                sb.Append(" (source : ")
+                    .Append(string.IsNullOrWhiteSpace(valeur.OrganisationNom)
+                        ? $"organisation #{valeur.OrganisationId}"
+                        : valeur.OrganisationNom)
+                    .Append(", période : ")
+                    .Append(string.IsNullOrWhiteSpace(valeur.PeriodeLibelle)
+                        ? $"#{valeur.PeriodeId}"
+                        : valeur.PeriodeLibelle);
                 if (!string.IsNullOrWhiteSpace(valeur.DegreDeFiabilite))
                 {
                     sb.Append(", fiabilité : ").Append(valeur.DegreDeFiabilite);
@@ -128,10 +134,26 @@ public static class PromptBuilder
 
         if (string.IsNullOrWhiteSpace(question))
         {
-            sb.AppendLine(
-                "TÂCHE : rédige une synthèse de 5 à 10 lignes. Indique les tendances, "
-                    + "les écarts éventuels par rapport aux valeurs cibles, et les points à surveiller."
-            );
+            // Une tendance suppose au moins deux mesures du même indicateur.
+            // Demander « les tendances » sur une valeur unique poussait le
+            // modèle à en inventer une (« en hausse par rapport à 2025 »).
+            var plusieursMesures = indicateurs.Any(i => i.Valeurs.Count > 1);
+
+            sb.AppendLine("TÂCHE : rédige une synthèse de 5 à 10 lignes.");
+            sb.AppendLine("- Traite chaque indicateur séparément, dans l'ordre de la liste.");
+            sb.AppendLine("- Pour chacun : rappelle sa valeur, son unité, son territoire, puis recopie sa ligne « Position ».");
+
+            if (plusieursMesures)
+            {
+                sb.AppendLine("- Indique une évolution UNIQUEMENT pour les indicateurs comptant plusieurs valeurs.");
+            }
+            else
+            {
+                sb.AppendLine("- Chaque indicateur ne compte qu'UNE seule mesure : ne parle NI de tendance, NI d'évolution, NI de hausse ou de baisse dans le temps.");
+            }
+
+            sb.AppendLine("- Termine par 2 ou 3 points à surveiller, en une phrase chacun.");
+            sb.AppendLine("- Dans cette conclusion, n'introduis AUCUN chiffre qui ne figure pas dans les données ci-dessus.");
         }
         else
         {

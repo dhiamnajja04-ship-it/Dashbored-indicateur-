@@ -15,6 +15,11 @@ import { UNITES_COURANTES, TYPES_COLLECTE, FREQUENCES } from '../../reference/re
   templateUrl: './indicateurs-list.component.html',
 })
 export class IndicateursListComponent implements OnInit {
+  // Injecté en premier : les champs s'initialisent dans l'ordre de déclaration
+  // et indicateurCourant appelle indicateurVide() dès la construction. Même
+  // précaution que dans consulter-indicateur.component.ts.
+  private readonly roles = inject(RoleService);
+
   indicateurs: Indicateur[] = [];
   loading = true;
   erreur = '';
@@ -39,8 +44,6 @@ export class IndicateursListComponent implements OnInit {
     private notifications: NotificationService,
   ) {}
 
-  /** Voir le commentaire équivalent dans consulter-indicateur.component.ts. */
-  private readonly roles = inject(RoleService);
 
   readonly peutGererIndicateurs = this.roles.peutGererIndicateurs;
   readonly peutSupprimer = this.roles.peutSupprimer;
@@ -204,6 +207,11 @@ export class IndicateursListComponent implements OnInit {
       sourceDeDonner: '',
       typeCollecte: '',
       frequence: '',
+      // Colonnes réellement présentes dans la table indicateurs : le
+      // formulaire les couvre désormais toutes.
+      statut: 'Actif',
+      valeurCible: undefined,
+      anneeReference: new Date().getFullYear(),
       categorieId: 1,
     };
   }

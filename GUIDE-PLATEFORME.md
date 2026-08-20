@@ -22,7 +22,8 @@ service métier ni le service IA directement.
 | Service | Techno | Rôle | Exposition |
 |---|---|---|---|
 | `frontend` | Angular 22 + nginx 1.27 | Interface, sert le SPA et relaie `/api` | port 8080 |
-| `gateway` | .NET 8 | Point d'entrée unique des API | port 5169 |
+| `loadbalancer` | nginx 1.27 | Répartit la charge sur les répliques du Gateway | port 5169 |
+| `gateway` | .NET 8 | Point d'entrée unique des API | interne, **2 répliques** |
 | `metier-service` | .NET 8 + EF Core | CRUD, workflow de validation, réclamations | interne |
 | `ia-service` | .NET 8 | Construction du prompt, appel du modèle | interne |
 | `ollama` | Ollama + qwen2.5:1.5b | Modèle IA local (986 Mo) | interne |
@@ -212,7 +213,45 @@ Annoncé plutôt que découvert :
 | Livraisons hebdomadaires | 8 semaines |
 | Captures documentées | 25 |
 
-## 10. Inspecter la base avec pgAdmin
+## 10. Répartition de charge
+
+Le Gateway était le point d'entrée unique : sa panne coupait toute la
+plateforme. Il est désormais **répliqué**, avec un répartiteur nginx devant.
+
+```
+Navigateur / Postman ─▶ loadbalancer:5169 ─┬─▶ gateway (réplique 1)
+                                            └─▶ gateway (réplique 2)
+```
+
+Changer le nombre de répliques :
+
+```bash
+docker compose up -d --scale gateway=3
+```
+
+Rien à reconfigurer : le répartiteur découvre les répliques par le DNS interne
+de Docker.
+
+### Le piège évité
+
+Un bloc `upstream` nginx classique ne résout les noms **qu'au démarrage** : il
+fige l'adresse d'une seule réplique et ignore les autres. Mesuré : avec deux
+répliques dont une arrêtée, **4 requêtes sur 8 échouaient**.
+
+La configuration passe donc par une **variable** dans `proxy_pass`, ce qui force
+une résolution à chaque requête via le résolveur Docker `127.0.0.11`. Après
+correction : **12 requêtes sur 12** aboutissent avec une réplique arrêtée.
+
+### Vérifier
+
+```bash
+curl http://localhost:5169/lb-health          # le répartiteur lui-même
+docker compose ps gateway                     # les répliques
+docker stop rw9980-gateway-2                  # simuler une panne
+curl http://localhost:5169/health/plateforme  # répond toujours
+```
+
+## 11. Inspecter la base avec pgAdmin
 
 pgAdmin est inclus dans la plateforme, avec la **connexion déjà enregistrée** :
 
@@ -240,7 +279,7 @@ WHERE v.is_valid IS TRUE;
 ⚠️ Ces identifiants conviennent à une démonstration locale. En production, ils
 devraient venir d'un Secret, comme la chaîne de connexion PostgreSQL.
 
-## 11. Tester l'API avec Postman
+## 12. Tester l'API avec Postman
 
 Une collection prête à importer : [`postman/Plateforme-Indicateurs.postman_collection.json`](postman/Plateforme-Indicateurs.postman_collection.json)
 — **7 dossiers, 33 requêtes**, chacune documentée.
@@ -255,7 +294,7 @@ Le parcours à suivre pour vérifier la règle centrale :
 3. `GET /api/ia/contexte` — le prompt a changé, sans avoir appelé le modèle
 4. `PATCH .../devalidate` — et il revient en arrière
 
-## 12. Les autres guides
+## 13. Les autres guides
 
 | Guide | Pour quoi |
 |---|---|

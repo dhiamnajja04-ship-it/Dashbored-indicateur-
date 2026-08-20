@@ -1,9 +1,10 @@
-import { ApplicationConfig, provideZonelessChangeDetection } from '@angular/core';
+import { ApplicationConfig, ErrorHandler, provideZonelessChangeDetection } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 
 import { routes } from './app.routes';
 import { renderInterceptor } from './interceptors/zone.interceptor';
+import { ErreurVisibleHandler } from './services/erreur-visible';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -15,5 +16,7 @@ export const appConfig: ApplicationConfig = {
     provideZonelessChangeDetection(),
     provideRouter(routes),
     provideHttpClient(withInterceptors([renderInterceptor])),
+    // Rend visible a l'ecran toute erreur d'execution (diagnostic a distance).
+    { provide: ErrorHandler, useClass: ErreurVisibleHandler },
   ],
 };

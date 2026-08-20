@@ -2,8 +2,8 @@
   <div class="entete-impression">
     <div class="societe-impression">Pictor Solution — Plateforme Indicateurs</div>
     <div class="meta-impression">
-      Valeurs de l'indicateur {{ indicateur?.code }} — {{ indicateur?.nom }} —
-      éditées le {{ imprimeLe | date: 'dd/MM/yyyy à HH:mm' }}
+      Valeurs de l'indicateur {{ indicateur?.code }} — édité le
+      {{ imprimeLe | date: 'dd/MM/yyyy à HH:mm' }}
     </div>
   </div>
 
@@ -20,36 +20,33 @@
     <div class="small">{{ erreur }}</div>
   </div>
 
-  <div *ngIf="!indicateur && !erreur" class="card">
-    <div class="card-body">
-      <div class="squelette mb-3" style="height: 1.8rem; width: 40%"></div>
-      <div class="squelette" style="height: 1rem; width: 70%"></div>
-    </div>
+  <div *ngIf="!indicateur && !erreur" class="card p-4">
+    <div class="squelette mb-3" style="height: 1.8rem; width: 40%"></div>
+    <div class="squelette" style="height: 1rem; width: 70%"></div>
   </div>
 
-  <div *ngIf="indicateur">
+  <ng-container *ngIf="indicateur as ind">
     <!-- En-tête de l'indicateur -->
     <div class="card mb-4">
       <div class="card-body">
         <div class="entete-page mb-0">
           <div>
-            <h2>{{ indicateur.nom }}</h2>
-            <p class="sous-titre-page">{{ indicateur.description }}</p>
+            <h2>{{ ind.nom }}</h2>
+            <p class="sous-titre-page">{{ ind.description }}</p>
             <div class="d-flex gap-2 flex-wrap mt-3">
-              <span class="etiquette"><span class="code-indicateur">{{ indicateur.code }}</span></span>
-              <span class="etiquette" *ngIf="indicateur.unite">
-                <i class="bi bi-rulers me-1"></i>{{ indicateur.unite }}
+              <span class="etiquette"><span class="code-indicateur">{{ ind.code }}</span></span>
+              <span class="etiquette" *ngIf="ind.unite">
+                <i class="bi bi-rulers me-1"></i>{{ ind.unite }}
               </span>
-              <span class="etiquette" *ngIf="indicateur.frequence">
-                <i class="bi bi-calendar3 me-1"></i>{{ indicateur.frequence }}
+              <span class="etiquette" *ngIf="ind.frequence">
+                <i class="bi bi-calendar3 me-1"></i>{{ ind.frequence }}
               </span>
-              <span class="etiquette" *ngIf="indicateur.valeurCible != null">
-                <i class="bi bi-bullseye me-1"></i>Cible : {{ indicateur.valeurCible }}
-                {{ indicateur.unite }}
+              <span class="etiquette" *ngIf="ind.valeurCible != null">
+                <i class="bi bi-bullseye me-1"></i>Cible : {{ ind.valeurCible }} {{ ind.unite }}
               </span>
             </div>
           </div>
-          <a routerLink="/indicateurs" class="btn btn-outline-secondary">
+          <a routerLink="/indicateurs" class="btn btn-outline-secondary sans-impression">
             <i class="bi bi-arrow-left"></i> Retour
           </a>
         </div>
@@ -62,15 +59,13 @@
         <i class="bi" [ngClass]="modeEditionValeur ? 'bi-pencil-square' : 'bi-plus-circle'"></i>
         {{ modeEditionValeur ? 'Modifier la valeur' : 'Nouvelle valeur' }}
       </div>
+
       <div class="card-body">
-        <div
-          *ngIf="modeEditionValeur"
-          class="alert alert-warning d-flex align-items-start gap-2 py-2"
-        >
+        <div *ngIf="modeEditionValeur" class="alert alert-warning d-flex align-items-start gap-2 py-2">
           <i class="bi bi-info-circle-fill mt-1"></i>
           <div class="small">
             Modifier le chiffre d'une valeur déjà validée la ramène en
-            <strong>Brouillon</strong> : elle devra être revalidée avant de repartir vers l'IA.
+            <strong>Brouillon</strong> : elle devra être revalidée.
           </div>
         </div>
 
@@ -83,7 +78,7 @@
           <div class="section-formulaire">
             <div class="titre-section">Mesure</div>
             <div class="row g-3">
-              <div class="col-md-4">
+              <div class="col-md-6">
                 <label class="form-label requis" for="champValeur">Valeur</label>
                 <div class="input-group">
                   <input
@@ -91,22 +86,15 @@
                     type="number"
                     step="any"
                     class="form-control"
-                    [class.champ-invalide]="valeurChamp.invalid && valeurChamp.touched"
                     name="valeur"
                     [(ngModel)]="valeurCourante.valeur"
-                    #valeurChamp="ngModel"
                     required
                   />
-                  <span class="input-group-text" *ngIf="indicateur.unite">
-                    {{ indicateur.unite }}
-                  </span>
-                </div>
-                <div class="message-erreur-champ" *ngIf="valeurChamp.invalid && valeurChamp.touched">
-                  La valeur est obligatoire.
+                  <span class="input-group-text" *ngIf="ind.unite">{{ ind.unite }}</span>
                 </div>
               </div>
 
-              <div class="col-md-4">
+              <div class="col-md-6">
                 <label class="form-label" for="champFiabilite">Degré de fiabilité</label>
                 <select
                   id="champFiabilite"
@@ -115,31 +103,23 @@
                   [(ngModel)]="valeurCourante.degreDeFiabilite"
                 >
                   <option value="">— Non précisé —</option>
-                  <option *ngFor="let d of degresFiabilite" [value]="d.valeur">
-                    {{ d.libelle }}
-                  </option>
+                  <option *ngFor="let d of degresFiabilite" [value]="d.valeur">{{ d.libelle }}</option>
                 </select>
               </div>
-
             </div>
           </div>
 
           <div class="section-formulaire">
             <div class="titre-section">Territoire</div>
             <div class="row g-3">
-              <div class="col-md-4">
+              <div class="col-md-6">
                 <label class="form-label" for="champPays">Pays</label>
-                <select
-                  id="champPays"
-                  class="form-select"
-                  name="pays"
-                  [(ngModel)]="valeurCourante.pays"
-                >
+                <select id="champPays" class="form-select" name="pays" [(ngModel)]="valeurCourante.pays">
                   <option *ngFor="let p of pays" [value]="p">{{ p }}</option>
                 </select>
               </div>
 
-              <div class="col-md-4">
+              <div class="col-md-6">
                 <label class="form-label" for="champGouvernorat">Gouvernorat</label>
                 <select
                   id="champGouvernorat"
@@ -151,9 +131,7 @@
                   <option value="">— Niveau national —</option>
                   <option *ngFor="let g of gouvernorats" [value]="g">{{ g }}</option>
                 </select>
-                <div class="aide-champ">
-                  Laissez « niveau national » pour un agrégat sur tout le pays.
-                </div>
+                <div class="aide-champ">Laissez « niveau national » pour un agrégat sur tout le pays.</div>
               </div>
             </div>
           </div>
@@ -163,33 +141,25 @@
             <div class="row g-3">
               <div class="col-md-4">
                 <label class="form-label" for="champOrganisation">Organisation</label>
-                <!-- Liste issue de la table « organisations ». Auparavant, il
-                     fallait deviner un identifiant numérique. -->
                 <select
                   id="champOrganisation"
                   class="form-select"
                   name="organisationId"
                   [(ngModel)]="valeurCourante.organisationId"
                 >
-                  <option *ngFor="let o of organisations" [ngValue]="o.id">
-                    {{ o.nom }}<span *ngIf="o.niveauAdministratif"> — {{ o.niveauAdministratif }}</span>
-                  </option>
+                  <option *ngFor="let o of organisations" [ngValue]="o.id">{{ o.nom }}</option>
                 </select>
               </div>
 
               <div class="col-md-4">
                 <label class="form-label" for="champPeriode">Période</label>
-                <!-- Les périodes portent de vraies dates de début et de fin :
-                     on les affiche pour lever toute ambiguïté. -->
                 <select
                   id="champPeriode"
                   class="form-select"
                   name="periodeId"
                   [(ngModel)]="valeurCourante.periodeId"
                 >
-                  <option *ngFor="let p of periodes" [ngValue]="p.id">
-                    {{ libellePeriode(p) }}
-                  </option>
+                  <option *ngFor="let p of periodes" [ngValue]="p.id">{{ libellePeriode(p) }}</option>
                 </select>
               </div>
 
@@ -207,16 +177,8 @@
           </div>
 
           <div class="d-flex gap-2 mt-4">
-            <button
-              type="submit"
-              class="btn btn-primary"
-              [disabled]="enregistrementEnCours || formValeur.invalid"
-            >
-              <span
-                *ngIf="enregistrementEnCours"
-                class="spinner-border spinner-border-sm"
-                aria-hidden="true"
-              ></span>
+            <button type="submit" class="btn btn-primary" [disabled]="enregistrementEnCours">
+              <span *ngIf="enregistrementEnCours" class="spinner-border spinner-border-sm"></span>
               <i class="bi bi-check-lg" *ngIf="!enregistrementEnCours"></i>
               {{ enregistrementEnCours ? 'Enregistrement…' : 'Enregistrer' }}
             </button>
@@ -231,31 +193,23 @@
           </div>
         </form>
       </div>
+    </div>
 
     <!-- Tableau des valeurs et workflow de validation -->
-    <div class="card">
+    <div class="card mb-4">
       <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
         <span><i class="bi bi-table me-2"></i>Valeurs enregistrées</span>
-        <div class="d-flex gap-2">
-          <button
-            class="btn btn-sm btn-outline-secondary"
-            (click)="imprimer()"
-            title="Imprimer le tableau des valeurs"
-          >
+        <div class="d-flex gap-2 sans-impression">
+          <button class="btn btn-sm btn-outline-secondary" (click)="imprimer()">
             <i class="bi bi-printer"></i> Imprimer
           </button>
-          <button
-            class="btn btn-sm btn-primary"
-            (click)="ouvrirCreationValeur()"
-            *ngIf="peutSaisir()"
-          >
+          <button class="btn btn-sm btn-primary" (click)="ouvrirCreationValeur()" *ngIf="peutSaisir()">
             <i class="bi bi-plus-lg"></i> Ajouter une valeur
           </button>
         </div>
       </div>
 
-      <!-- Filtre par statut : n'affiche que les statuts réellement présents. -->
-      <div class="barre-filtres sans-impression" *ngIf="valeurs.length > 0" role="group" aria-label="Filtrer par statut">
+      <div class="barre-filtres sans-impression" *ngIf="valeurs.length > 0">
         <button
           *ngFor="let f of filtresDisponibles"
           type="button"
@@ -289,13 +243,9 @@
               <td class="ps-3 text-muted">{{ i + 1 }}</td>
               <td>
                 <span class="fw-bold">{{ val.valeur }}</span>
-                <span class="text-muted small ms-1">{{ indicateur.unite }}</span>
+                <span class="text-muted small ms-1">{{ ind.unite }}</span>
                 <div *ngIf="ecartCible(val) as ecart" class="ecart-cible" [ngClass]="'ecart-' + ecart.signe">
-                  <i class="bi" [ngClass]="{
-                    'bi-arrow-up-short': ecart.signe === 'positif',
-                    'bi-arrow-down-short': ecart.signe === 'negatif',
-                    'bi-check2': ecart.signe === 'atteint'
-                  }"></i>{{ ecart.texte }}
+                  {{ ecart.texte }}
                 </div>
               </td>
               <td>
@@ -305,17 +255,13 @@
                 </span>
               </td>
               <td>
-                <span class="badge-statut" [ngClass]="classeStatut(val)">
-                  {{ libelleStatut(val) }}
-                </span>
+                <span class="badge-statut" [ngClass]="classeStatut(val)">{{ libelleStatut(val) }}</span>
                 <div class="text-muted small mt-1" *ngIf="val.isValid && val.validePar">
                   par {{ val.validePar }}
                 </div>
               </td>
               <td>
-                <span class="etiquette" *ngIf="val.degreDeFiabilite">
-                  {{ val.degreDeFiabilite | titlecase }}
-                </span>
+                <span class="etiquette" *ngIf="val.degreDeFiabilite">{{ val.degreDeFiabilite | titlecase }}</span>
                 <span class="text-muted" *ngIf="!val.degreDeFiabilite">—</span>
               </td>
               <td class="small">{{ val.saisiePar || '—' }}</td>
@@ -333,7 +279,7 @@
                     (click)="ouvrirEditionValeur(val)"
                     class="btn btn-sm btn-outline-secondary btn-icone"
                     [disabled]="statutEnCours !== null"
-                    title="Modifier — une valeur validée repassera en brouillon si le chiffre change"
+                    title="Modifier"
                     aria-label="Modifier la valeur"
                   >
                     <i class="bi bi-pencil"></i>
@@ -344,7 +290,7 @@
                     (click)="soumettreEnRevue(val.id!)"
                     class="btn btn-sm btn-outline-info"
                     [disabled]="statutEnCours !== null"
-                    title="Soumettre cette valeur à la revue"
+                    title="Soumettre à la revue"
                   >
                     <i class="bi bi-send"></i> Soumettre
                   </button>
@@ -364,7 +310,7 @@
                     (click)="rejeter(val.id!)"
                     class="btn btn-sm btn-outline-warning btn-icone"
                     [disabled]="statutEnCours !== null"
-                    title="Rejeter la valeur"
+                    title="Rejeter"
                     aria-label="Rejeter la valeur"
                   >
                     <i class="bi bi-x-lg"></i>
@@ -375,7 +321,7 @@
                     (click)="devalider(val.id!)"
                     class="btn btn-sm btn-outline-warning"
                     [disabled]="statutEnCours !== null"
-                    title="Dévalider : la valeur sort du périmètre de l'IA, sans être supprimée"
+                    title="Dévalider : sort du périmètre de l'IA"
                   >
                     <i class="bi bi-arrow-counterclockwise"></i> Dévalider
                   </button>
@@ -385,7 +331,7 @@
                     (click)="supprimerValeur(val.id!)"
                     class="btn btn-sm btn-outline-danger btn-icone"
                     [disabled]="statutEnCours !== null"
-                    title="Supprimer définitivement cette valeur"
+                    title="Supprimer"
                     aria-label="Supprimer la valeur"
                   >
                     <i class="bi bi-trash"></i>
@@ -398,20 +344,11 @@
               <td colspan="10">
                 <div class="etat-vide">
                   <i class="bi bi-clipboard-x icone-vide"></i>
-                  <p class="mb-3" *ngIf="filtreStatut">
-                    Aucune valeur avec ce statut.
-                  </p>
-                  <button class="btn btn-outline-secondary btn-sm mb-2" *ngIf="filtreStatut" (click)="appliquerFiltre('')">
+                  <p class="mb-3" *ngIf="filtreStatut">Aucune valeur avec ce statut.</p>
+                  <button class="btn btn-outline-secondary btn-sm" *ngIf="filtreStatut" (click)="appliquerFiltre('')">
                     Voir toutes les valeurs
                   </button>
-                  <p class="mb-3" *ngIf="!filtreStatut">Aucune valeur enregistrée pour cet indicateur.</p>
-                  <button
-                    class="btn btn-primary btn-sm"
-                    (click)="ouvrirCreationValeur()"
-                    *ngIf="peutSaisir()"
-                  >
-                    <i class="bi bi-plus-lg"></i> Ajouter une valeur
-                  </button>
+                  <p class="mb-0" *ngIf="!filtreStatut">Aucune valeur enregistrée pour cet indicateur.</p>
                 </div>
               </td>
             </tr>
@@ -422,14 +359,14 @@
       <div class="card-footer bg-transparent small text-muted d-flex align-items-center gap-2">
         <i class="bi bi-shield-check"></i>
         <span>
-          <strong>{{ nbValeursValidees }}</strong> valeur(s) validée(s) sur
-          {{ valeurs.length }} — seules les valeurs validées sont transmises à l'IA.
+          <strong>{{ nbValeursValidees }}</strong> valeur(s) validée(s) sur {{ valeurs.length }} —
+          seules les valeurs validées sont transmises à l'IA.
         </span>
       </div>
     </div>
 
     <!-- Documents justificatifs (table meta_data) -->
-    <div class="card mt-4">
+    <div class="card mb-4">
       <div class="card-header d-flex align-items-center gap-2">
         <i class="bi bi-paperclip"></i>Documents justificatifs
         <span class="etiquette ms-auto">{{ documents.length }}</span>
@@ -452,7 +389,7 @@
               (change)="surFichierChoisi($event)"
               [disabled]="depotEnCours"
             />
-            <div class="aide-champ">10 Mo maximum. PDF, tableur, texte ou image.</div>
+            <div class="aide-champ">10 Mo maximum.</div>
           </div>
 
           <div class="col-md-5">
@@ -468,11 +405,7 @@
           </div>
 
           <div class="col-md-2 d-grid">
-            <button
-              class="btn btn-primary"
-              (click)="deposerDocument()"
-              [disabled]="!fichierChoisi || depotEnCours"
-            >
+            <button class="btn btn-primary" (click)="deposerDocument()" [disabled]="!fichierChoisi || depotEnCours">
               <span *ngIf="depotEnCours" class="spinner-border spinner-border-sm"></span>
               <i class="bi bi-upload" *ngIf="!depotEnCours"></i>
               {{ depotEnCours ? 'Envoi…' : 'Déposer' }}
@@ -494,29 +427,20 @@
             </thead>
             <tbody>
               <tr *ngFor="let doc of documents">
-                <td class="ps-3">
-                  <i class="bi bi-file-earmark-text me-1 text-muted"></i>{{ doc.nomFichier }}
-                </td>
+                <td class="ps-3"><i class="bi bi-file-earmark-text me-1 text-muted"></i>{{ doc.nomFichier }}</td>
                 <td class="small text-muted">{{ doc.description || '—' }}</td>
                 <td class="small">{{ tailleLisible(doc.tailleOctets) }}</td>
                 <td class="small">{{ doc.deposePar || '—' }}</td>
                 <td class="small text-muted">{{ doc.deposeLe | date: 'dd/MM/yyyy HH:mm' }}</td>
                 <td class="text-end pe-3 colonne-actions">
                   <div class="actions-ligne">
-                    <a
-                      [href]="urlDocument(doc.id)"
-                      class="btn btn-sm btn-outline-primary"
-                      target="_blank"
-                      rel="noopener"
-                      title="Télécharger"
-                    >
+                    <a [href]="urlDocument(doc.id)" class="btn btn-sm btn-outline-primary" target="_blank" rel="noopener">
                       <i class="bi bi-download"></i>
                     </a>
                     <button
                       class="btn btn-sm btn-outline-danger btn-icone"
                       (click)="supprimerDocument(doc)"
                       *ngIf="peutSupprimer()"
-                      title="Supprimer le document"
                       aria-label="Supprimer le document"
                     >
                       <i class="bi bi-trash"></i>
@@ -535,12 +459,7 @@
       </div>
     </div>
 
-    <!-- Semaine 7 : analyse IA limitée à cet indicateur -->
-    <div class="mt-4">
-      <app-analyse-ia
-        [indicateurId]="indicateurId"
-        titre="Analyse IA de cet indicateur"
-      ></app-analyse-ia>
-    </div>
-  </div>
+    <!-- Analyse IA limitée à cet indicateur -->
+    <app-analyse-ia [indicateurId]="indicateurId" titre="Analyse IA de cet indicateur"></app-analyse-ia>
+  </ng-container>
 </div>

@@ -26,6 +26,8 @@ public class ValeurValide
     public decimal Valeur { get; set; }
     public string? Pays { get; set; }
     public string? Gouvernorat { get; set; }
+    public string? OrganisationNom { get; set; }
+    public string? PeriodeLibelle { get; set; }
     public string? Statut { get; set; }
     public string? DegreDeFiabilite { get; set; }
     public string? Commentaire { get; set; }

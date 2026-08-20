@@ -43,6 +43,14 @@ public class ValeurValideDto
     /// puisse situer chaque chiffre au lieu de les confondre.</summary>
     public string? Pays { get; set; }
     public string? Gouvernorat { get; set; }
+
+    /// <summary>
+    /// Libellés résolus depuis organisations et periodes. Le modèle recevait
+    /// « organisation #1, période #1 » : des identifiants qui ne lui
+    /// apprenaient rien et qu'il finissait par recracher tels quels.
+    /// </summary>
+    public string? OrganisationNom { get; set; }
+    public string? PeriodeLibelle { get; set; }
     public string? Statut { get; set; }
     public string? DegreDeFiabilite { get; set; }
     public string? Commentaire { get; set; }

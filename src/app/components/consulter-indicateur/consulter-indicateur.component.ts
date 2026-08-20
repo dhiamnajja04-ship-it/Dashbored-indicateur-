@@ -26,6 +26,12 @@ import { AnalyseIaComponent } from '../analyse-ia/analyse-ia.component';
   templateUrl: './consulter-indicateur.component.html',
 })
 export class ConsulterIndicateurComponent implements OnInit {
+  // Injecté EN PREMIER, volontairement : les champs d'une classe s'initialisent
+  // dans l'ordre de déclaration. valeurCourante appelle valeurVide(), qui lit
+  // this.roles.agent() pour renseigner « saisi par ». Déclaré plus bas, roles
+  // valait encore undefined et la page entière plantait au rendu.
+  private readonly roles = inject(RoleService);
+
   indicateur: Indicateur | null = null;
   valeurs: ValeurIndicateur[] = [];
   indicateurId!: number;
@@ -51,7 +57,6 @@ export class ConsulterIndicateurComponent implements OnInit {
    * champs ci-dessous s'exécutent avant l'affectation des paramètres du
    * constructeur, ce qui rendrait `this.roles` indéfini.
    */
-  private readonly roles = inject(RoleService);
 
   /** Droits du rôle courant (voir RoleService : confort d'IHM, pas de sécurité). */
   readonly peutSaisir = this.roles.peutSaisir;
