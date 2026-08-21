@@ -211,7 +211,48 @@ services:
       postgres:
         condition: service_healthy
 
+  # Automatisation des flux (n8n). Deux usages prevus :
+  #   - indexer les indicateurs sous forme de vecteurs (pgvector) ;
+  #   - exposer une recherche semantique par webhook.
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: indic-n8n
+    restart: unless-stopped
+    environment:
+      # Pas d'authentification : demonstration locale, comme pgAdmin.
+      N8N_SECURE_COOKIE: "false"
+      N8N_HOST: "0.0.0.0"
+      N8N_PORT: "5678"
+      # Fuseau explicite : sans lui, les declencheurs planifies partent en UTC
+      # et se declenchent a des heures inattendues.
+      GENERIC_TIMEZONE: "Africa/Tunis"
+      TZ: "Africa/Tunis"
+      # Les workflows sont stockes dans PostgreSQL plutot que dans SQLite :
+      # une seule base a sauvegarder, et les flux survivent au conteneur.
+      DB_TYPE: postgresdb
+      DB_POSTGRESDB_HOST: postgres
+      DB_POSTGRESDB_PORT: "5432"
+      DB_POSTGRESDB_DATABASE: n8n
+      DB_POSTGRESDB_USER: postgres
+      DB_POSTGRESDB_PASSWORD: testpwd
+      N8N_RUNNERS_ENABLED: "true"
+    deploy:
+      resources:
+        limits:
+          # Plafonne comme ollama : meme si un flux s'emballe, il ne peut pas
+          # prendre la machine. Lecon tiree du gel provoque par Mistral 7B.
+          cpus: "1"
+          memory: 768M
+    ports:
+      - "5678:5678"
+    volumes:
+      - n8n-data:/home/node/.n8n
+    depends_on:
+      postgres:
+        condition: service_healthy
+
 volumes:
+  n8n-data:
   pgadmin-data:
   documents-data:
   postgres-data:
