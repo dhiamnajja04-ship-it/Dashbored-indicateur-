@@ -396,6 +396,43 @@ kubectl top pods -l app=gateway
   iterations        : 524 612  soit 10 492/s
 ```
 
+### Arrêt en douceur : de 4 erreurs à zéro
+
+Avant correction, supprimer un pod sous charge produisait quelques erreurs :
+
+```
+4 erreurs sur 381 113 requêtes   (connection reset, EOF)
+9 requêtes sur 10 pendant la recréation
+```
+
+Cause : Kubernetes retire le pod des endpoints du Service **et** le termine
+quasi simultanément. Les connexions déjà ouvertes sont coupées net.
+
+Correction, sur les quatre déploiements :
+
+```yaml
+terminationGracePeriodSeconds: 30
+lifecycle:
+  preStop:
+    exec:
+      command: ["/bin/sh", "-c", "sleep 8"]
+strategy:
+  rollingUpdate:
+    maxUnavailable: 0      # un nouveau pod PRÊT avant qu'un ancien parte
+    maxSurge: 1
+```
+
+Le `preStop` laisse à kube-proxy le temps de propager le retrait avant que le
+processus ne s'arrête : le pod ne reçoit plus de nouvelle requête, mais finit
+celles en cours.
+
+Après correction, même test :
+
+```
+494 925 requêtes  ·  [200] 494 925  ·  AUCUNE erreur
+20 requêtes sur 20 pendant la recréation
+```
+
 ### Une nuance à assumer sur la répartition CPU
 
 Les deux pods consomment (38m et 93m), mais **pas à parts égales**. C'est

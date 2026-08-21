@@ -7,6 +7,14 @@ metadata:
     app: ia-service
 spec:
   replicas: 1
+  strategy:
+    # maxUnavailable 0 : un nouveau pod doit être PRÊT avant qu'un ancien
+    # disparaisse. Sans cela, un redéploiement peut réduire temporairement la
+    # capacité et provoquer des refus de connexion sous charge.
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
   selector:
     matchLabels:
       app: ia-service
@@ -15,6 +23,9 @@ spec:
       labels:
         app: ia-service
     spec:
+      # Doit dépasser la durée du preStop, sinon Kubernetes tue le pod
+      # avant qu'il ait fini de se retirer proprement.
+      terminationGracePeriodSeconds: 30
       containers:
         - name: ia
           image: indicateurs/ia:1.0
@@ -46,6 +57,19 @@ spec:
                   key: OLLAMA_TIMEOUT_SECONDS
             - name: ASPNETCORE_ENVIRONMENT
               value: "Production"
+          # Arrêt en douceur. Sans ce délai, Kubernetes retire le pod des
+          # endpoints du Service ET le termine quasi simultanément : les
+          # connexions déjà ouvertes sont coupées net. Mesuré avant
+          # correction : 4 erreurs sur 381 113 requêtes pendant la suppression
+          # d'un pod sous charge.
+          #
+          # Le preStop laisse le temps à kube-proxy de propager le retrait
+          # avant que le processus ne commence à s'arrêter. Le pod ne reçoit
+          # plus de nouvelle requête, mais finit celles en cours.
+          lifecycle:
+            preStop:
+              exec:
+                command: ["/bin/sh", "-c", "sleep 8"]
           livenessProbe:
             httpGet:
               path: /health
