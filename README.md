@@ -290,21 +290,48 @@ Module de signalement indépendant du workflow de validation
 
 ```
 rw9980/
-├── src/                    # Frontend Angular
-├── GatewayService/         # .NET 8 — routage
-├── MetierService/          # .NET 8 — CRUD + validation
-├── IaService/              # .NET 8 — prompt + modèle
-├── db/                     # Migration SQL + données de démo
-├── k8s/                    # Manifests + deploy.sh
-├── livraisons/             # Comptes-rendus semaines 1 à 8 + captures
-├── Dockerfile              # Image du frontend
-├── nginx.conf              # Sert le SPA + relaie /api
-├── docs/besoins/           # Sujet du stage
-├── GUIDE-UTILISATION.md    # Installation et utilisation
-├── GUIDE-PLATEFORME.md     # Inventaire complet du projet
-├── GUIDE-LANCEMENT.md      # Démarrer la plateforme pas à pas
-└── GUIDE-PRESENTATION.md   # Soutenance : déroulé et questions attendues
+│
+├── src/                     Frontend Angular 22 (8 composants, 7 services)
+├── GatewayService/          .NET 8 — point d'entrée unique des API
+├── MetierService/           .NET 8 — CRUD, workflow de validation, documents
+├── IaService/               .NET 8 — construction du prompt, appel du modèle
+│
+├── db/                      9 scripts SQL, appliqués dans l'ordre
+├── k8s/                     Manifestes Kubernetes + cluster kind
+├── loadbalancer/            nginx devant les répliques du Gateway
+├── pgadmin/                 Connexion pgAdmin pré-enregistrée
+│
+├── tests/                   Tests unitaires xUnit (35 tests)
+├── ci/                      Scripts de test, démonstration et supervision
+├── .github/workflows/       Intégration continue
+├── postman/                 Collection de 33 requêtes
+│
+├── livraisons/              Comptes-rendus semaines 1 à 8 + 27 captures
+├── docs/besoins/            Sujet du stage
+│
+├── Dockerfile               Image du frontend
+├── nginx.conf               Sert le SPA et relaie /api
+├── docker-compose.yml       Les 9 services
+│
+├── README.md                Ce document
+├── GUIDE-UTILISATION.md     Installer et se servir de la plateforme
+├── GUIDE-PLATEFORME.md      Inventaire : services, tables, API, limites
+├── GUIDE-LANCEMENT.md       Démarrer, vérifier, dépanner
+└── GUIDE-PRESENTATION.md    Soutenance : déroulé et questions attendues
 ```
+
+### Les scripts de `ci/`
+
+| Script | Rôle |
+|---|---|
+| `tests-unitaires.sh` | 35 tests des règles métier, sans base ni réseau |
+| `demonstration-tests.sh` | Casse une règle, montre que le test la rattrape |
+| `verifier-plateforme.sh` | 17 contrôles sur l'API d'une plateforme démarrée |
+| `guide-resilience.sh` | Résilience et répartition de charge |
+| `demonstration.sh` | Docker, Kubernetes et load balancing |
+| `demonstration-git.sh` | Le travail versionné, en ligne de commande |
+| `demarrage-plateforme.sh` | Démarrage et réparation automatiques |
+| `charge-k6.js` | Scénario de charge avec seuils |
 
 ## Commandes Angular
 
@@ -325,5 +352,7 @@ Les 35 tests unitaires portent sur les deux fichiers qui décident de ce que
 voit le modèle IA : le workflow de validation (20 tests) et la construction du
 prompt (15 tests). Détail dans [`GUIDE-PLATEFORME.md`](GUIDE-PLATEFORME.md).
 
-> Le frontend Angular n'a pas de tests : le sujet n'en demande pas, et l'effort
-> a été porté là où une régression serait grave — la règle métier.
+> Le frontend Angular n'a pas de tests, et son outillage de test a été retiré
+> (`vitest`, `jsdom`, la cible `test` d'angular.json) plutôt que laissé en
+> place sans rien exécuter. L'effort a été porté là où une régression serait
+> grave : la règle métier.
