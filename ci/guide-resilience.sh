@@ -108,19 +108,37 @@ else
 fi
 
 sous "2.3 Test de charge avec observation"
-info "200 requêtes en 10 flux parallèles…"
-debut=$(date +%s)
-for _ in $(seq 1 10); do
-  ( for _ in $(seq 1 20); do curl -s -o /dev/null --max-time 10 "$K8S_API/api/indicators"; done ) &
-done
-wait
-duree=$(( $(date +%s) - debut ))
-ok "200 requêtes servies en ${duree}s"
+if command -v hey >/dev/null 2>&1; then
+  info "hey -n 2000 -c 50 (commande du guide) :"
+  hey -n 2000 -c 50 "$K8S_API/health" 2>&1 \
+    | grep -E "Total:|Requests/sec|\[200\]" | sed 's/^/      /'
+
+  info ""
+  info "Charge soutenue 30 s, pour que les métriques aient le temps de monter :"
+  hey -z 30s -c 50 "$K8S_API/api/indicators" > /tmp/hey-charge.txt 2>&1 &
+  pid_charge=$!
+  sleep 25
+  info "  pendant la charge :"
+  kubectl -n indicateurs top pods -l app=gateway --no-headers 2>/dev/null \
+    | awk '{printf "      %-34s CPU %-7s RAM %s\n",$1,$2,$3}' \
+    || info "      (metrics-server indisponible)"
+  wait $pid_charge 2>/dev/null
+  grep -E "Total:|Requests/sec|\[200\]" /tmp/hey-charge.txt | sed 's/^/      /'
+else
+  info "hey absent — charge via 10 flux curl parallèles :"
+  debut=$(date +%s)
+  for _ in $(seq 1 10); do
+    ( for _ in $(seq 1 20); do curl -s -o /dev/null --max-time 10 "$K8S_API/api/indicators"; done ) &
+  done
+  wait
+  ok "200 requêtes servies en $(( $(date +%s) - debut ))s"
+fi
+
 info ""
-info "Consommation par pod :"
-kubectl -n indicateurs top pods -l app=gateway --no-headers 2>/dev/null \
-  | awk '{printf "      %-34s CPU %-8s RAM %s\n",$1,$2,$3}' \
-  || info "      (metrics-server absent : la répartition reste visible via /health)"
+info "Les DEUX pods doivent consommer du CPU. Un écart est normal :"
+info "avec des connexions persistantes, un client reste sur le pod qui lui a"
+info "été attribué à l'établissement. Ce qui compte est qu'aucun pod ne reste"
+info "à zéro pendant que l'autre encaisse tout."
 
 sous "2.4 Couper un pod pendant la charge"
 ( for _ in $(seq 1 40); do curl -s -o /dev/null --max-time 10 "$K8S_API/api/indicators"; sleep 0.2; done ) &

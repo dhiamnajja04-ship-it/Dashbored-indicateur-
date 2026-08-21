@@ -349,9 +349,60 @@ En Docker simple, un conteneur arrêté **ne redémarre pas seul** — il faudra
 bascule sur la réplique restante. C'est exactement la différence que Kubernetes
 comble : lui **recrée** le pod, il ne se contente pas de contourner la panne.
 
-### metrics-server
+### Les outils du §2.3 sont installés
 
-`kubectl top pods` n'est pas disponible sur ce cluster kind : le composant
-`metrics-server` n'y est pas installé par défaut. La répartition reste
-démontrable par `/health`, qui est d'ailleurs la méthode que le guide
-recommande en premier.
+Les trois manquants ont été ajoutés, sans droits root :
+
+| Outil | Rôle | Installation |
+|---|---|---|
+| `metrics-server` | active `kubectl top pods` | `kubectl apply` + option `--kubelet-insecure-tls` |
+| `hey` | charge, commande du guide | compilé dans un conteneur Go |
+| `k6` | charge avec seuils | binaire dans `~/bin` |
+
+> `metrics-server` demande `--kubelet-insecure-tls` sur kind : les certificats
+> du kubelet n'y sont pas signés par l'autorité du cluster. Sans cette option
+> il reste en erreur, sans message explicite.
+>
+> `hey` ne publie plus de binaire : sa dernière version exige Go 1.24, il a
+> donc été compilé dans un conteneur `golang:1.24-alpine`.
+
+### Les mesures obtenues
+
+**La commande exacte du guide** :
+
+```
+hey -n 2000 -c 50 http://localhost:30169/health
+  Total:         0.0959 secs
+  Requests/sec:  20845
+  [200]          2000 responses      ← aucune erreur
+```
+
+**Charge soutenue, avec observation** :
+
+```
+hey -z 40s -c 50 …          12 560 requêtes, 313 req/s, 100 % en 200
+
+kubectl top pods -l app=gateway
+  gateway-…-t6kmb   CPU 38m   RAM 44Mi
+  gateway-…-w76tf   CPU 93m   RAM 44Mi
+```
+
+**k6, avec seuils** (`k6 run ci/charge-k6.js`) :
+
+```
+✓ http_req_duration : p(95) = 8.28ms   (seuil < 500ms)
+✓ http_req_failed   : 0.00%            (seuil < 1%)
+  checks            : 100.00%  1 049 224 vérifications
+  iterations        : 524 612  soit 10 492/s
+```
+
+### Une nuance à assumer sur la répartition CPU
+
+Les deux pods consomment (38m et 93m), mais **pas à parts égales**. C'est
+attendu : avec des connexions persistantes, un client reste sur le pod qui lui
+a été attribué à l'établissement de la connexion. Le Service Kubernetes
+répartit les *connexions*, pas les *requêtes*.
+
+Ce qui compte, et que le guide demande, c'est qu'aucun pod ne reste à zéro
+pendant que l'autre encaisse tout. Un écart de 1 à 2,4 sur des connexions
+longues n'est pas un défaut de répartition.
