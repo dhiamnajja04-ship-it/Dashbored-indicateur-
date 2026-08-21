@@ -47,7 +47,14 @@ if (app.Environment.IsDevelopment())
 // Liveness : le conteneur tourne.
 app.MapGet(
     "/health",
-    () => Results.Ok(new { status = "OK", service = "IaService", timestamp = DateTime.UtcNow })
+    () => Results.Ok(new
+    {
+        status = "OK",
+        service = "IaService",
+        // Nom du conteneur ou du pod : rend la répartition observable.
+        instance = Environment.MachineName,
+        timestamp = DateTime.UtcNow,
+    })
 );
 
 // Readiness : le modèle local répond-il réellement ?
@@ -60,6 +67,7 @@ app.MapGet(
         {
             status = ollamaOk ? "OK" : "DEGRADED",
             service = "IaService",
+            instance = Environment.MachineName,
             modele = ollama.Modele,
             ollama = ollamaOk ? "joignable" : "injoignable",
             timestamp = DateTime.UtcNow,

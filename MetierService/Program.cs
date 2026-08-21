@@ -39,10 +39,12 @@ if (app.Environment.IsDevelopment())
 }
 
 // Liveness : le conteneur répond.
+// « instance » : nom du conteneur ou du pod, pour observer la répartition.
 app.MapGet("/health", () => Results.Ok(new
 {
     status = "OK",
     service = "MetierService",
+    instance = Environment.MachineName,
     timestamp = DateTime.UtcNow
 }));
 
@@ -59,6 +61,7 @@ app.MapGet("/health/ready", async (AppDbContext db, ILogger<Program> logger) =>
             {
                 status = "OK",
                 service = "MetierService",
+                instance = Environment.MachineName,
                 postgres = "joignable",
                 timestamp = DateTime.UtcNow
             });

@@ -43,6 +43,7 @@ commentaire.
 | `organisations` | 4 | **Producteurs de données**, hiérarchisés via `id_parent` — exposés par l'API |
 | `periodes` | 6 | **Périodes de référence** bornées par de vraies dates — exposées par l'API |
 | `reclamations` | 10 | Signalements des utilisateurs |
+| `indicateurs_embeddings` | 5 | **Plongements vectoriels** (pgvector) — préparé pour n8n et la recherche sémantique |
 | `utilisateurs` | 4 | **Référentiel des agents** — pas des comptes, aucune authentification |
 | `meta_data` | 10 | **Documents justificatifs** attachés à un indicateur |
 

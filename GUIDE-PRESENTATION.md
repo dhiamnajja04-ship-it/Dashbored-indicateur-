@@ -302,3 +302,56 @@ Mieux vaut l'annoncer que le laisser découvrir :
 - **Pas de données historiques** — une seule mesure par indicateur, donc pas de
   courbe d'évolution. Le prompt interdit d'ailleurs explicitement au modèle de
   parler de tendance dans ce cas, et un test le vérifie.
+
+## Le guide de test de l'encadrant
+
+Le protocole demandé (résilience & load balancing) est rejoué par une commande :
+
+```bash
+./ci/guide-resilience.sh
+```
+
+### Ce qu'elle démontre, section par section
+
+| § du guide | Résultat mesuré |
+|---|---|
+| 1.1 Docker simple | Réplique arrêtée → **10/10** requêtes servies par la restante |
+| 1.2 Kubernetes | Pod supprimé → **12/12** pendant la recréation, pod recréé **sans intervention** |
+| 1.3 Service à 0 réplique | API tombe, interface répond encore : l'impact est **identifié** |
+| 2.2 Quel pod répond | `/health` renvoie `Environment.MachineName` → **2 pods distincts** sur 10 appels |
+| 2.3 Charge | **200 requêtes en 9 s** |
+| 2.4 Pod coupé sous charge | **aucune erreur client** |
+| 2.5 Vrai cluster | `kindest/node:v1.31.0`, control-plane réel, serveur v1.31.0 |
+| 2.6 Pods dans le cluster | IP en `10.244.0.x` — pas `127.0.0.1` |
+
+### Le point du §2.2 : l'endpoint qui rend la répartition visible
+
+L'encadrant demandait explicitement d'ajouter le hostname à `/health`. C'est
+fait sur les **trois** services :
+
+```json
+{ "status": "OK", "service": "GatewayService",
+  "instance": "gateway-7d58f5468-88vpv", "timestamp": "…" }
+```
+
+Sans lui, on ne peut que *supposer* que la charge est répartie. Avec lui, dix
+appels successifs le prouvent :
+
+```
+5 réponses  gateway-7d58f5468-88vpv
+5 réponses  gateway-7d58f5468-g8gls
+```
+
+### Une nuance à assumer sur le §1.1
+
+En Docker simple, un conteneur arrêté **ne redémarre pas seul** — il faudrait
+`--restart=always`. Le site reste pourtant servi, parce que le répartiteur
+bascule sur la réplique restante. C'est exactement la différence que Kubernetes
+comble : lui **recrée** le pod, il ne se contente pas de contourner la panne.
+
+### metrics-server
+
+`kubectl top pods` n'est pas disponible sur ce cluster kind : le composant
+`metrics-server` n'y est pas installé par défaut. La répartition reste
+démontrable par `/health`, qui est d'ailleurs la méthode que le guide
+recommande en premier.

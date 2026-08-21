@@ -15,7 +15,11 @@
 
 services:
   postgres:
-    image: postgres:17
+    # pgvector/pgvector embarque PostgreSQL 17 ET l'extension vectorielle.
+    # L'image officielle postgres:17 ne la contient pas, et l'installer à la
+    # main dans un conteneur ne survivrait pas à sa recréation.
+    # Prévu pour n8n : la recherche sémantique a besoin d'un type vector.
+    image: pgvector/pgvector:pg17
     container_name: indic-postgres
     environment:
       POSTGRES_PASSWORD: testpwd
@@ -34,6 +38,7 @@ services:
       - ./db/06-indicateurs-complementaires.sql:/docker-entrypoint-initdb.d/06-indicateurs.sql:ro
       - ./db/07-organisations-et-periodes.sql:/docker-entrypoint-initdb.d/07-referentiels.sql:ro
       - ./db/08-cascades.sql:/docker-entrypoint-initdb.d/08-cascades.sql:ro
+      - ./db/09-pgvector.sql:/docker-entrypoint-initdb.d/09-pgvector.sql:ro
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d indicateurs_db"]

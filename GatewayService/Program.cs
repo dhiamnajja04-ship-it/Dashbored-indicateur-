@@ -26,7 +26,17 @@ if (app.Environment.IsDevelopment())
 }
 
 // --- Santé du Gateway lui-même ---
-app.MapGet("/health", () => Results.Ok(new { status = "OK", timestamp = DateTime.UtcNow, service = "GatewayService" }));
+// « instance » expose le nom de machine du conteneur ou du pod qui répond.
+// C'est ce qui rend la répartition de charge OBSERVABLE : dix appels
+// successifs doivent renvoyer des noms différents quand plusieurs répliques
+// tournent. Sans cela, on ne peut que supposer que la charge est répartie.
+app.MapGet("/health", () => Results.Ok(new
+{
+    status = "OK",
+    service = "GatewayService",
+    instance = Environment.MachineName,
+    timestamp = DateTime.UtcNow,
+}));
 
 // --- Santé agrégée de la plateforme : un seul appel pour vérifier toute la chaîne ---
 app.MapGet(
@@ -44,6 +54,9 @@ app.MapGet(
         {
             status = toutOk ? "OK" : "DEGRADED",
             gateway = "OK",
+            // Quelle réplique du Gateway a traité cet appel : utile pour
+            // constater la répartition sans instrumenter le client.
+            instance = Environment.MachineName,
             metier,
             ia,
             timestamp = DateTime.UtcNow,
