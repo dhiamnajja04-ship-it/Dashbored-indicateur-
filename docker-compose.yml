@@ -20,6 +20,10 @@ services:
     # main dans un conteneur ne survivrait pas à sa recréation.
     # Prévu pour n8n : la recherche sémantique a besoin d'un type vector.
     image: pgvector/pgvector:pg17
+    # Redémarre automatiquement après un plantage ou un redémarrage de la
+    # machine. Un « docker stop » explicite reste respecté : c'est voulu, on
+    # ne veut pas qu'un conteneur arrêté volontairement revienne seul.
+    restart: unless-stopped
     container_name: indic-postgres
     environment:
       POSTGRES_PASSWORD: testpwd
@@ -48,6 +52,10 @@ services:
 
   metier-service:
     build: ./MetierService
+    # Redémarre automatiquement après un plantage ou un redémarrage de la
+    # machine. Un « docker stop » explicite reste respecté : c'est voulu, on
+    # ne veut pas qu'un conteneur arrêté volontairement revienne seul.
+    restart: unless-stopped
     container_name: indic-metier
     environment:
       ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=indicateurs_db;Username=postgres;Password=testpwd"
@@ -65,6 +73,10 @@ services:
 
   ollama:
     image: ollama/ollama:latest
+    # Redémarre automatiquement après un plantage ou un redémarrage de la
+    # machine. Un « docker stop » explicite reste respecté : c'est voulu, on
+    # ne veut pas qu'un conteneur arrêté volontairement revienne seul.
+    restart: unless-stopped
     container_name: indic-ollama
     environment:
       # Une seule génération et un seul modèle chargés à la fois : sur 4 cœurs,
@@ -101,6 +113,10 @@ services:
 
   ia-service:
     build: ./IaService
+    # Redémarre automatiquement après un plantage ou un redémarrage de la
+    # machine. Un « docker stop » explicite reste respecté : c'est voulu, on
+    # ne veut pas qu'un conteneur arrêté volontairement revienne seul.
+    restart: unless-stopped
     container_name: indic-ia
     environment:
       MetierServiceUrl: "http://metier-service:8080/api/indicators/"
@@ -125,6 +141,10 @@ services:
 
   gateway:
     build: ./GatewayService
+    # Redémarre automatiquement après un plantage ou un redémarrage de la
+    # machine. Un « docker stop » explicite reste respecté : c'est voulu, on
+    # ne veut pas qu'un conteneur arrêté volontairement revienne seul.
+    restart: unless-stopped
     # Pas de container_name : il empêcherait la réplication, Docker exigeant
     # un nom unique par conteneur. Les répliques sont nommées rw9980-gateway-1,
     # rw9980-gateway-2, etc.
@@ -142,6 +162,10 @@ services:
   # disparaît.
   loadbalancer:
     image: nginx:1.27-alpine
+    # Redémarre automatiquement après un plantage ou un redémarrage de la
+    # machine. Un « docker stop » explicite reste respecté : c'est voulu, on
+    # ne veut pas qu'un conteneur arrêté volontairement revienne seul.
+    restart: unless-stopped
     container_name: indic-loadbalancer
     ports:
       - "5169:80"
@@ -152,6 +176,10 @@ services:
 
   frontend:
     build: .
+    # Redémarre automatiquement après un plantage ou un redémarrage de la
+    # machine. Un « docker stop » explicite reste respecté : c'est voulu, on
+    # ne veut pas qu'un conteneur arrêté volontairement revienne seul.
+    restart: unless-stopped
     container_name: indic-frontend
     ports:
       - "8080:80"
@@ -160,6 +188,10 @@ services:
 
   pgadmin:
     image: dpage/pgadmin4:latest
+    # Redémarre automatiquement après un plantage ou un redémarrage de la
+    # machine. Un « docker stop » explicite reste respecté : c'est voulu, on
+    # ne veut pas qu'un conteneur arrêté volontairement revienne seul.
+    restart: unless-stopped
     container_name: indic-pgadmin
     environment:
       # Identifiants de l'interface pgAdmin elle-meme (pas ceux de PostgreSQL).
