@@ -75,7 +75,14 @@ services:
           # Aligné sur k8s/20-ollama.yaml, qui plafonne déjà ollama. Sans cette
           # limite, ollama prend les 4 cœurs de la VM pendant toute la génération
           # et l'interface graphique gèle — ce qui ressemble à un plantage.
-          cpus: "3"
+          # 2 cœurs et non 3 : la valeur doit rester valide sur une machine
+          # à 2 processeurs, sinon Docker refuse de créer le conteneur et
+          # TOUTE la pile échoue — ia-service dépendant d'ollama. C'est ce qui
+          # cassait le pipeline, dont le runner n'a que 2 cœurs.
+          # Sur la VM de développement (4 cœurs), il en reste 2 pour le
+          # système : l'interface graphique ne gèle plus pendant une
+          # génération, ce qui était l'objectif initial de cette limite.
+          cpus: "2"
           memory: 6G
     ports:
       # Publie pour que le cluster Kubernetes (kind) puisse joindre le modèle
