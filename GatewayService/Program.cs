@@ -30,7 +30,7 @@ if (app.Environment.IsDevelopment())
 // C'est ce qui rend la répartition de charge OBSERVABLE : dix appels
 // successifs doivent renvoyer des noms différents quand plusieurs répliques
 // tournent. Sans cela, on ne peut que supposer que la charge est répartie.
-app.MapGet("/health", () => Results.Ok(new
+app.MapMethods("/health", new[] { "GET", "HEAD" }, () => Results.Ok(new
 {
     status = "OK",
     service = "GatewayService",
@@ -39,8 +39,9 @@ app.MapGet("/health", () => Results.Ok(new
 }));
 
 // --- Santé agrégée de la plateforme : un seul appel pour vérifier toute la chaîne ---
-app.MapGet(
+app.MapMethods(
     "/health/plateforme",
+    new[] { "GET", "HEAD" },
     async (IHttpClientFactory clientFactory, IConfiguration config) =>
     {
         var client = clientFactory.CreateClient();

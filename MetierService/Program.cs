@@ -40,7 +40,7 @@ if (app.Environment.IsDevelopment())
 
 // Liveness : le conteneur répond.
 // « instance » : nom du conteneur ou du pod, pour observer la répartition.
-app.MapGet("/health", () => Results.Ok(new
+app.MapMethods("/health", new[] { "GET", "HEAD" }, () => Results.Ok(new
 {
     status = "OK",
     service = "MetierService",
@@ -50,7 +50,7 @@ app.MapGet("/health", () => Results.Ok(new
 
 // Readiness : PostgreSQL est-il réellement joignable ? Utilisé par la readinessProbe
 // k8s pour ne pas router de trafic vers un pod qui ne peut pas servir de données.
-app.MapGet("/health/ready", async (AppDbContext db, ILogger<Program> logger) =>
+app.MapMethods("/health/ready", new[] { "GET", "HEAD" }, async (AppDbContext db, ILogger<Program> logger) =>
 {
     try
     {

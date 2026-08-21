@@ -45,8 +45,9 @@ if (app.Environment.IsDevelopment())
 }
 
 // Liveness : le conteneur tourne.
-app.MapGet(
+app.MapMethods(
     "/health",
+    new[] { "GET", "HEAD" },
     () => Results.Ok(new
     {
         status = "OK",
@@ -58,8 +59,9 @@ app.MapGet(
 );
 
 // Readiness : le modèle local répond-il réellement ?
-app.MapGet(
+app.MapMethods(
     "/health/ready",
+    new[] { "GET", "HEAD" },
     async (OllamaClient ollama, CancellationToken ct) =>
     {
         var ollamaOk = await ollama.EstJoignableAsync(ct);
