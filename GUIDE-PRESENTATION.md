@@ -168,3 +168,73 @@ de 2 à 1 indicateur après dévalidation.
 | Endpoints exposés | 20, tous via le Gateway |
 | États du workflow | 4, avec transitions contrôlées |
 | Niveaux appliquant la règle centrale | 4 |
+
+## Démontrer Docker, Kubernetes et la répartition de charge
+
+Une seule commande, qui **prouve** chaque point par une sortie réelle :
+
+```bash
+./ci/demonstration.sh
+```
+
+Elle déroule quatre sections.
+
+### 1. Docker
+
+9 conteneurs actifs, santé de bout en bout, et le rappel que **PostgreSQL
+n'est pas dans le cluster** — contrainte du sujet.
+
+### 2. Répartition de charge
+
+Ce que l'encadrant doit retenir :
+
+```
+AVANT 30 requêtes    gateway-1  6.2 kB    gateway-2  2.89 kB
+APRÈS                gateway-1  155 kB    gateway-2  133 kB
+```
+
+Les deux compteurs augmentent : la charge est **réellement** distribuée, ce
+n'est pas une affirmation.
+
+Puis le script arrête une réplique et rejoue 10 requêtes :
+
+```
+avec 1 réplique sur 2 : 10/10 requêtes servies
+```
+
+> À dire à l'encadrant : la première version échouait **4 fois sur 8**, parce
+> qu'un bloc `upstream` nginx ne résout les noms qu'au démarrage et figeait une
+> seule réplique. La configuration passe donc par une variable dans
+> `proxy_pass`, ce qui force une résolution DNS à chaque requête.
+
+### 3. Kubernetes
+
+5 pods prêts, et le point d'architecture qui compte :
+
+```
+frontend         NodePort    80:30080/TCP     ← exposé
+gateway          NodePort    8080:30169/TCP   ← exposé
+ia-service       ClusterIP   8080/TCP         ← interne
+metier-service   ClusterIP   8080/TCP         ← interne
+```
+
+Le métier et l'IA sont **injoignables de l'extérieur**. Et les endpoints du
+Service `gateway` montrent la répartition **native** de Kubernetes :
+
+```
+gateway   10.244.0.4:8080,10.244.0.7:8080
+```
+
+> Aucun conteneur nginx n'est nécessaire côté Kubernetes : un Service répartit
+> déjà sur ses pods. Le répartiteur nginx n'existe que parce que Docker Compose
+> n'offre pas cette fonction.
+
+### 4. La règle du sujet, dans les deux environnements
+
+```
+Docker      : 12 indicateurs en base, 2 transmis à l'IA
+Kubernetes  : 12 indicateurs en base, 2 transmis à l'IA
+```
+
+Le même applicatif, deux orchestrateurs, la même règle métier respectée.
+
