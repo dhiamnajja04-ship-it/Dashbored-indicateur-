@@ -127,7 +127,15 @@ jobs:
       - name: Calculer les étiquettes
         id: etiquettes
         run: |
-          depot=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
+          # Un nom d'image Docker n'accepte pas de séparateur final : chaque
+          # segment doit matcher [a-z0-9]+([._-][a-z0-9]+)*. Or le dépôt
+          # s'appelle « Dashbored-indicateur- », avec un tiret terminal, et
+          # buildx refusait la référence :
+          #   invalid tag "ghcr.io/.../dashbored-indicateur-/ia:latest"
+          depot=$(echo "${{ github.repository }}" \
+            | tr '[:upper:]' '[:lower:]' \
+            | sed -E 's/[._-]+$//; s#/[._-]+#/#')
+          echo "Nom d'image retenu : ${{ env.REGISTRE }}/${depot}/${{ matrix.service }}"
           echo "image=${{ env.REGISTRE }}/${depot}/${{ matrix.service }}" >> "$GITHUB_OUTPUT"
 
       - name: Construire et publier
