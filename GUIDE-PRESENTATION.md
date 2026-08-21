@@ -240,6 +240,8 @@ Le même applicatif, deux orchestrateurs, la même règle métier respectée.
 
 ## Montrer les tests
 
+### D'abord : les faire tourner
+
 ```bash
 ./ci/tests-unitaires.sh
 ```
@@ -259,10 +261,34 @@ les fichiers de logique**, pas les projets entiers. Inutile de tirer EF Core,
 Npgsql et ASP.NET pour tester des règles pures — les tests s'exécutent en
 moins de 100 ms.
 
-Si l'encadrant demande une régression concrète, le test à montrer est
-`Une_valeur_validee_ne_peut_pas_etre_rejetee_directement` : il faut d'abord
-dévalider, parce que sortir une valeur du périmètre de l'IA est un acte
-distinct de son rejet.
+### Puis : prouver qu'ils servent à quelque chose
+
+Des tests qui passent ne prouvent rien — un test vide passe aussi. Cette
+commande casse **volontairement** une règle métier, montre que le test la
+rattrape, puis restaure le code :
+
+```bash
+./ci/demonstration-tests.sh
+```
+
+Déroulé à l'écran :
+
+```
+ÉTAPE 1 — le code est sain          Passed!  20/20
+ÉTAPE 2 — on casse une règle        [Valide] = { Brouillon, EnRevue, Rejete }
+ÉTAPE 3 — le test rattrape          Failed!  2 échecs sur 20
+             Transitions_non_prevues_sont_refusees(depuis: "Valide", vers: "Rejete") [FAIL]
+             Une_valeur_validee_ne_peut_pas_etre_rejetee_directement [FAIL]
+ÉTAPE 4 — on restaure               Passed!  20/20
+```
+
+**Ce qu'il faut dire** : la règle cassée autorise à rejeter une valeur déjà
+validée. Ce n'est pas une contrainte technique mais une règle métier — sortir
+une valeur du périmètre de l'IA (dévalider) est un acte distinct de son rejet.
+Deux tests différents la rattrapent, dont un cas paramétré.
+
+Le fichier est sauvegardé avant modification et restauré par un piège sur
+`EXIT` : même une interruption au clavier laisse le dépôt propre.
 
 ## Si une question porte sur ce qui n'est pas fait
 
