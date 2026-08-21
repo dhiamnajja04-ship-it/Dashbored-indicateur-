@@ -33,6 +33,19 @@ jobs:
       - name: Récupérer le dépôt
         uses: actions/checkout@v4
 
+      - name: Installer le SDK .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Tests unitaires des règles métier
+        # Exécutés AVANT de construire les images : inutile de démarrer une
+        # plateforme si le workflow de validation ou la construction du prompt
+        # sont déjà cassés.
+        run: |
+          dotnet test tests/MetierService.Tests/MetierService.Tests.csproj --nologo
+          dotnet test tests/IaService.Tests/IaService.Tests.csproj --nologo
+
       - name: Construire les images
         run: |
           docker compose build metier-service gateway frontend ia-service

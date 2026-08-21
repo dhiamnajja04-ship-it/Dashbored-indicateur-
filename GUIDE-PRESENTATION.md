@@ -238,3 +238,41 @@ Kubernetes  : 12 indicateurs en base, 2 transmis à l'IA
 
 Le même applicatif, deux orchestrateurs, la même règle métier respectée.
 
+## Montrer les tests
+
+```bash
+./ci/tests-unitaires.sh
+```
+
+```
+MetierService.Tests   Passed!  Failed: 0, Passed: 20
+IaService.Tests       Passed!  Failed: 0, Passed: 15
+```
+
+**Ce qu'il faut dire** : ces 35 tests ne portent pas sur de l'affichage mais
+sur les deux fichiers qui décident de ce que voit le modèle IA — le workflow de
+validation et la construction du prompt. Une régression à cet endroit enverrait
+des valeurs non validées au modèle, ce que le sujet interdit.
+
+Un point d'ingénierie à mentionner : les projets de test **ne référencent que
+les fichiers de logique**, pas les projets entiers. Inutile de tirer EF Core,
+Npgsql et ASP.NET pour tester des règles pures — les tests s'exécutent en
+moins de 100 ms.
+
+Si l'encadrant demande une régression concrète, le test à montrer est
+`Une_valeur_validee_ne_peut_pas_etre_rejetee_directement` : il faut d'abord
+dévalider, parce que sortir une valeur du périmètre de l'IA est un acte
+distinct de son rejet.
+
+## Si une question porte sur ce qui n'est pas fait
+
+Mieux vaut l'annoncer que le laisser découvrir :
+
+- **Pas d'authentification** — les rôles filtrent l'interface, pas l'API. Le
+  sujet ne la demandait pas.
+- **Modèle IA léger** (1,5 milliard de paramètres) — le périmètre est garanti
+  et testé ; la qualité rédactionnelle est celle d'un modèle qui tient sur
+  4 cœurs sans carte graphique.
+- **Pas de données historiques** — une seule mesure par indicateur, donc pas de
+  courbe d'évolution. Le prompt interdit d'ailleurs explicitement au modèle de
+  parler de tendance dans ce cas, et un test le vérifie.

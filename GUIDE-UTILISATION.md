@@ -47,6 +47,13 @@ redémarrage, et même à `docker compose down` (mais **pas** à `down -v`).
 curl -s http://localhost:5169/health/plateforme
 ```
 
+Pour un contrôle complet — conteneurs, répartition de charge, Kubernetes et
+règle métier :
+
+```bash
+./ci/demonstration.sh
+```
+
 Attendu :
 
 ```json
@@ -237,3 +244,20 @@ docker compose down -v   # arrête ET EFFACE la base et le modèle
 ```
 
 ⚠️ `down -v` oblige à refaire le `ollama pull`.
+
+---
+
+# Partie 4 — Vérifier soi-même
+
+| Ce qu'on veut savoir | Commande |
+|---|---|
+| Tout fonctionne | `./ci/demonstration.sh` |
+| Les règles métier sont saines | `./ci/tests-unitaires.sh` |
+| L'API se comporte bien | `./ci/verifier-plateforme.sh` |
+| La chaîne répond | `curl -s localhost:5169/health/plateforme` |
+| Ce que reçoit l'IA | `curl -s localhost:5169/api/ia/contexte` |
+| Les conteneurs | `docker compose ps` |
+| Les pods Kubernetes | `kubectl -n indicateurs get pods` |
+
+Le champ fautif de `/health/plateforme` (`metier` ou `ia`) désigne
+immédiatement le maillon en panne.

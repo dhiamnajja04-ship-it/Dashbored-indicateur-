@@ -313,7 +313,17 @@ npm start          # serveur de développement
 npm run build      # build de production -> dist/
 ```
 
-> Le projet ne contient **pas** de tests unitaires : le sujet du stage n'en
-> demande pas, et aucun fichier `*.spec.ts` n'est présent. Vitest et jsdom
-> figurent encore dans les `devDependencies` du gabarit Angular, mais le script
-> `npm test` (`ng test`) n'aurait rien à exécuter.
+## Tests
+
+```bash
+./ci/tests-unitaires.sh      # 35 tests des règles métier (aucun SDK requis)
+./ci/verifier-plateforme.sh  # 17 contrôles sur une plateforme démarrée
+./ci/demonstration.sh        # Docker, Kubernetes et répartition de charge
+```
+
+Les 35 tests unitaires portent sur les deux fichiers qui décident de ce que
+voit le modèle IA : le workflow de validation (20 tests) et la construction du
+prompt (15 tests). Détail dans [`GUIDE-PLATEFORME.md`](GUIDE-PLATEFORME.md).
+
+> Le frontend Angular n'a pas de tests : le sujet n'en demande pas, et l'effort
+> a été porté là où une régression serait grave — la règle métier.

@@ -166,3 +166,37 @@ le mot de passe reste dans l'historique du shell.
 Interface : `http://$(minikube ip):30080`
 
 Détails et dépannage : [`k8s/README.md`](k8s/README.md).
+
+---
+
+## Vérifier que tout tourne
+
+### En une commande
+
+```bash
+./ci/demonstration.sh
+```
+
+Elle prouve, sortie à l'appui : les conteneurs Docker, la répartition de
+charge (compteurs réseau avant/après, puis panne d'une réplique), les pods
+Kubernetes, et la règle du sujet dans les deux environnements.
+
+### Les tests
+
+```bash
+./ci/tests-unitaires.sh      # 35 tests des règles métier, sans base ni réseau
+./ci/verifier-plateforme.sh  # 17 contrôles sur une plateforme démarrée
+```
+
+### Vérifications ciblées
+
+| Ce qu'on veut savoir | Commande |
+|---|---|
+| La chaîne complète répond | `curl -s localhost:5169/health/plateforme` |
+| Les conteneurs tournent | `docker compose ps` |
+| Le répartiteur est actif | `curl -s localhost:5169/lb-health` |
+| Les répliques du Gateway | `docker compose ps gateway` |
+| La charge est distribuée | `docker stats --no-stream \| grep gateway` |
+| Les pods Kubernetes | `kubectl -n indicateurs get pods` |
+| Ce que voit l'IA | `curl -s localhost:5169/api/ia/contexte` |
+| Les données en base | `docker compose exec postgres psql -U postgres -d indicateurs_db -c "SELECT count(*) FROM indicateurs;"` |

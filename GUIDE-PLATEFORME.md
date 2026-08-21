@@ -192,7 +192,7 @@ Annoncé plutôt que découvert :
 | Limite | Pourquoi |
 |---|---|
 | **Pas d'authentification** | Non demandée par le sujet. Les rôles filtrent l'interface, pas l'API. |
-| **Pas de tests automatisés** | Non demandés. Vérifications par scénario reproductible. |
+
 
 | **Modèle IA léger** | 4 cœurs sans GPU. Le périmètre est garanti, pas la qualité rédactionnelle. |
 
@@ -301,7 +301,39 @@ Aucun secret à créer : le `GITHUB_TOKEN` est fourni automatiquement.
 ./ci/verifier-plateforme.sh
 ```
 
-## 12. Répartition de charge
+## 12. Tests
+
+### Tests unitaires — 35 tests, sans base ni réseau
+
+```bash
+./ci/tests-unitaires.sh
+```
+
+Aucun SDK .NET requis sur la machine : tout s'exécute dans un conteneur.
+
+| Projet | Tests | Ce qui est couvert |
+|---|---|---|
+| `tests/MetierService.Tests` | **20** | Le workflow de validation : transitions autorisées et refusées, idempotence, normalisation de la casse, statuts historiques inconnus |
+| `tests/IaService.Tests` | **15** | La construction du prompt : contenu transmis, écart à la cible et son sens, distinction national/régional, libellés vs identifiants, interdiction de parler de tendance sur une mesure unique |
+
+Ces deux fichiers portent la logique qui décide de ce que voit le modèle IA.
+Une régression y enverrait des valeurs non validées au modèle — précisément ce
+que le sujet interdit.
+
+Les projets de test **ne référencent que les fichiers de logique**, pas les
+projets entiers : inutile de tirer EF Core, Npgsql et ASP.NET pour tester des
+règles pures.
+
+### Tests d'intégration — 17 contrôles sur une plateforme démarrée
+
+```bash
+./ci/verifier-plateforme.sh
+```
+
+Vérifie le CRUD avec relecture, le refus d'auto-validation par le client, et
+que le périmètre de l'IA suit réellement la validation.
+
+## 13. Répartition de charge
 
 Le Gateway était le point d'entrée unique : sa panne coupait toute la
 plateforme. Il est désormais **répliqué**, avec un répartiteur nginx devant.
@@ -339,7 +371,7 @@ docker stop rw9980-gateway-2                  # simuler une panne
 curl http://localhost:5169/health/plateforme  # répond toujours
 ```
 
-## 13. Inspecter la base avec pgAdmin
+## 14. Inspecter la base avec pgAdmin
 
 pgAdmin est inclus dans la plateforme, avec la **connexion déjà enregistrée** :
 
@@ -367,7 +399,7 @@ WHERE v.is_valid IS TRUE;
 ⚠️ Ces identifiants conviennent à une démonstration locale. En production, ils
 devraient venir d'un Secret, comme la chaîne de connexion PostgreSQL.
 
-## 14. Tester l'API avec Postman
+## 15. Tester l'API avec Postman
 
 Une collection prête à importer : [`postman/Plateforme-Indicateurs.postman_collection.json`](postman/Plateforme-Indicateurs.postman_collection.json)
 — **7 dossiers, 33 requêtes**, chacune documentée.
@@ -382,7 +414,7 @@ Le parcours à suivre pour vérifier la règle centrale :
 3. `GET /api/ia/contexte` — le prompt a changé, sans avoir appelé le modèle
 4. `PATCH .../devalidate` — et il revient en arrière
 
-## 15. Les autres guides
+## 16. Les autres guides
 
 | Guide | Pour quoi |
 |---|---|

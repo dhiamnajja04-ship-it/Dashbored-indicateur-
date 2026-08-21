@@ -56,3 +56,7 @@ obj/
 k8s/01-secret-postgres.yaml
 k8s/*-secret.yaml
 !k8s/*-secret*.example.yaml
+
+# Artefacts de compilation des projets de test
+tests/**/bin/
+tests/**/obj/
