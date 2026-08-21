@@ -334,7 +334,69 @@ règles pures.
 Vérifie le CRUD avec relecture, le refus d'auto-validation par le client, et
 que le périmètre de l'IA suit réellement la validation.
 
-## 13. Répartition de charge
+## 13. Robustesse et redémarrage automatique
+
+La plateforme se relève seule d'une panne, sans intervention.
+
+### Trois niveaux de protection
+
+| Niveau | Mécanisme | Ce qu'il couvre |
+|---|---|---|
+| Conteneur | `restart: unless-stopped` sur les 9 services | Plantage applicatif, redémarrage du démon Docker |
+| Cluster | Contrôleur de Deployment | Pod supprimé ou en échec → recréé en ~5 s |
+| Machine | `crontab` de l'utilisateur | Redémarrage de la VM, panne partielle |
+
+Le nœud kind était en `on-failure`, qui ne relance **pas** au redémarrage du
+démon. Passé en `unless-stopped`.
+
+### La supervision
+
+```bash
+./ci/demarrage-plateforme.sh            # démarre ou répare
+./ci/demarrage-plateforme.sh --verifier # rapporte sans réparer
+```
+
+Installé dans la crontab :
+
+```
+@reboot sleep 60 && …/ci/demarrage-plateforme.sh
+*/10 * * * *        …/ci/demarrage-plateforme.sh
+```
+
+> Pas de service systemd : la VM n'accorde pas les droits root. La crontab de
+> l'utilisateur suffit et ne demande aucune permission particulière. Le délai
+> de 60 s au démarrage laisse au démon Docker le temps d'être prêt.
+
+Le script **ne se fie pas à l'état Docker seul** : un conteneur « Up » ne
+garantit pas que le service répond. Il interroge `/health/plateforme`, donc la
+chaîne complète, et redémarre les services applicatifs si elle est dégradée.
+
+Il est idempotent : relancé sur une plateforme saine, il écrit une ligne de
+journal et s'arrête.
+
+### Vérifié par simulation de panne
+
+**Trois conteneurs arrêtés** :
+
+```
+10:56:45  Pile Compose incomplète : 6/9 conteneurs.
+10:57:02  Après relance : 9/9 conteneurs.
+```
+
+**Nœud Kubernetes arrêté** :
+
+```
+10:58:27  Seulement 3/5 pods prêts — attente de la convergence.
+10:58:57  Après convergence : 5/5 pods prêts.
+```
+
+Sur ce second cas, le script **laisse Kubernetes converger** au lieu de forcer
+un redéploiement : le contrôleur rétablit seul l'état désiré, et le forcer
+coûterait plus cher sans rien apporter.
+
+Journal : `~/plateforme-demarrage.log`
+
+## 14. Répartition de charge
 
 Le Gateway était le point d'entrée unique : sa panne coupait toute la
 plateforme. Il est désormais **répliqué**, avec un répartiteur nginx devant.
@@ -372,7 +434,7 @@ docker stop rw9980-gateway-2                  # simuler une panne
 curl http://localhost:5169/health/plateforme  # répond toujours
 ```
 
-## 14. Inspecter la base avec pgAdmin
+## 15. Inspecter la base avec pgAdmin
 
 pgAdmin est inclus dans la plateforme, avec la **connexion déjà enregistrée** :
 
@@ -400,7 +462,7 @@ WHERE v.is_valid IS TRUE;
 ⚠️ Ces identifiants conviennent à une démonstration locale. En production, ils
 devraient venir d'un Secret, comme la chaîne de connexion PostgreSQL.
 
-## 15. Tester l'API avec Postman
+## 16. Tester l'API avec Postman
 
 Une collection prête à importer : [`postman/Plateforme-Indicateurs.postman_collection.json`](postman/Plateforme-Indicateurs.postman_collection.json)
 — **7 dossiers, 33 requêtes**, chacune documentée.
@@ -415,7 +477,7 @@ Le parcours à suivre pour vérifier la règle centrale :
 3. `GET /api/ia/contexte` — le prompt a changé, sans avoir appelé le modèle
 4. `PATCH .../devalidate` — et il revient en arrière
 
-## 16. Les autres guides
+## 17. Les autres guides
 
 | Guide | Pour quoi |
 |---|---|
