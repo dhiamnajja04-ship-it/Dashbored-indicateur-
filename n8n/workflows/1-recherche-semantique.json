@@ -1,0 +1,138 @@
+{
+  "name": "Recherche sémantique d'indicateurs",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "recherche",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook",
+      "name": "Question reçue",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -200,
+        300
+      ],
+      "webhookId": "recherche-indicateurs",
+      "notes": "POST /webhook/recherche  avec {\"question\": \"...\"}"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://ollama:11434/api/embeddings",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ model: 'nomic-embed-text', prompt: $json.body.question || '' }) }}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "id": "embedding",
+      "name": "Vectoriser la question",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        20,
+        300
+      ],
+      "notes": "Le même modèle que l'indexation : nomic-embed-text, 768 dimensions.\nUtiliser un autre modèle produirait des vecteurs incomparables."
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT code, nom, unite, similarite\nFROM rechercher_indicateurs($1::vector, $2);",
+        "options": {
+          "queryReplacement": "={{ '[' + $json.embedding.join(',') + '] ' }},={{ $('Question reçue').item.json.body.limite || 5 }}"
+        }
+      },
+      "id": "recherche",
+      "name": "Chercher les voisins",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        240,
+        300
+      ],
+      "notes": "La logique vit dans la fonction SQL rechercher_indicateurs(),\npas dans ce nœud : testable en une requête et versionnée avec le code."
+    },
+    {
+      "parameters": {
+        "jsCode": "// Regroupe les lignes SQL en une réponse unique et lisible.\nconst question = $('Question reçue').first().json.body.question || '';\nconst resultats = $input.all().map(l => ({\n  code: l.json.code,\n  nom: l.json.nom,\n  unite: l.json.unite,\n  similarite: Number(l.json.similarite),\n}));\n\nreturn [{ json: {\n  question,\n  nombre: resultats.length,\n  resultats,\n  // Rappel utile : ces indicateurs sont trouvés par le SENS, pas par les\n  // mots. « emploi » remonte « chômage » sans partager un seul terme.\n  methode: 'similarité cosinus sur plongements nomic-embed-text (768 dimensions)',\n}}];"
+      },
+      "id": "format",
+      "name": "Mettre en forme",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        460,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "reponse",
+      "name": "Répondre",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        680,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Question reçue": {
+      "main": [
+        [
+          {
+            "node": "Vectoriser la question",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Vectoriser la question": {
+      "main": [
+        [
+          {
+            "node": "Chercher les voisins",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chercher les voisins": {
+      "main": [
+        [
+          {
+            "node": "Mettre en forme",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mettre en forme": {
+      "main": [
+        [
+          {
+            "node": "Répondre",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": []
+}

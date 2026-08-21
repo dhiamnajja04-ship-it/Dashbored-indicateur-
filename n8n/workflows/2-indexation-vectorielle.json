@@ -1,0 +1,161 @@
+{
+  "name": "Indexation vectorielle des indicateurs",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 6
+            }
+          ]
+        }
+      },
+      "id": "planif",
+      "name": "Toutes les 6 heures",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -220,
+        300
+      ],
+      "notes": "Six heures suffisent : un indicateur change rarement, et\nchaque exécution ne coûte que quelques secondes."
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "-- Ne remonte QUE le nouveau ou le modifié.\n-- Réindexer les 12 à chaque passage serait du gaspillage.\nSELECT id, contenu FROM indicateurs_a_indexer ORDER BY id;",
+        "options": {}
+      },
+      "id": "a-indexer",
+      "name": "Quoi indexer ?",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        0,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "a-faire",
+              "leftValue": "={{ $json.id }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "filtre",
+      "name": "Y a-t-il du travail ?",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        220,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://ollama:11434/api/embeddings",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ model: 'nomic-embed-text', prompt: $json.contenu }) }}",
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "id": "vectoriser",
+      "name": "Calculer le plongement",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        440,
+        300
+      ],
+      "notes": "768 dimensions. Une dimension différente ferait échouer\nl'insertion : la colonne est typée vector(768)."
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO indicateurs_embeddings (indicateur_id, contenu, embedding, modele)\nVALUES ($1, $2, $3::vector, 'nomic-embed-text')\nON CONFLICT (indicateur_id) DO UPDATE\nSET contenu = EXCLUDED.contenu,\n    embedding = EXCLUDED.embedding,\n    modele = EXCLUDED.modele,\n    calcule_le = now();",
+        "options": {
+          "queryReplacement": "={{ $('Quoi indexer ?').item.json.id }},={{ $('Quoi indexer ?').item.json.contenu }},={{ '[' + $json.embedding.join(',') + ']' }}"
+        }
+      },
+      "id": "stocker",
+      "name": "Stocker le vecteur",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        660,
+        300
+      ],
+      "notes": "ON CONFLICT : un indicateur modifié voit son vecteur remplacé,\npas dupliqué. Les valeurs passent en paramètres, jamais concaténées."
+    }
+  ],
+  "connections": {
+    "Toutes les 6 heures": {
+      "main": [
+        [
+          {
+            "node": "Quoi indexer ?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Quoi indexer ?": {
+      "main": [
+        [
+          {
+            "node": "Y a-t-il du travail ?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Y a-t-il du travail ?": {
+      "main": [
+        [
+          {
+            "node": "Calculer le plongement",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculer le plongement": {
+      "main": [
+        [
+          {
+            "node": "Stocker le vecteur",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": []
+}

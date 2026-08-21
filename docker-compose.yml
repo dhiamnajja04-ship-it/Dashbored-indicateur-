@@ -43,6 +43,9 @@ services:
       - ./db/07-organisations-et-periodes.sql:/docker-entrypoint-initdb.d/07-referentiels.sql:ro
       - ./db/08-cascades.sql:/docker-entrypoint-initdb.d/08-cascades.sql:ro
       - ./db/09-pgvector.sql:/docker-entrypoint-initdb.d/09-pgvector.sql:ro
+      - ./db/10-recherche-semantique.sql:/docker-entrypoint-initdb.d/10-recherche.sql:ro
+      - ./db/11-index-vectoriel.sql:/docker-entrypoint-initdb.d/11-index.sql:ro
+      - ./db/12-alertes.sql:/docker-entrypoint-initdb.d/12-alertes.sql:ro
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d indicateurs_db"]

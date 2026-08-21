@@ -1,0 +1,151 @@
+{
+  "name": "Alerte des validations en attente",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 8 * * *"
+            }
+          ]
+        }
+      },
+      "id": "planif",
+      "name": "Chaque jour à 8h",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -220,
+        300
+      ],
+      "notes": "Fuseau Africa/Tunis, fixé dans docker-compose.\nSans lui, n8n planifierait en UTC et déclencherait à 9h locale."
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "-- La fonction n'enregistre une alerte que s'il y a réellement quelque\n-- chose en attente, et renvoie le total.\nSELECT generer_alerte_validation() AS nb_en_attente;",
+        "options": {}
+      },
+      "id": "generer",
+      "name": "Générer l'alerte",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        0,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "en-attente",
+              "leftValue": "={{ $json.nb_en_attente }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "filtre",
+      "name": "Quelque chose en attente ?",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        220,
+        300
+      ],
+      "notes": "Sans ce filtre, le flux irait au bout tous les jours même quand\ntout est validé — et l'alerte perdrait tout son sens."
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "-- Les plus anciennes d'abord : c'est l'ancienneté qui révèle un\n-- circuit de validation bloqué, pas le nombre.\nSELECT code, nom, valeur, unite, statut, saisie_par, jours_attente\nFROM valeurs_en_attente\nORDER BY jours_attente DESC\nLIMIT 20;",
+        "options": {}
+      },
+      "id": "detail",
+      "name": "Lister les valeurs",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        440,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Construit un résumé lisible. Il est écrit en base par la fonction SQL ;\n// ce nœud sert à le rendre exploitable si l'on branche plus tard un canal\n// de diffusion (e-mail, Slack) sans toucher au reste du flux.\nconst lignes = $input.all().map(l => l.json);\nconst bloquees = lignes.filter(l => l.jours_attente >= 3);\n\nconst resume = lignes.map(l =>\n  `${l.code.padEnd(10)} ${String(l.valeur).padStart(10)} ${l.unite || ''}  ` +\n  `${l.statut.padEnd(10)} depuis ${l.jours_attente} j  (${l.saisie_par || 'inconnu'})`\n).join('\\n');\n\nreturn [{ json: {\n  total: lignes.length,\n  bloquees_3j_ou_plus: bloquees.length,\n  plus_ancienne_jours: lignes.length ? Math.max(...lignes.map(l => l.jours_attente)) : 0,\n  resume,\n  // Rappel du lien avec la règle centrale : tant qu'une valeur n'est pas\n  // validée, l'IA ne la voit pas. Une file d'attente qui grossit, c'est\n  // une analyse qui s'appauvrit.\n  consequence: 'Ces valeurs ne sont pas transmises au modèle IA.',\n}}];"
+      },
+      "id": "resume",
+      "name": "Résumer",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        660,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Chaque jour à 8h": {
+      "main": [
+        [
+          {
+            "node": "Générer l'alerte",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Générer l'alerte": {
+      "main": [
+        [
+          {
+            "node": "Quelque chose en attente ?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Quelque chose en attente ?": {
+      "main": [
+        [
+          {
+            "node": "Lister les valeurs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lister les valeurs": {
+      "main": [
+        [
+          {
+            "node": "Résumer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": []
+}
